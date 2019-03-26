@@ -1,6 +1,11 @@
 package libre.sampler.models;
 
+import android.icu.text.RelativeDateTimeFormatter;
+
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Locale;
 
 public class Project {
     public String name;
@@ -12,6 +17,12 @@ public class Project {
     }
 
     public String getRelativeTime() {
-        return mtime.toString();
+        StringBuilder relativeTime = new StringBuilder();
+        Date now = new Date();
+        if(mtime.getYear() == now.getYear()) {
+            return (new SimpleDateFormat("MMM d h:mm a", Locale.US)).format(mtime);
+        } else {
+            return (new SimpleDateFormat("MMM d, yyyy", Locale.US)).format(mtime);
+        }
     }
 }

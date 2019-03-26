@@ -1,6 +1,7 @@
 package libre.sampler.adapters;
 
 import android.content.Context;
+import android.util.Log;
 import android.util.Pair;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -9,10 +10,8 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import java.util.List;
-import java.util.concurrent.Callable;
 
 import androidx.annotation.NonNull;
-import androidx.arch.core.util.Function;
 import androidx.core.util.Consumer;
 import androidx.recyclerview.widget.RecyclerView;
 import libre.sampler.R;
@@ -22,6 +21,7 @@ import libre.sampler.models.Project;
 public class ProjectListAdapter extends RecyclerView.Adapter<ProjectListAdapter.ViewHolder> {
     public List<Project> items;
     private Consumer<Project> clickPostHook;
+    public boolean autoScrollOnInsert = false;  // todo
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
         private LinearLayout rootView;
@@ -68,8 +68,7 @@ public class ProjectListAdapter extends RecyclerView.Adapter<ProjectListAdapter.
 
     public void insertItem(Project e) {
         int insertIdx = this.items.size();
-        this.items.add(e);
-        this.notifyItemInserted(insertIdx);
+        this.insertItem(insertIdx, e);
     }
 
     public void insertItem(int insertIdx, Project e) {
@@ -79,8 +78,7 @@ public class ProjectListAdapter extends RecyclerView.Adapter<ProjectListAdapter.
 
     public void insertAll(List<Project> e) {
         int insertIdx = this.items.size();
-        this.items.addAll(e);
-        this.notifyItemRangeInserted(insertIdx, e.size());
+        this.insertAll(insertIdx, e);
     }
 
     public void insertAll(int insertIdx, List<Project> e) {

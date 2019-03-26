@@ -5,4 +5,9 @@
     <dimen name="margin4">24dp</dimen>
     <dimen name="margin5">48dp</dimen>
     <dimen name="fab_margin">@dimen/margin3</dimen>
+
+    <dimen name="headline">24sp</dimen>
+    <dimen name="title">20sp</dimen>
+    <dimen name="subheading">16sp</dimen>
+    <dimen name="caption">12sp</dimen>
 </resources>

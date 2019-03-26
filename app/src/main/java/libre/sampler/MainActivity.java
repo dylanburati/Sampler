@@ -8,12 +8,14 @@ import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.util.Consumer;
+import androidx.fragment.app.DialogFragment;
+import androidx.fragment.app.FragmentActivity;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import libre.sampler.adapters.ProjectListAdapter;
+import libre.sampler.dialogs.ProjectCreateDialog;
 import libre.sampler.listeners.MySwipeRefreshListener;
 import libre.sampler.models.Project;
-import libre.sampler.utils.IntentFactory;
 
 import android.view.Menu;
 import android.view.MenuItem;
@@ -22,8 +24,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-public class MainActivity extends AppCompatActivity {
-    private IntentFactory intentFactory;
+public class MainActivity extends AppCompatActivity implements ProjectCreateDialog.ProjectCreateDialogListener {
     private SwipeRefreshLayout refreshLayout;
     private RecyclerView data;
     private ProjectListAdapter dataAdapter;
@@ -35,7 +36,6 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-        intentFactory = new IntentFactory(this);
 
         refreshLayout = (SwipeRefreshLayout) findViewById(R.id.main_refresh);
         refreshLayout.setOnRefreshListener(new MySwipeRefreshListener() {
@@ -53,12 +53,13 @@ public class MainActivity extends AppCompatActivity {
             structuredData.add(new Project(s, (long) s.hashCode()));
         }
         // tmp>
+        dataAdapter.autoScrollOnInsert = true;
 
         this.data = (RecyclerView) findViewById(R.id.main_data);
         this.dataAdapter = new ProjectListAdapter(structuredData, new Consumer<Project>() {
             @Override
             public void accept(Project project) {
-                Intent intent = intentFactory.fromClass(ProjectActivity.class);
+                Intent intent = new Intent(MainActivity.this, ProjectActivity.class);
                 intent.setAction(Intent.ACTION_VIEW);
                 intent.putExtra(Intent.EXTRA_TITLE, project.name);
                 if(intent.resolveActivity(getPackageManager()) != null) {
@@ -78,11 +79,15 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         if(item.getItemId() == R.id.appbar_create) {
-            // tmp
-            this.dataAdapter.insertAll(this.dataAdapter.items);
-            // tmp>
+            new ProjectCreateDialog().show(getSupportFragmentManager(), "dialog_create");
             return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+
+    @Override
+    public void onSubmitProjectCreate(String projectName) {
+        this.dataAdapter.insertItem(0, new Project(projectName, System.currentTimeMillis()));
     }
 }
