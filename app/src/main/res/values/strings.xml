@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">Sampler</string>
+    <string name="title_activity_main">Projects</string>
+    <string name="appbar_create">Create</string>
+</resources>
