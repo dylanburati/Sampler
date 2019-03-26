@@ -1,13 +1,19 @@
 package libre.sampler.adapters;
 
+import android.content.Context;
+import android.util.Pair;
 import android.view.LayoutInflater;
+import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import java.util.List;
+import java.util.concurrent.Callable;
 
 import androidx.annotation.NonNull;
+import androidx.arch.core.util.Function;
+import androidx.core.util.Consumer;
 import androidx.recyclerview.widget.RecyclerView;
 import libre.sampler.R;
 import libre.sampler.listeners.ProjectClickListener;
@@ -15,6 +21,7 @@ import libre.sampler.models.Project;
 
 public class ProjectListAdapter extends RecyclerView.Adapter<ProjectListAdapter.ViewHolder> {
     public List<Project> items;
+    private Consumer<Project> clickPostHook;
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
         private LinearLayout rootView;
@@ -28,8 +35,9 @@ public class ProjectListAdapter extends RecyclerView.Adapter<ProjectListAdapter.
         }
     }
 
-    public ProjectListAdapter(List<Project> items) {
+    public ProjectListAdapter(List<Project> items, Consumer<Project> clickPostHook) {
         this.items = items;
+        this.clickPostHook = clickPostHook;
     }
 
     @NonNull
@@ -43,7 +51,12 @@ public class ProjectListAdapter extends RecyclerView.Adapter<ProjectListAdapter.
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         Project item = items.get(position);
-        holder.rootView.setOnClickListener(new ProjectClickListener(item));
+        holder.rootView.setOnClickListener(new ProjectClickListener(item) {
+            @Override
+            public void onClick(View v) {
+                clickPostHook.accept(this.project);
+            }
+        });
         holder.nameTextView.setText(item.name);
         holder.mtimeTextView.setText(item.getRelativeTime());
     }

@@ -1,19 +1,20 @@
 package libre.sampler;
 
+import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
 
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.core.util.Consumer;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import libre.sampler.adapters.ProjectListAdapter;
 import libre.sampler.listeners.MySwipeRefreshListener;
-import libre.sampler.listeners.RefreshPostHook;
 import libre.sampler.models.Project;
+import libre.sampler.utils.IntentFactory;
 
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 
@@ -22,6 +23,7 @@ import java.util.Collections;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
+    private IntentFactory intentFactory;
     private SwipeRefreshLayout refreshLayout;
     private RecyclerView data;
     private ProjectListAdapter dataAdapter;
@@ -33,15 +35,15 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+        intentFactory = new IntentFactory(this);
 
         refreshLayout = (SwipeRefreshLayout) findViewById(R.id.main_refresh);
-        refreshLayout.setOnRefreshListener(new MySwipeRefreshListener(new RefreshPostHook(
-        ) {
+        refreshLayout.setOnRefreshListener(new MySwipeRefreshListener() {
             @Override
-            public void afterRefresh() {
+            public void onRefresh() {
                 refreshLayout.setRefreshing(false);
             }
-        }));
+        });
 
         // tmp
         List<String> inputData = new ArrayList<>();
@@ -53,7 +55,17 @@ public class MainActivity extends AppCompatActivity {
         // tmp>
 
         this.data = (RecyclerView) findViewById(R.id.main_data);
-        this.dataAdapter = new ProjectListAdapter(structuredData);
+        this.dataAdapter = new ProjectListAdapter(structuredData, new Consumer<Project>() {
+            @Override
+            public void accept(Project project) {
+                Intent intent = intentFactory.fromClass(ProjectActivity.class);
+                intent.setAction(Intent.ACTION_VIEW);
+                intent.putExtra(Intent.EXTRA_TITLE, project.name);
+                if(intent.resolveActivity(getPackageManager()) != null) {
+                    startActivity(intent);
+                }
+            }
+        });
         data.setAdapter(this.dataAdapter);
     }
 
