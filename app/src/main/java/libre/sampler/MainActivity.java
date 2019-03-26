@@ -1,6 +1,7 @@
 package libre.sampler;
 
 import android.content.Intent;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 
@@ -8,14 +9,15 @@ import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.util.Consumer;
-import androidx.fragment.app.DialogFragment;
-import androidx.fragment.app.FragmentActivity;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import libre.sampler.adapters.ProjectListAdapter;
+import libre.sampler.databases.ProjectDao;
 import libre.sampler.dialogs.ProjectCreateDialog;
 import libre.sampler.listeners.MySwipeRefreshListener;
 import libre.sampler.models.Project;
+import libre.sampler.tasks.GetProjectsTask;
+import libre.sampler.utils.DatabaseConnectionManager;
 
 import android.view.Menu;
 import android.view.MenuItem;
@@ -46,17 +48,16 @@ public class MainActivity extends AppCompatActivity implements ProjectCreateDial
         });
 
         // tmp
-        List<String> inputData = new ArrayList<>();
-        List<Project> structuredData = new ArrayList<>();
-        Collections.addAll(inputData,"Anaconda3", "Android", "Autodesk", "Blender Foundation", "Bonjour", "Common Files", "Dell", "Docker", "GIMP 2", "Goodix", "Intel", "Java", "JetBrains", "Killer Networking", "Linux Containers", "MATLAB", "Microsoft Office 15", "Microsoft SQL Server", "Microsoft Visual Studio 10.0", "Microsoft.NET", "MiKTeX 2.9", "Mozilla Firefox", "MSBuild", "NVIDIA Corporation", "Oracle", "Reference Assemblies", "Shotcut", "SOLIDWORKS Corp", "VideoLAN", "VMware", "WindowsPowerShell");
-        for(String s : inputData) {
-            structuredData.add(new Project(s, (long) s.hashCode()));
-        }
+//        List<String> inputData = new ArrayList<>();
+//        List<Project> structuredData = new ArrayList<>();
+//        Collections.addAll(inputData,"Anaconda3", "Android", "Autodesk", "Blender Foundation", "Bonjour", "Common Files", "Dell", "Docker", "GIMP 2", "Goodix", "Intel", "Java", "JetBrains", "Killer Networking", "Linux Containers", "MATLAB", "Microsoft Office 15", "Microsoft SQL Server", "Microsoft Visual Studio 10.0", "Microsoft.NET", "MiKTeX 2.9", "Mozilla Firefox", "MSBuild", "NVIDIA Corporation", "Oracle", "Reference Assemblies", "Shotcut", "SOLIDWORKS Corp", "VideoLAN", "VMware", "WindowsPowerShell");
+//        for(String s : inputData) {
+//            structuredData.add(new Project(0, s, (long) s.hashCode()));
+//        }
         // tmp>
-        dataAdapter.autoScrollOnInsert = true;
 
         this.data = (RecyclerView) findViewById(R.id.main_data);
-        this.dataAdapter = new ProjectListAdapter(structuredData, new Consumer<Project>() {
+        this.dataAdapter = new ProjectListAdapter(new ArrayList<Project>(), new Consumer<Project>() {
             @Override
             public void accept(Project project) {
                 Intent intent = new Intent(MainActivity.this, ProjectActivity.class);
@@ -68,6 +69,15 @@ public class MainActivity extends AppCompatActivity implements ProjectCreateDial
             }
         });
         data.setAdapter(this.dataAdapter);
+
+        DatabaseConnectionManager.getInstance(this);  // initialize database
+        DatabaseConnectionManager.runTask(new GetProjectsTask(new Consumer<List<Project>>() {
+            @Override
+            public void accept(List<Project> projects) {
+                dataAdapter.insertAll(projects);
+                dataAdapter.autoScrollOnInsert = true;
+            }
+        }));
     }
 
     @Override
@@ -88,6 +98,14 @@ public class MainActivity extends AppCompatActivity implements ProjectCreateDial
 
     @Override
     public void onSubmitProjectCreate(String projectName) {
-        this.dataAdapter.insertItem(0, new Project(projectName, System.currentTimeMillis()));
+        final Project toAdd = new Project(0, projectName, System.currentTimeMillis());
+        final ProjectDao dao = DatabaseConnectionManager.getInstance(this).projectDao();
+        DatabaseConnectionManager.execute(new Runnable() {
+            @Override
+            public void run() {
+                dao.insertAll(toAdd);
+            }
+        });
+        this.dataAdapter.insertItem(0, toAdd);
     }
 }
