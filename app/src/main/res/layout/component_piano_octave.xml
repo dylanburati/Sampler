@@ -78,7 +78,7 @@
         android:layout_alignTop="@id/piano_c"
         android:layout_toRightOf="@id/piano_c"
         android:layout_marginLeft="@dimen/piano_keywidth_b2"
-        android:background="@android:color/black" />
+        android:background="@drawable/piano_black" />
 
 
     <View
@@ -88,7 +88,7 @@
         android:layout_alignTop="@id/piano_c"
         android:layout_toLeftOf="@id/piano_e"
         android:layout_marginRight="@dimen/piano_keywidth_b2"
-        android:background="@android:color/black" />
+        android:background="@drawable/piano_black" />
 
     <View
         android:id="@+id/piano_f_sharp"
@@ -97,7 +97,7 @@
         android:layout_alignTop="@id/piano_c"
         android:layout_toRightOf="@id/piano_f"
         android:layout_marginLeft="@dimen/piano_keywidth_b3"
-        android:background="@android:color/black" />
+        android:background="@drawable/piano_black" />
 
     <View
         android:id="@+id/piano_g_sharp"
@@ -106,7 +106,7 @@
         android:layout_alignTop="@id/piano_c"
         android:layout_toRightOf="@id/piano_g"
         android:layout_marginLeft="@dimen/piano_keywidth_b1"
-        android:background="@android:color/black" />
+        android:background="@drawable/piano_black" />
 
     <View
         android:id="@+id/piano_a_sharp"
@@ -115,6 +115,6 @@
         android:layout_alignTop="@id/piano_c"
         android:layout_toLeftOf="@id/piano_b"
         android:layout_marginRight="@dimen/piano_keywidth_b3"
-        android:background="@android:color/black" />
+        android:background="@drawable/piano_black" />
 
 </RelativeLayout>

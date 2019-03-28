@@ -6,7 +6,7 @@ import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentPagerAdapter;
 import libre.sampler.fragments.PlaceholderFragment;
-import libre.sampler.fragments.ProjectPatternsFragment;
+import libre.sampler.fragments.ProjectKeyboardFragment;
 
 public class ProjectFragmentAdapter extends FragmentPagerAdapter {
     public ProjectFragmentAdapter(@NonNull FragmentManager fm) {
@@ -16,11 +16,11 @@ public class ProjectFragmentAdapter extends FragmentPagerAdapter {
     private Fragment[] fragments = new Fragment[4];
     private static class PROJECT_FRAGMENTS {
         private static final int INSTRUMENTS = 0;
-        private static final int PATTERNS = 1;
-        private static final int PLAYLIST = 2;
+        private static final int KEYBOARD = 1;
+        private static final int PATTERNS = 2;
         private static final int SETTINGS = 3;
         private static String[] titles = new String[]{
-                "Instruments", "Patterns", "Playlist", "Settings"};
+                "Instruments", "Keyboard", "Patterns", "Settings"};
     }
 
     @Nullable
@@ -34,11 +34,11 @@ public class ProjectFragmentAdapter extends FragmentPagerAdapter {
     public Fragment getItem(int position) {
         if(fragments[position] == null) {
             switch(position) {
-                case PROJECT_FRAGMENTS.PATTERNS:
-                    fragments[position] = new ProjectPatternsFragment();
+                case PROJECT_FRAGMENTS.KEYBOARD:
+                    fragments[position] = new ProjectKeyboardFragment();
                     break;
                 case PROJECT_FRAGMENTS.INSTRUMENTS:
-                case PROJECT_FRAGMENTS.PLAYLIST:
+                case PROJECT_FRAGMENTS.PATTERNS:
                 case PROJECT_FRAGMENTS.SETTINGS:
                     fragments[position] = new PlaceholderFragment();
                     break;

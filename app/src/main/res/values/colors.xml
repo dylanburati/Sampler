@@ -2,4 +2,9 @@
 <resources>
     <color name="colorPrimary">#FF212121</color>
     <color name="colorAccent">#00B0FF</color>
+
+    <color name="piano_white_up">#FFFFFF</color>
+    <color name="piano_white_down">#CFCFDC</color>
+    <color name="piano_black_up">#000000</color>
+    <color name="piano_black_down">#373747</color>
 </resources>

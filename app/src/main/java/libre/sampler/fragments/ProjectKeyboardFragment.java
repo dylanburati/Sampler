@@ -1,5 +1,6 @@
 package libre.sampler.fragments;
 
+import android.graphics.Color;
 import android.graphics.Rect;
 import android.os.Bundle;
 import android.util.Log;
@@ -22,31 +23,43 @@ import libre.sampler.adapters.PianoAdapter;
 import libre.sampler.models.NoteEvent;
 import libre.sampler.publishers.NoteEventSource;
 
-public class ProjectPatternsFragment extends Fragment {
+public class ProjectKeyboardFragment extends Fragment {
     private RecyclerView pianoContainer;
     private PianoAdapter pianoAdapter;
-    private final Map<Pair<Long, Integer>, NoteEvent> noteQueue = new HashMap<>();
+    private final Map<Pair<Long, Integer>, KeyData> noteQueue = new HashMap<>();
     public NoteEventSource noteEventSource = new NoteEventSource();
 
-    public ProjectPatternsFragment() {
+    private class KeyData {
+        public View keyView;
+        public int keyNum;
+
+        public KeyData(View keyView, int keyNum) {
+            this.keyView = keyView;
+            this.keyNum = keyNum;
+        }
     }
 
-    private int resolveKeyNum(View octaveContainer, float x, float y) {
+    public ProjectKeyboardFragment() {
+    }
+
+    private KeyData resolveKeyNum(View octaveContainer, float x, float y) {
         if(octaveContainer == null) {
-            return -1;
+            return new KeyData(null, -1);
         }
         int octave = pianoContainer.getChildAdapterPosition(octaveContainer);
         if(octave == RecyclerView.NO_POSITION) {
-            return -1;
+            return new KeyData(null, -1);
         }
         ViewGroup vg = (ViewGroup) octaveContainer;
         int[] resIds = new int[]{R.id.piano_c_sharp, R.id.piano_d_sharp, R.id.piano_f_sharp,
                 R.id.piano_g_sharp, R.id.piano_a_sharp, R.id.piano_c, R.id.piano_d,
                 R.id.piano_e, R.id.piano_f, R.id.piano_g, R.id.piano_a, R.id.piano_b};
         int[] offsets = new int[]{2, 4, 7, 9, 11, 1, 3, 5, 6, 8, 10, 12};
+
         int keyNum = -1;
+        View keyView = null;
         for(int i = 0; i < 12; i++) {
-            View keyView = vg.findViewById(resIds[i]);
+            keyView = vg.findViewById(resIds[i]);
             Rect r = new Rect();
             keyView.getLocalVisibleRect(r);
             vg.offsetDescendantRectToMyCoords(keyView, r);
@@ -57,7 +70,7 @@ public class ProjectPatternsFragment extends Fragment {
                 break;
             }
         }
-        return keyNum;
+        return new KeyData(keyView, keyNum);
     }
 
     @Nullable
@@ -69,7 +82,7 @@ public class ProjectPatternsFragment extends Fragment {
         noteEventSource.add(new Consumer<NoteEvent>() {
             @Override
             public void accept(NoteEvent noteEvent) {
-                Log.d("ProjectPatternsFragment", String.format("noteEvent: keynum=%d action=%d", noteEvent.keyNum, noteEvent.action));
+                Log.d("ProjectKeyboardFragment", String.format("noteEvent: keynum=%d action=%d", noteEvent.keyNum, noteEvent.action));
             }
         });
         
@@ -89,34 +102,40 @@ public class ProjectPatternsFragment extends Fragment {
                 for(int i = 0; i < pointerCount; i++) {
                     View octaveContainer = rv.findChildViewUnder(e.getX(i), e.getY(i));
                     int eventAction = e.getActionMasked();
-                    Pair<Long, Integer> eventKey = new Pair<>(e.getDownTime(), e.getPointerId(i));
+                    Pair<Long, Integer> eventId = new Pair<>(e.getDownTime(), e.getPointerId(i));
+                    KeyData keyData = resolveKeyNum(octaveContainer, e.getX(i), e.getY(i));
 
                     if(eventAction == MotionEvent.ACTION_CANCEL || eventAction == MotionEvent.ACTION_UP
                             || (eventAction == MotionEvent.ACTION_POINTER_UP && e.getActionIndex() == i)) {
-                        NoteEvent previous = noteQueue.get(eventKey);
+                        KeyData previous = noteQueue.get(eventId);
                         if(previous != null) {
                             NoteEvent prevEndEvent = new NoteEvent(previous.keyNum, NoteEvent.ACTION_END);
                             noteEventSource.dispatch(prevEndEvent);
-                            noteQueue.remove(eventKey);
+                            noteQueue.remove(eventId);
+                            previous.keyView.setActivated(false);
                         }
                         continue;
                     }
 
-                    int keyNum = resolveKeyNum(octaveContainer, e.getX(i), e.getY(i));
                     if(eventAction == MotionEvent.ACTION_DOWN || eventAction == MotionEvent.ACTION_POINTER_DOWN) {
-                        if(!noteQueue.containsKey(eventKey)) {
-                            NoteEvent noteEvent = new NoteEvent(keyNum, NoteEvent.ACTION_BEGIN);
-                            noteQueue.put(eventKey, noteEvent);
+                        if(keyData.keyNum != -1 && !noteQueue.containsKey(eventId)) {
+                            NoteEvent noteEvent = new NoteEvent(keyData.keyNum, NoteEvent.ACTION_BEGIN);
                             noteEventSource.dispatch(noteEvent);
+                            noteQueue.put(eventId, keyData);
+                            keyData.keyView.setActivated(true);
                         }
                     } else if(eventAction == MotionEvent.ACTION_MOVE) {
-                        NoteEvent previous = noteQueue.get(eventKey);
-                        if(previous != null && previous.keyNum != keyNum) {
+                        KeyData previous = noteQueue.get(eventId);
+                        if(previous != null && previous.keyNum != keyData.keyNum) {
                             NoteEvent prevEndEvent = new NoteEvent(previous.keyNum, NoteEvent.ACTION_END);
                             noteEventSource.dispatch(prevEndEvent);
-                            NoteEvent noteEvent = new NoteEvent(keyNum, NoteEvent.ACTION_BEGIN);
-                            noteQueue.put(eventKey, noteEvent);
-                            noteEventSource.dispatch(noteEvent);
+                            previous.keyView.setActivated(false);
+                            if(keyData.keyNum != -1) {
+                                NoteEvent noteEvent = new NoteEvent(keyData.keyNum, NoteEvent.ACTION_BEGIN);
+                                noteEventSource.dispatch(noteEvent);
+                                noteQueue.put(eventId, keyData);
+                                keyData.keyView.setActivated(true);
+                            }
                         }
                     }
                 }
