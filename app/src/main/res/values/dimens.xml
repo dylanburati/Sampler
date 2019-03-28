@@ -10,4 +10,20 @@
     <dimen name="title">20sp</dimen>
     <dimen name="subheading">16sp</dimen>
     <dimen name="caption">12sp</dimen>
+
+    <dimen name="piano_height">210dp</dimen>
+    <dimen name="piano_height_b">140dp</dimen>
+    <dimen name="piano_keywidth_w1">48dp</dimen>
+    <dimen name="piano_keywidth_w2">96dp</dimen>
+    <dimen name="piano_keywidth_w3">144dp</dimen>
+    <dimen name="piano_keywidth_w4">192dp</dimen>
+    <dimen name="piano_keywidth_w5">240dp</dimen>
+    <dimen name="piano_keywidth_w6">288dp</dimen>
+    <dimen name="piano_keywidth_b">28dp</dimen>
+    <dimen name="piano_keywidth_b1">-14dp</dimen>
+    <dimen name="piano_keywidth_b2">-18.667dp</dimen>
+    <dimen name="piano_keywidth_b3">-21dp</dimen>
+    <!-- Default screen margins, per the Android Design guidelines. -->
+    <dimen name="activity_horizontal_margin">16dp</dimen>
+    <dimen name="activity_vertical_margin">16dp</dimen>
 </resources>

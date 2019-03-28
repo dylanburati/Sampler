@@ -6,10 +6,10 @@ import android.util.Log;
 import android.view.View;
 
 import libre.sampler.models.Project;
+import libre.sampler.utils.SingleStateHolder;
 
-public abstract class ProjectClickListener implements View.OnClickListener {
-    public Project project = null;
-    public ProjectClickListener(Project p) {
-        this.project = p;
+public abstract class StatefulClickListener <T> extends SingleStateHolder<T> implements View.OnClickListener {
+    public StatefulClickListener(T data) {
+        super(data);
     }
 }

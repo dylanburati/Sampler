@@ -1,8 +1,5 @@
 package libre.sampler.adapters;
 
-import android.content.Context;
-import android.util.Log;
-import android.util.Pair;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -15,7 +12,7 @@ import androidx.annotation.NonNull;
 import androidx.core.util.Consumer;
 import androidx.recyclerview.widget.RecyclerView;
 import libre.sampler.R;
-import libre.sampler.listeners.ProjectClickListener;
+import libre.sampler.listeners.StatefulClickListener;
 import libre.sampler.models.Project;
 
 public class ProjectListAdapter extends RecyclerView.Adapter<ProjectListAdapter.ViewHolder> {
@@ -51,10 +48,10 @@ public class ProjectListAdapter extends RecyclerView.Adapter<ProjectListAdapter.
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         Project item = items.get(position);
-        holder.rootView.setOnClickListener(new ProjectClickListener(item) {
+        holder.rootView.setOnClickListener(new StatefulClickListener<Project>(item) {
             @Override
             public void onClick(View v) {
-                clickPostHook.accept(this.project);
+                clickPostHook.accept(this.data);
             }
         });
         holder.nameTextView.setText(item.name);
