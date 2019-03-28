@@ -20,11 +20,13 @@ import androidx.recyclerview.widget.RecyclerView;
 import libre.sampler.R;
 import libre.sampler.adapters.PianoAdapter;
 import libre.sampler.models.NoteEvent;
+import libre.sampler.publishers.NoteEventSource;
 
 public class ProjectPatternsFragment extends Fragment {
     private RecyclerView pianoContainer;
     private PianoAdapter pianoAdapter;
     private final Map<Pair<Long, Integer>, NoteEvent> noteQueue = new HashMap<>();
+    public NoteEventSource noteEventSource = new NoteEventSource();
 
     public ProjectPatternsFragment() {
     }
@@ -64,18 +66,16 @@ public class ProjectPatternsFragment extends Fragment {
         View rootView = inflater.inflate(R.layout.fragment_project_patterns, container, false);
         pianoContainer = rootView.findViewById(R.id.piano_container);
 
-        final Consumer<NoteEvent> clickPostHook = new Consumer<NoteEvent>() {
+        noteEventSource.add(new Consumer<NoteEvent>() {
             @Override
             public void accept(NoteEvent noteEvent) {
                 Log.d("ProjectPatternsFragment", String.format("noteEvent: keynum=%d action=%d", noteEvent.keyNum, noteEvent.action));
             }
-        };
+        });
+        
         pianoContainer.addOnItemTouchListener(new RecyclerView.OnItemTouchListener() {
             @Override
             public boolean onInterceptTouchEvent(@NonNull RecyclerView rv, @NonNull MotionEvent e) {
-                if(e.getAction() == MotionEvent.ACTION_UP || e.getAction() == MotionEvent.ACTION_POINTER_UP) {
-                    Log.d("onItemTouchListener","actionUp");
-                }
                 float scrollBarHeight = getResources().getDimension(R.dimen.caption) + getResources().getDimension(R.dimen.margin2) * 2;
                 if((e.getAction() == MotionEvent.ACTION_DOWN) && e.getY() > scrollBarHeight) {
                     return true;
@@ -96,7 +96,7 @@ public class ProjectPatternsFragment extends Fragment {
                         NoteEvent previous = noteQueue.get(eventKey);
                         if(previous != null) {
                             NoteEvent prevEndEvent = new NoteEvent(previous.keyNum, NoteEvent.ACTION_END);
-                            clickPostHook.accept(prevEndEvent);
+                            noteEventSource.dispatch(prevEndEvent);
                             noteQueue.remove(eventKey);
                         }
                         continue;
@@ -107,16 +107,16 @@ public class ProjectPatternsFragment extends Fragment {
                         if(!noteQueue.containsKey(eventKey)) {
                             NoteEvent noteEvent = new NoteEvent(keyNum, NoteEvent.ACTION_BEGIN);
                             noteQueue.put(eventKey, noteEvent);
-                            clickPostHook.accept(noteEvent);
+                            noteEventSource.dispatch(noteEvent);
                         }
                     } else if(eventAction == MotionEvent.ACTION_MOVE) {
                         NoteEvent previous = noteQueue.get(eventKey);
                         if(previous != null && previous.keyNum != keyNum) {
                             NoteEvent prevEndEvent = new NoteEvent(previous.keyNum, NoteEvent.ACTION_END);
-                            clickPostHook.accept(prevEndEvent);
+                            noteEventSource.dispatch(prevEndEvent);
                             NoteEvent noteEvent = new NoteEvent(keyNum, NoteEvent.ACTION_BEGIN);
                             noteQueue.put(eventKey, noteEvent);
-                            clickPostHook.accept(noteEvent);
+                            noteEventSource.dispatch(noteEvent);
                         }
                     }
                 }
