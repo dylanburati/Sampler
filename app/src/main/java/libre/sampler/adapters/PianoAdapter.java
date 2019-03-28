@@ -43,7 +43,7 @@ public class PianoAdapter extends RecyclerView.Adapter<PianoAdapter.ViewHolder> 
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         ((TextView) holder.rootView.getChildAt(0)).setText("C" + position);
         // register black keys listeners last
-        int[] resIds = new int[]{R.id.piano_c, R.id.piano_d, R.id.piano_e, R.id.piano_f,
+        /*int[] resIds = new int[]{R.id.piano_c, R.id.piano_d, R.id.piano_e, R.id.piano_f,
                 R.id.piano_g, R.id.piano_a, R.id.piano_b, R.id.piano_c_sharp, R.id.piano_d_sharp,
                 R.id.piano_f_sharp, R.id.piano_g_sharp, R.id.piano_a_sharp};
         int[] offsets = new int[]{1, 3, 5, 6, 8, 10, 12, 2, 4, 7, 9, 11};
@@ -75,7 +75,7 @@ public class PianoAdapter extends RecyclerView.Adapter<PianoAdapter.ViewHolder> 
                         }
                     }
             );
-        }
+        }*/
     }
 
     @Override

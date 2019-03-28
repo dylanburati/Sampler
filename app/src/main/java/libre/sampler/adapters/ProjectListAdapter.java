@@ -87,4 +87,17 @@ public class ProjectListAdapter extends RecyclerView.Adapter<ProjectListAdapter.
         this.items.remove(removeIdx);
         this.notifyItemRemoved(removeIdx);
     }
+
+    public void clear() {
+        int removeLen = this.items.size();
+        this.items.clear();
+        this.notifyItemRangeRemoved(0, removeLen);
+    }
+
+    public void removeRange(int removeIdx, int removeLen) {
+        for(int i = 0; i < removeLen; i++) {
+            this.items.remove(removeIdx);
+        }
+        this.notifyItemRangeRemoved(removeIdx, removeLen);
+    }
 }

@@ -91,6 +91,15 @@ public class MainActivity extends AppCompatActivity implements ProjectCreateDial
         if(item.getItemId() == R.id.appbar_create) {
             new ProjectCreateDialog().show(getSupportFragmentManager(), "dialog_create");
             return true;
+        } else if(item.getItemId() == R.id.appbar_delete) {
+            final ProjectDao dao = DatabaseConnectionManager.getInstance(this).projectDao();
+            DatabaseConnectionManager.execute(new Runnable() {
+                @Override
+                public void run() {
+                    dao.deleteAll();
+                }
+            });
+            dataAdapter.clear();
         }
         return super.onOptionsItemSelected(item);
     }

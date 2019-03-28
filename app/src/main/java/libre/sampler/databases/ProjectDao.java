@@ -18,4 +18,7 @@ public interface ProjectDao {
 
     @Query("SELECT id, name, mtime FROM project ORDER BY mtime DESC")
     List<Project> getAll();
+
+    @Query("DELETE FROM project")
+    void deleteAll();
 }

@@ -6,4 +6,8 @@
         android:title="@string/appbar_create"
         android:icon="@drawable/ic_add"
         app:showAsAction="ifRoom" />
+
+    <item android:id="@+id/appbar_delete"
+        android:title="@string/appbar_delete"
+        app:showAsAction="never" />
 </menu>
