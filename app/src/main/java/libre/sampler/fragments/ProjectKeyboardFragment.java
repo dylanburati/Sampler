@@ -54,7 +54,7 @@ public class ProjectKeyboardFragment extends Fragment {
         int[] resIds = new int[]{R.id.piano_c_sharp, R.id.piano_d_sharp, R.id.piano_f_sharp,
                 R.id.piano_g_sharp, R.id.piano_a_sharp, R.id.piano_c, R.id.piano_d,
                 R.id.piano_e, R.id.piano_f, R.id.piano_g, R.id.piano_a, R.id.piano_b};
-        int[] offsets = new int[]{2, 4, 7, 9, 11, 1, 3, 5, 6, 8, 10, 12};
+        int[] offsets = new int[]{1, 3, 6, 8, 10, 0, 2, 4, 5, 7, 9, 11};
 
         int keyNum = -1;
         View keyView = null;
@@ -66,7 +66,7 @@ public class ProjectKeyboardFragment extends Fragment {
             pianoContainer.offsetDescendantRectToMyCoords(octaveContainer, r);
 
             if(r.contains((int) x, (int) y)) {
-                keyNum = octave * 12 + offsets[i];
+                keyNum = (octave + 2) * 12 + offsets[i];
                 break;
             }
         }

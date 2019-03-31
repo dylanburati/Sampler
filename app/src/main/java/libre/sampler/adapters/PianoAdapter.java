@@ -36,7 +36,7 @@ public class PianoAdapter extends RecyclerView.Adapter<PianoAdapter.ViewHolder> 
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-        ((TextView) holder.rootView.getChildAt(0)).setText("C" + position);
+        ((TextView) holder.rootView.getChildAt(0)).setText("C" + (position + 1));
     }
 
     @Override

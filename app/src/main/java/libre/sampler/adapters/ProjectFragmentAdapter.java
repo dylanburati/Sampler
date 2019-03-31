@@ -7,6 +7,8 @@ import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentPagerAdapter;
 import libre.sampler.fragments.PlaceholderFragment;
 import libre.sampler.fragments.ProjectKeyboardFragment;
+import libre.sampler.publishers.NoteEventSource;
+import libre.sampler.utils.EventSource;
 
 public class ProjectFragmentAdapter extends FragmentPagerAdapter {
     public ProjectFragmentAdapter(@NonNull FragmentManager fm) {
@@ -14,12 +16,12 @@ public class ProjectFragmentAdapter extends FragmentPagerAdapter {
     }
 
     private Fragment[] fragments = new Fragment[4];
-    private static class PROJECT_FRAGMENTS {
-        private static final int INSTRUMENTS = 0;
-        private static final int KEYBOARD = 1;
-        private static final int PATTERNS = 2;
-        private static final int SETTINGS = 3;
-        private static String[] titles = new String[]{
+    public static class PROJECT_FRAGMENTS {
+        public static final int INSTRUMENTS = 0;
+        public static final int KEYBOARD = 1;
+        public static final int PATTERNS = 2;
+        public static final int SETTINGS = 3;
+        public static String[] titles = new String[]{
                 "Instruments", "Keyboard", "Patterns", "Settings"};
     }
 
