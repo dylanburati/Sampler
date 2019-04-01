@@ -1,6 +1,5 @@
 package libre.sampler.fragments;
 
-import android.graphics.Color;
 import android.graphics.Rect;
 import android.os.Bundle;
 import android.util.Log;
@@ -12,12 +11,14 @@ import android.view.ViewGroup;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.util.Consumer;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.RecyclerView;
+import libre.sampler.ProjectActivity;
 import libre.sampler.R;
 import libre.sampler.adapters.PianoAdapter;
 import libre.sampler.models.NoteEvent;
@@ -27,7 +28,7 @@ public class ProjectKeyboardFragment extends Fragment {
     private RecyclerView pianoContainer;
     private PianoAdapter pianoAdapter;
     private final Map<Pair<Long, Integer>, KeyData> noteQueue = new HashMap<>();
-    public NoteEventSource noteEventSource = new NoteEventSource();
+    private NoteEventSource noteEventSource;
 
     private class KeyData {
         public View keyView;
@@ -78,6 +79,7 @@ public class ProjectKeyboardFragment extends Fragment {
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_project_patterns, container, false);
         pianoContainer = rootView.findViewById(R.id.piano_container);
+        noteEventSource = ((ProjectActivity) Objects.requireNonNull(getActivity())).noteEventSource;
 
         noteEventSource.add(new Consumer<NoteEvent>() {
             @Override
@@ -109,7 +111,7 @@ public class ProjectKeyboardFragment extends Fragment {
                             || (eventAction == MotionEvent.ACTION_POINTER_UP && e.getActionIndex() == i)) {
                         KeyData previous = noteQueue.get(eventId);
                         if(previous != null) {
-                            NoteEvent prevEndEvent = new NoteEvent(previous.keyNum, NoteEvent.ACTION_END);
+                            NoteEvent prevEndEvent = new NoteEvent(previous.keyNum, NoteEvent.ACTION_END, eventId);
                             noteEventSource.dispatch(prevEndEvent);
                             noteQueue.remove(eventId);
                             previous.keyView.setActivated(false);
@@ -119,7 +121,7 @@ public class ProjectKeyboardFragment extends Fragment {
 
                     if(eventAction == MotionEvent.ACTION_DOWN || eventAction == MotionEvent.ACTION_POINTER_DOWN) {
                         if(keyData.keyNum != -1 && !noteQueue.containsKey(eventId)) {
-                            NoteEvent noteEvent = new NoteEvent(keyData.keyNum, NoteEvent.ACTION_BEGIN);
+                            NoteEvent noteEvent = new NoteEvent(keyData.keyNum, NoteEvent.ACTION_BEGIN, eventId);
                             noteEventSource.dispatch(noteEvent);
                             noteQueue.put(eventId, keyData);
                             keyData.keyView.setActivated(true);
@@ -127,11 +129,11 @@ public class ProjectKeyboardFragment extends Fragment {
                     } else if(eventAction == MotionEvent.ACTION_MOVE) {
                         KeyData previous = noteQueue.get(eventId);
                         if(previous != null && previous.keyNum != keyData.keyNum) {
-                            NoteEvent prevEndEvent = new NoteEvent(previous.keyNum, NoteEvent.ACTION_END);
+                            NoteEvent prevEndEvent = new NoteEvent(previous.keyNum, NoteEvent.ACTION_END, eventId);
                             noteEventSource.dispatch(prevEndEvent);
                             previous.keyView.setActivated(false);
                             if(keyData.keyNum != -1) {
-                                NoteEvent noteEvent = new NoteEvent(keyData.keyNum, NoteEvent.ACTION_BEGIN);
+                                NoteEvent noteEvent = new NoteEvent(keyData.keyNum, NoteEvent.ACTION_BEGIN, eventId);
                                 noteEventSource.dispatch(noteEvent);
                                 noteQueue.put(eventId, keyData);
                                 keyData.keyView.setActivated(true);

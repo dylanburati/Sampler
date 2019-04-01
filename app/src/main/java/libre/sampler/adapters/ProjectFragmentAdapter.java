@@ -1,5 +1,7 @@
 package libre.sampler.adapters;
 
+import android.view.ViewGroup;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
@@ -11,11 +13,13 @@ import libre.sampler.publishers.NoteEventSource;
 import libre.sampler.utils.EventSource;
 
 public class ProjectFragmentAdapter extends FragmentPagerAdapter {
+    private final FragmentManager fm;
+
     public ProjectFragmentAdapter(@NonNull FragmentManager fm) {
         super(fm);
+        this.fm = fm;
     }
 
-    private Fragment[] fragments = new Fragment[4];
     public static class PROJECT_FRAGMENTS {
         public static final int INSTRUMENTS = 0;
         public static final int KEYBOARD = 1;
@@ -34,20 +38,18 @@ public class ProjectFragmentAdapter extends FragmentPagerAdapter {
     @NonNull
     @Override
     public Fragment getItem(int position) {
-        if(fragments[position] == null) {
-            switch(position) {
-                case PROJECT_FRAGMENTS.KEYBOARD:
-                    fragments[position] = new ProjectKeyboardFragment();
-                    break;
-                case PROJECT_FRAGMENTS.INSTRUMENTS:
-                case PROJECT_FRAGMENTS.PATTERNS:
-                case PROJECT_FRAGMENTS.SETTINGS:
-                    fragments[position] = new PlaceholderFragment();
-                    break;
-            }
+        switch(position) {
+            case PROJECT_FRAGMENTS.KEYBOARD:
+                return new ProjectKeyboardFragment();
+            case PROJECT_FRAGMENTS.INSTRUMENTS:
+            case PROJECT_FRAGMENTS.PATTERNS:
+            case PROJECT_FRAGMENTS.SETTINGS:
+                return new PlaceholderFragment();
         }
-        return fragments[position];
+        return null;
     }
+
+
 
     @Override
     public int getCount() {
