@@ -71,6 +71,7 @@ public class ProjectActivity extends AppCompatActivity {
                 int indexToFree = (int) x;
                 if(indexToFree >= 0 && indexToFree < pdSampleBindingLen) {
                     pdSampleBindings.set(indexToFree, null);
+                    Log.d("pdReceiver", String.format("voice_free %d", indexToFree));
                 }
             }
         }
@@ -167,8 +168,6 @@ public class ProjectActivity extends AppCompatActivity {
             public void accept(NoteEvent noteEvent) {
                 if(pdService != null) {
                     try {
-                        PdBase.sendFloat("sample_start", 0.769f);
-                        PdBase.sendFloat("sample_end", 7.500f);
                         if(noteEvent.action == NoteEvent.ACTION_BEGIN) {
                             if(!pdService.isRunning()) {
                                 pdService.initAudio(AudioParameters.suggestSampleRate(), 0, 2, 8);
@@ -190,7 +189,7 @@ public class ProjectActivity extends AppCompatActivity {
 //                                PdBase.sendList("note", sampleVoice, pdSampleBindings.get(sampleVoice).keyNum, 0, 0, 0, 0, 0);
                             }
                             pdSampleBindings.set(sampleVoice, new SampleBindingData(noteEvent));
-                            PdBase.sendList("note", sampleVoice, noteEvent.keyNum, 100, 8, 80, 0.75, 320);
+                            PdBase.sendList("note", sampleVoice, noteEvent.keyNum, 100, 8, 80, 0.75, 160, 0);
                         } else if(noteEvent.action == NoteEvent.ACTION_END) {
                             int sampleVoice = 0;
                             while(sampleVoice < pdSampleBindingLen && (pdSampleBindings.get(sampleVoice) == null ||
@@ -201,7 +200,7 @@ public class ProjectActivity extends AppCompatActivity {
                                 return;
                             }
                             if(pdService.isRunning()) {
-                                PdBase.sendList("note",sampleVoice, noteEvent.keyNum, 0, 8, 80, 0.75, 320);
+                                PdBase.sendList("note",sampleVoice, noteEvent.keyNum, 0, 8, 80, 0.75, 160, 0);
                             }
                         }
                     } catch(IOException e) {
@@ -243,6 +242,9 @@ public class ProjectActivity extends AppCompatActivity {
             PdBase.sendBang("dsp");
             PdBase.sendSymbol("sample_file", "sample.wav");
             PdBase.sendFloat("sample_base_pitch", 60);
+            PdBase.sendFloat("sample_start", 0.769f);
+            PdBase.sendFloat("sample_resume", 5.900f);
+            PdBase.sendFloat("sample_end", 7.500f);
         } catch (IOException e) {
             finish();
         } finally {
