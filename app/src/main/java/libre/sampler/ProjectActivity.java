@@ -3,23 +3,18 @@ package libre.sampler;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.util.Consumer;
-import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentActivity;
 import androidx.viewpager.widget.ViewPager;
 import libre.sampler.adapters.ProjectFragmentAdapter;
-import libre.sampler.fragments.ProjectKeyboardFragment;
 import libre.sampler.models.NoteEvent;
 import libre.sampler.publishers.NoteEventSource;
 
 import android.content.ComponentName;
-import android.content.ContextWrapper;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.res.Resources;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.util.Log;
-import android.util.Pair;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Toast;
@@ -31,17 +26,11 @@ import org.puredata.core.PdBase;
 import org.puredata.core.PdReceiver;
 import org.puredata.core.utils.IoUtils;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
-import java.io.PrintWriter;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Scanner;
 
 public class ProjectActivity extends AppCompatActivity {
     private ViewPager pager;
@@ -69,8 +58,8 @@ public class ProjectActivity extends AppCompatActivity {
             // Log.d("pdReceiver", source + String.format(": float %f", x));
             if("voice_free".equals(source)) {
                 int indexToFree = (int) x;
-                if(indexToFree >= 0 && indexToFree < pdSampleBindingLen) {
-                    pdSampleBindings.set(indexToFree, null);
+                if(indexToFree >= 0 && indexToFree < pdVoiceBindingLen) {
+                    pdVoiceBindings.set(indexToFree, null);
                     Log.d("pdReceiver", String.format("voice_free %d", indexToFree));
                 }
             }
@@ -86,6 +75,19 @@ public class ProjectActivity extends AppCompatActivity {
         public void receiveList(String source, Object... args) {
             // makeToast(source + ": list");
             Log.d("pdReceiver", source + ": list");
+
+            if("sample_info".equals(source)) {
+                if(args.length >= 3) {
+                    try {
+                        int sampleIndex = (int)((float) args[0]);
+                        if(sampleIndex >= 0 && sampleIndex <= pdSampleInfoLen) {
+                            pdSampleInfo.set(sampleIndex, (int)((float) args[2]));
+                        }
+                    } catch(ClassCastException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
         }
 
         @Override
@@ -111,11 +113,11 @@ public class ProjectActivity extends AppCompatActivity {
         }
     };
 
-    private class SampleBindingData {
+    private class VoiceBindingData {
         NoteEvent event;
         int eventCount;
 
-        public SampleBindingData(NoteEvent evt) {
+        public VoiceBindingData(NoteEvent evt) {
             this.event = evt;
             this.eventCount = 1;
         }
@@ -129,8 +131,10 @@ public class ProjectActivity extends AppCompatActivity {
         }
     }
 
-    private final int pdSampleBindingLen = 24;
-    private List<SampleBindingData> pdSampleBindings;
+    private final int pdVoiceBindingLen = 96;
+    private List<VoiceBindingData> pdVoiceBindings;
+    private final int pdSampleInfoLen = 48;
+    private List<Integer> pdSampleInfo;
     private File sampleFile;
 
     private void makeToast(final String s) {
@@ -154,9 +158,13 @@ public class ProjectActivity extends AppCompatActivity {
 
         final String name = getResources().getString(R.string.app_name);
         noteEventSource = new NoteEventSource();
-        pdSampleBindings = new ArrayList<>(pdSampleBindingLen);
-        for(int i = 0; i < pdSampleBindingLen; i++) {
-            pdSampleBindings.add(null);
+        pdVoiceBindings = new ArrayList<>(pdVoiceBindingLen);
+        for(int i = 0; i < pdVoiceBindingLen; i++) {
+            pdVoiceBindings.add(null);
+        }
+        pdSampleInfo = new ArrayList<>(pdSampleInfoLen);
+        for(int i = 0; i < pdSampleInfoLen; i++) {
+            pdSampleInfo.add(null);
         }
 
         pager = findViewById(R.id.pager);
@@ -168,39 +176,55 @@ public class ProjectActivity extends AppCompatActivity {
             public void accept(NoteEvent noteEvent) {
                 if(pdService != null) {
                     try {
+                        int sampleIndex = (noteEvent.keyNum < 36 ? 1 : 0);
+                        int basePitch = (noteEvent.keyNum < 36 ? 24 : 60);
+                        float startTime = (noteEvent.keyNum < 36 ? 7.897f : 0.769f);
+                        float resumeTime = (noteEvent.keyNum < 36 ? -1f : 5.900f);
+                        float endTime = (noteEvent.keyNum < 36 ? 8.500f : 7.500f);
+                        Integer sampleRate = pdSampleInfo.get(sampleIndex);
+                        if(sampleRate == null) {
+                            return;
+                        }
+
                         if(noteEvent.action == NoteEvent.ACTION_BEGIN) {
                             if(!pdService.isRunning()) {
                                 pdService.initAudio(AudioParameters.suggestSampleRate(), 0, 2, 8);
                                 pdService.startAudio();
                             }
-                            int sampleVoice = 0;
-                            while(sampleVoice < pdSampleBindingLen && pdSampleBindings.get(sampleVoice) != null) {
-                                sampleVoice++;
+                            int voiceIndex = 0;
+                            while(voiceIndex < pdVoiceBindingLen && pdVoiceBindings.get(voiceIndex) != null) {
+                                voiceIndex++;
                             }
-                            if(sampleVoice >= pdSampleBindingLen) {
+                            if(voiceIndex >= pdVoiceBindingLen) {
                                 return;
-//                                sampleVoice = 0;
-//                                while(sampleVoice < pdSampleBindingLen && pdSampleBindings.get(sampleVoice).keyNum != noteEvent.keyNum) {
-//                                    sampleVoice++;
+//                                voiceIndex = 0;
+//                                while(voiceIndex < pdVoiceBindingLen && pdVoiceBindings.get(voiceIndex).keyNum != noteEvent.keyNum) {
+//                                    voiceIndex++;
 //                                }
-//                                if(sampleVoice >= pdSampleBindingLen) {
+//                                if(voiceIndex >= pdVoiceBindingLen) {
 //                                    return;
 //                                }
-//                                PdBase.sendList("note", sampleVoice, pdSampleBindings.get(sampleVoice).keyNum, 0, 0, 0, 0, 0);
+//                                PdBase.sendList("note", voiceIndex, pdVoiceBindings.get(voiceIndex).keyNum, 0, 0, 0, 0, 0);
                             }
-                            pdSampleBindings.set(sampleVoice, new SampleBindingData(noteEvent));
-                            PdBase.sendList("note", sampleVoice, noteEvent.keyNum, 100, 8, 80, 0.75, 160, 0);
+                            pdVoiceBindings.set(voiceIndex, new VoiceBindingData(noteEvent));
+                            PdBase.sendList("note", voiceIndex, noteEvent.keyNum,
+                                    /*velocity*/   100,
+                                    /*ADSR*/       8, 80, 0.75, 160,
+                                    /*sampleInfo*/ sampleIndex, startTime, resumeTime, endTime, sampleRate, basePitch);
                         } else if(noteEvent.action == NoteEvent.ACTION_END) {
-                            int sampleVoice = 0;
-                            while(sampleVoice < pdSampleBindingLen && (pdSampleBindings.get(sampleVoice) == null ||
-                                    !pdSampleBindings.get(sampleVoice).tryAddEvent(noteEvent))) {
-                                sampleVoice++;
+                            int voiceIndex = 0;
+                            while(voiceIndex < pdVoiceBindingLen && (pdVoiceBindings.get(voiceIndex) == null ||
+                                    !pdVoiceBindings.get(voiceIndex).tryAddEvent(noteEvent))) {
+                                voiceIndex++;
                             }
-                            if(sampleVoice >= pdSampleBindingLen) {
+                            if(voiceIndex >= pdVoiceBindingLen) {
                                 return;
                             }
                             if(pdService.isRunning()) {
-                                PdBase.sendList("note",sampleVoice, noteEvent.keyNum, 0, 8, 80, 0.75, 160, 0);
+                                PdBase.sendList("note", voiceIndex, noteEvent.keyNum,
+                                        /*velocity*/   0,
+                                        /*ADSR*/       8, 80, 0.75, 160,
+                                        /*sampleInfo*/ sampleIndex, startTime, resumeTime, endTime, sampleRate, basePitch);
                             }
                         }
                     } catch(IOException e) {
@@ -225,6 +249,7 @@ public class ProjectActivity extends AppCompatActivity {
         try {
             PdBase.setReceiver(pdReceiver);
             PdBase.subscribe("voice_free");
+            PdBase.subscribe("sample_info");
             InputStream in = res.openRawResource(R.raw.pd_test);
 //            BufferedReader inReader = new BufferedReader(new InputStreamReader(in, StandardCharsets.UTF_8));
 //            patchFile = new File(getCacheDir(), "test.pd");
@@ -235,16 +260,14 @@ public class ProjectActivity extends AppCompatActivity {
 //            }
             patchFile = IoUtils.extractResource(in, "test.pd", getCacheDir());
             PdBase.openPatch(patchFile);
-            InputStream sampleIn = res.openRawResource(R.raw.sample);
-            sampleFile = IoUtils.extractResource(sampleIn, "sample.wav", getCacheDir());
+            InputStream sampleIn0 = res.openRawResource(R.raw.sample);
+            InputStream sampleIn1 = res.openRawResource(R.raw.sample1);
+            IoUtils.extractResource(sampleIn0, "sample.wav", getCacheDir());
+            IoUtils.extractResource(sampleIn1, "sample1.wav", getCacheDir());
             pdService.initAudio(AudioParameters.suggestSampleRate(), 0, 2, 8);
             pdService.startAudio();
-            PdBase.sendBang("dsp");
-            PdBase.sendSymbol("sample_file", "sample.wav");
-            PdBase.sendFloat("sample_base_pitch", 60);
-            PdBase.sendFloat("sample_start", 0.769f);
-            PdBase.sendFloat("sample_resume", 5.900f);
-            PdBase.sendFloat("sample_end", 7.500f);
+            PdBase.sendList("sample_file", 0, "sample.wav");
+            PdBase.sendList("sample_file", 1, "sample1.wav");
         } catch (IOException e) {
             finish();
         } finally {
@@ -270,3 +293,4 @@ public class ProjectActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 }
+
