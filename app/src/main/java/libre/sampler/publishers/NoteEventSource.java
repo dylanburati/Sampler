@@ -8,14 +8,21 @@ import libre.sampler.models.NoteEvent;
 import libre.sampler.utils.EventSource;
 
 public class NoteEventSource implements EventSource<NoteEvent> {
+    private List<String> keys = new ArrayList<>();
     private List<Consumer<NoteEvent>> listeners = new ArrayList<>();
 
     public NoteEventSource() {
     }
 
     @Override
-    public void add(Consumer<NoteEvent> listener) {
-        listeners.add(listener);
+    public void add(String tag, Consumer<NoteEvent> listener) {
+        int replaceIndex = (tag == null ? -1 : keys.indexOf(tag));
+        if(replaceIndex == -1) {
+            keys.add(tag);
+            listeners.add(listener);
+        } else {
+            listeners.set(replaceIndex, listener);
+        }
     }
 
     @Override

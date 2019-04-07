@@ -106,10 +106,7 @@ public class ProjectActivity extends AppCompatActivity {
 
         @Override
         public void onServiceDisconnected(ComponentName name) {
-            if(pdService != null) {
-                pdService.stopAudio();
-                pdService.release();
-            }
+            pdService = null;
         }
     };
 
@@ -135,7 +132,7 @@ public class ProjectActivity extends AppCompatActivity {
     private List<VoiceBindingData> pdVoiceBindings;
     private final int pdSampleInfoLen = 48;
     private List<Integer> pdSampleInfo;
-    private File sampleFile;
+    private int pdPatchHandle;
 
     private void makeToast(final String s) {
         runOnUiThread(new Runnable() {
@@ -156,85 +153,24 @@ public class ProjectActivity extends AppCompatActivity {
             toolbar.setTitle(getIntent().getStringExtra(Intent.EXTRA_TITLE));
         }
 
-        final String name = getResources().getString(R.string.app_name);
-        noteEventSource = new NoteEventSource();
-        pdVoiceBindings = new ArrayList<>(pdVoiceBindingLen);
-        for(int i = 0; i < pdVoiceBindingLen; i++) {
-            pdVoiceBindings.add(null);
-        }
-        pdSampleInfo = new ArrayList<>(pdSampleInfoLen);
-        for(int i = 0; i < pdSampleInfoLen; i++) {
-            pdSampleInfo.add(null);
-        }
+        initNoteEventSource();
+        initUI();
+        initPdService();
+    }
 
+    private void initNoteEventSource() {
+        noteEventSource = new NoteEventSource();
+    }
+
+    private void initUI() {
         pager = findViewById(R.id.pager);
         adapter = new ProjectFragmentAdapter(getSupportFragmentManager());
         pager.setAdapter(adapter);
+    }
 
-        noteEventSource.add(new Consumer<NoteEvent>() {
-            @Override
-            public void accept(NoteEvent noteEvent) {
-                if(pdService != null) {
-                    try {
-                        int sampleIndex = (noteEvent.keyNum < 36 ? 1 : 0);
-                        int basePitch = (noteEvent.keyNum < 36 ? 24 : 60);
-                        float startTime = (noteEvent.keyNum < 36 ? 7.897f : 0.769f);
-                        float resumeTime = (noteEvent.keyNum < 36 ? -1f : 5.900f);
-                        float endTime = (noteEvent.keyNum < 36 ? 8.500f : 7.500f);
-                        Integer sampleRate = pdSampleInfo.get(sampleIndex);
-                        if(sampleRate == null) {
-                            return;
-                        }
-
-                        if(noteEvent.action == NoteEvent.ACTION_BEGIN) {
-                            if(!pdService.isRunning()) {
-                                pdService.initAudio(AudioParameters.suggestSampleRate(), 0, 2, 8);
-                                pdService.startAudio();
-                            }
-                            int voiceIndex = 0;
-                            while(voiceIndex < pdVoiceBindingLen && pdVoiceBindings.get(voiceIndex) != null) {
-                                voiceIndex++;
-                            }
-                            if(voiceIndex >= pdVoiceBindingLen) {
-                                return;
-//                                voiceIndex = 0;
-//                                while(voiceIndex < pdVoiceBindingLen && pdVoiceBindings.get(voiceIndex).keyNum != noteEvent.keyNum) {
-//                                    voiceIndex++;
-//                                }
-//                                if(voiceIndex >= pdVoiceBindingLen) {
-//                                    return;
-//                                }
-//                                PdBase.sendList("note", voiceIndex, pdVoiceBindings.get(voiceIndex).keyNum, 0, 0, 0, 0, 0);
-                            }
-                            pdVoiceBindings.set(voiceIndex, new VoiceBindingData(noteEvent));
-                            PdBase.sendList("note", voiceIndex, noteEvent.keyNum,
-                                    /*velocity*/   100,
-                                    /*ADSR*/       8, 80, 0.75, 160,
-                                    /*sampleInfo*/ sampleIndex, startTime, resumeTime, endTime, sampleRate, basePitch);
-                        } else if(noteEvent.action == NoteEvent.ACTION_END) {
-                            int voiceIndex = 0;
-                            while(voiceIndex < pdVoiceBindingLen && (pdVoiceBindings.get(voiceIndex) == null ||
-                                    !pdVoiceBindings.get(voiceIndex).tryAddEvent(noteEvent))) {
-                                voiceIndex++;
-                            }
-                            if(voiceIndex >= pdVoiceBindingLen) {
-                                return;
-                            }
-                            if(pdService.isRunning()) {
-                                PdBase.sendList("note", voiceIndex, noteEvent.keyNum,
-                                        /*velocity*/   0,
-                                        /*ADSR*/       8, 80, 0.75, 160,
-                                        /*sampleInfo*/ sampleIndex, startTime, resumeTime, endTime, sampleRate, basePitch);
-                            }
-                        }
-                    } catch(IOException e) {
-                        e.printStackTrace();
-                    }
-                } else {
-                    Log.d(name,"Audio service not running");
-                }
-            }
-        });
+    private void initPdService() {
+        final String name = getResources().getString(R.string.app_name);
+        noteEventSource.add("KeyboardNoteEventConsumer", new KeyboardNoteEventConsumer(name));
 
         AudioParameters.init(this);
         PdPreferences.initPreferences(getApplicationContext());
@@ -243,7 +179,29 @@ public class ProjectActivity extends AppCompatActivity {
         startService(serviceIntent);
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if(noteEventSource == null) {
+            initNoteEventSource();
+        }
+        if(adapter == null) {
+            initUI();
+        }
+        if(pdService == null) {
+            initPdService();
+        }
+    }
+
     private void initPd() {
+        pdVoiceBindings = new ArrayList<>(pdVoiceBindingLen);
+        for(int i = 0; i < pdVoiceBindingLen; i++) {
+            pdVoiceBindings.add(null);
+        }
+        pdSampleInfo = new ArrayList<>(pdSampleInfoLen);
+        for(int i = 0; i < pdSampleInfoLen; i++) {
+            pdSampleInfo.add(null);
+        }
         Resources res = getResources();
         File patchFile = null;
         try {
@@ -258,12 +216,14 @@ public class ProjectActivity extends AppCompatActivity {
 //            while((line = inReader.readLine()) != null) {
 //                p.write(line.replace("{{cacheDir}}", getCacheDir().getAbsolutePath()));
 //            }
-            patchFile = IoUtils.extractResource(in, "test.pd", getCacheDir());
-            PdBase.openPatch(patchFile);
-            InputStream sampleIn0 = res.openRawResource(R.raw.sample);
-            InputStream sampleIn1 = res.openRawResource(R.raw.sample1);
-            IoUtils.extractResource(sampleIn0, "sample.wav", getCacheDir());
-            IoUtils.extractResource(sampleIn1, "sample1.wav", getCacheDir());
+            if(!PdBase.exists("voices")) {
+                patchFile = IoUtils.extractResource(in, "test.pd", getCacheDir());
+                pdPatchHandle = PdBase.openPatch(patchFile);
+                InputStream sampleIn0 = res.openRawResource(R.raw.sample);
+                InputStream sampleIn1 = res.openRawResource(R.raw.sample1);
+                IoUtils.extractResource(sampleIn0, "sample.wav", getCacheDir());
+                IoUtils.extractResource(sampleIn1, "sample1.wav", getCacheDir());
+            }
             pdService.initAudio(AudioParameters.suggestSampleRate(), 0, 2, 8);
             pdService.startAudio();
             PdBase.sendList("sample_file", 0, "sample.wav");
@@ -271,8 +231,14 @@ public class ProjectActivity extends AppCompatActivity {
         } catch (IOException e) {
             finish();
         } finally {
-            if (patchFile != null) patchFile.delete();
+            if(patchFile != null) patchFile.delete();
         }
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        pdService.stopAudio();
     }
 
     @Override
@@ -291,6 +257,77 @@ public class ProjectActivity extends AppCompatActivity {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         return super.onOptionsItemSelected(item);
+    }
+
+    private class KeyboardNoteEventConsumer implements Consumer<NoteEvent> {
+        private final String name;
+
+        public KeyboardNoteEventConsumer(String name) {
+            this.name = name;
+        }
+
+        @Override
+        public void accept(NoteEvent noteEvent) {
+            if(pdService != null) {
+                try {
+                    int sampleIndex = (noteEvent.keyNum < 36 ? 1 : 0);
+                    int basePitch = (noteEvent.keyNum < 36 ? 24 : 60);
+                    float startTime = (noteEvent.keyNum < 36 ? 7.897f : 0.769f);
+                    float resumeTime = (noteEvent.keyNum < 36 ? -1f : 5.900f);
+                    float endTime = (noteEvent.keyNum < 36 ? 8.500f : 7.500f);
+                    Integer sampleRate = pdSampleInfo.get(sampleIndex);
+                    if(sampleRate == null) {
+                        return;
+                    }
+
+                    if(noteEvent.action == NoteEvent.ACTION_BEGIN) {
+                        if(!pdService.isRunning()) {
+                            pdService.initAudio(AudioParameters.suggestSampleRate(), 0, 2, 8);
+                            pdService.startAudio();
+                        }
+                        int voiceIndex = 0;
+                        while(voiceIndex < pdVoiceBindingLen && pdVoiceBindings.get(voiceIndex) != null) {
+                            voiceIndex++;
+                        }
+                        if(voiceIndex >= pdVoiceBindingLen) {
+                            return;
+//                                voiceIndex = 0;
+//                                while(voiceIndex < pdVoiceBindingLen && pdVoiceBindings.get(voiceIndex).keyNum != noteEvent.keyNum) {
+//                                    voiceIndex++;
+//                                }
+//                                if(voiceIndex >= pdVoiceBindingLen) {
+//                                    return;
+//                                }
+//                                PdBase.sendList("note", voiceIndex, pdVoiceBindings.get(voiceIndex).keyNum, 0, 0, 0, 0, 0);
+                        }
+                        pdVoiceBindings.set(voiceIndex, new VoiceBindingData(noteEvent));
+                        PdBase.sendList("note", voiceIndex, noteEvent.keyNum,
+                                /*velocity*/   100,
+                                /*ADSR*/       8, 80, 0.75, 160,
+                                /*sampleInfo*/ sampleIndex, startTime, resumeTime, endTime, sampleRate, basePitch);
+                    } else if(noteEvent.action == NoteEvent.ACTION_END) {
+                        int voiceIndex = 0;
+                        while(voiceIndex < pdVoiceBindingLen && (pdVoiceBindings.get(voiceIndex) == null ||
+                                !pdVoiceBindings.get(voiceIndex).tryAddEvent(noteEvent))) {
+                            voiceIndex++;
+                        }
+                        if(voiceIndex >= pdVoiceBindingLen) {
+                            return;
+                        }
+                        if(pdService.isRunning()) {
+                            PdBase.sendList("note", voiceIndex, noteEvent.keyNum,
+                                    /*velocity*/   0,
+                                    /*ADSR*/       8, 80, 0.75, 160,
+                                    /*sampleInfo*/ sampleIndex, startTime, resumeTime, endTime, sampleRate, basePitch);
+                        }
+                    }
+                } catch(IOException e) {
+                    e.printStackTrace();
+                }
+            } else {
+                Log.d(name,"Audio service not running");
+            }
+        }
     }
 }
 

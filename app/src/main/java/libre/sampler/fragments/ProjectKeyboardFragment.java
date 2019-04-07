@@ -81,7 +81,7 @@ public class ProjectKeyboardFragment extends Fragment {
         pianoContainer = rootView.findViewById(R.id.piano_container);
         noteEventSource = ((ProjectActivity) Objects.requireNonNull(getActivity())).noteEventSource;
 
-        noteEventSource.add(new Consumer<NoteEvent>() {
+        noteEventSource.add("logger", new Consumer<NoteEvent>() {
             @Override
             public void accept(NoteEvent noteEvent) {
                 Log.d("ProjectKeyboardFragment", String.format("noteEvent: keynum=%d action=%d", noteEvent.keyNum, noteEvent.action));
