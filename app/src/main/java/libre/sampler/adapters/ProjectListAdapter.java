@@ -14,11 +14,17 @@ import androidx.recyclerview.widget.RecyclerView;
 import libre.sampler.R;
 import libre.sampler.listeners.StatefulClickListener;
 import libre.sampler.models.Project;
+import libre.sampler.utils.AdapterLoader;
 
-public class ProjectListAdapter extends RecyclerView.Adapter<ProjectListAdapter.ViewHolder> {
+public class ProjectListAdapter extends RecyclerView.Adapter<ProjectListAdapter.ViewHolder> implements AdapterLoader.Loadable<Project> {
     public List<Project> items;
     private Consumer<Project> clickPostHook;
     public boolean autoScrollOnInsert = false;  // todo
+
+    @Override
+    public List<Project> items() {
+        return items;
+    }
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
         private LinearLayout rootView;
@@ -41,7 +47,7 @@ public class ProjectListAdapter extends RecyclerView.Adapter<ProjectListAdapter.
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         LinearLayout v = (LinearLayout) LayoutInflater.from(parent.getContext())
-                .inflate(R.layout.component_list_tile, parent, false);
+                .inflate(R.layout.component_project_list_tile, parent, false);
         return new ViewHolder(v);
     }
 
@@ -63,41 +69,5 @@ public class ProjectListAdapter extends RecyclerView.Adapter<ProjectListAdapter.
         return this.items.size();
     }
 
-    public void insertItem(Project e) {
-        int insertIdx = this.items.size();
-        this.insertItem(insertIdx, e);
-    }
 
-    public void insertItem(int insertIdx, Project e) {
-        this.items.add(insertIdx, e);
-        this.notifyItemInserted(insertIdx);
-    }
-
-    public void insertAll(List<Project> e) {
-        int insertIdx = this.items.size();
-        this.insertAll(insertIdx, e);
-    }
-
-    public void insertAll(int insertIdx, List<Project> e) {
-        this.items.addAll(insertIdx, e);
-        this.notifyItemRangeInserted(insertIdx, e.size());
-    }
-
-    public void removeItem(int removeIdx) {
-        this.items.remove(removeIdx);
-        this.notifyItemRemoved(removeIdx);
-    }
-
-    public void clear() {
-        int removeLen = this.items.size();
-        this.items.clear();
-        this.notifyItemRangeRemoved(0, removeLen);
-    }
-
-    public void removeRange(int removeIdx, int removeLen) {
-        for(int i = 0; i < removeLen; i++) {
-            this.items.remove(removeIdx);
-        }
-        this.notifyItemRangeRemoved(removeIdx, removeLen);
-    }
 }
