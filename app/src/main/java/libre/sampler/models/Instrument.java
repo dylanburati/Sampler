@@ -4,11 +4,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Instrument {
+    public String name;
     public int id;
     public List<SampleZone> sampleZones = new ArrayList<>();
     public List<Sample> samples = new ArrayList<>();
 
-    public Instrument() {
+    public Instrument(String name) {
+        this.name = name;
     }
 
     public Sample addSample(SampleZone sz) {

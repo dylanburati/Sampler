@@ -22,7 +22,6 @@ public class ProjectCreateDialog extends DialogFragment {
     private ProjectCreateDialogListener listener;
     private EditText nameInputView;
 
-
     @Override
     public void onAttach(@NonNull Context context) {
         super.onAttach(context);

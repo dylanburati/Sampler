@@ -142,7 +142,7 @@ public class ProjectActivity extends AppCompatActivity {
     }
 
     private void initInstrument() {
-        Instrument t = new Instrument();
+        Instrument t = new Instrument("Default");
         project.addInstrument(t);
         Sample s0 = t.addSample(new SampleZone(36, 128, 0, 128));
         s0.setFilename("sample.wav");

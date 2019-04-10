@@ -17,6 +17,7 @@ import libre.sampler.dialogs.ProjectCreateDialog;
 import libre.sampler.listeners.MySwipeRefreshListener;
 import libre.sampler.models.Project;
 import libre.sampler.tasks.GetProjectsTask;
+import libre.sampler.utils.AdapterLoader;
 import libre.sampler.utils.DatabaseConnectionManager;
 
 import android.os.Parcelable;
@@ -76,7 +77,7 @@ public class MainActivity extends AppCompatActivity implements ProjectCreateDial
         DatabaseConnectionManager.runTask(new GetProjectsTask(new Consumer<List<Project>>() {
             @Override
             public void accept(List<Project> projects) {
-                dataAdapter.insertAll(projects);
+                AdapterLoader.insertAll(dataAdapter, projects);
                 dataAdapter.autoScrollOnInsert = true;
             }
         }));
@@ -101,7 +102,7 @@ public class MainActivity extends AppCompatActivity implements ProjectCreateDial
                     dao.deleteAll();
                 }
             });
-            dataAdapter.clear();
+            AdapterLoader.clear(dataAdapter);
         }
         return super.onOptionsItemSelected(item);
     }
@@ -117,6 +118,6 @@ public class MainActivity extends AppCompatActivity implements ProjectCreateDial
                 dao.insertAll(toAdd);
             }
         });
-        this.dataAdapter.insertItem(0, toAdd);
+        AdapterLoader.insertItem(this.dataAdapter, 0, toAdd);
     }
 }

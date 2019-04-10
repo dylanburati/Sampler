@@ -8,6 +8,7 @@ import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentPagerAdapter;
 import libre.sampler.fragments.PlaceholderFragment;
+import libre.sampler.fragments.ProjectInstrumentsFragment;
 import libre.sampler.fragments.ProjectKeyboardFragment;
 import libre.sampler.publishers.NoteEventSource;
 import libre.sampler.utils.EventSource;
@@ -39,9 +40,10 @@ public class ProjectFragmentAdapter extends FragmentPagerAdapter {
     @Override
     public Fragment getItem(int position) {
         switch(position) {
+            case PROJECT_FRAGMENTS.INSTRUMENTS:
+                return new ProjectInstrumentsFragment();
             case PROJECT_FRAGMENTS.KEYBOARD:
                 return new ProjectKeyboardFragment();
-            case PROJECT_FRAGMENTS.INSTRUMENTS:
             case PROJECT_FRAGMENTS.PATTERNS:
             case PROJECT_FRAGMENTS.SETTINGS:
                 return new PlaceholderFragment();

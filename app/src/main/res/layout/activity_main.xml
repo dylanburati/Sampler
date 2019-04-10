@@ -37,7 +37,7 @@
         android:layout_below="@id/toolbar"
         app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
-        <RelativeLayout
+        <LinearLayout
             android:id="@+id/main_holder"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -52,7 +52,7 @@
                 app:layoutManager="libre.sampler.views.ListLayoutManager">
 
             </androidx.recyclerview.widget.RecyclerView>
-        </RelativeLayout>
+        </LinearLayout>
 
     </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 
