@@ -92,7 +92,7 @@ public class MainActivity extends AppCompatActivity implements ProjectCreateDial
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         if(item.getItemId() == R.id.appbar_create) {
-            new ProjectCreateDialog().show(getSupportFragmentManager(), "dialog_create");
+            new ProjectCreateDialog().show(getSupportFragmentManager(), "dialog_project_create");
             return true;
         } else if(item.getItemId() == R.id.appbar_delete) {
             final ProjectDao dao = DatabaseConnectionManager.getInstance(this).projectDao();

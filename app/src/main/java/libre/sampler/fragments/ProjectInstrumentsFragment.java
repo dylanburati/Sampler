@@ -1,5 +1,6 @@
 package libre.sampler.fragments;
 
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
@@ -15,11 +16,13 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.util.Consumer;
 import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
 import androidx.recyclerview.widget.RecyclerView;
 import libre.sampler.ProjectActivity;
 import libre.sampler.R;
 import libre.sampler.adapters.InstrumentListAdapter;
 import libre.sampler.adapters.ProjectListAdapter;
+import libre.sampler.dialogs.InstrumentCreateDialog;
 import libre.sampler.models.Instrument;
 import libre.sampler.models.Project;
 
@@ -42,14 +45,33 @@ public class ProjectInstrumentsFragment extends Fragment {
         // tmp>
 
         this.data = (RecyclerView) rootView.findViewById(R.id.instruments_data);
-        this.dataAdapter = new InstrumentListAdapter(structuredData, new Consumer<Instrument>() {
-            @Override
-            public void accept(Instrument instrument) {
-                Log.d("InstrumentListAdapter", "" + instrument.name + " clicked");
-            }
-        });
+        this.dataAdapter = new InstrumentListAdapter(structuredData,
+                new InstrumentEditConsumer(), new InstrumentCreateRunnable(this));
         data.setAdapter(this.dataAdapter);
 
         return rootView;
+    }
+
+    private static class InstrumentEditConsumer implements Consumer<Instrument> {
+        @Override
+        public void accept(Instrument instrument) {
+            Log.d("InstrumentListAdapter", "" + instrument.name + " clicked");
+        }
+    }
+
+    private static class InstrumentCreateRunnable implements Runnable {
+        private final Fragment ctx;
+
+        public InstrumentCreateRunnable(Fragment ctx) {
+            this.ctx = ctx;
+        }
+
+        @Override
+        public void run() {
+            FragmentManager fm = ctx.getFragmentManager();
+            if(fm != null) {
+                new InstrumentCreateDialog().show(fm, "dialog_instrument_create");
+            }
+        }
     }
 }

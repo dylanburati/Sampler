@@ -33,8 +33,8 @@ public class ProjectListAdapter extends RecyclerView.Adapter<ProjectListAdapter.
         public ViewHolder(LinearLayout v) {
             super(v);
             rootView = v;
-            nameTextView = (TextView) v.getChildAt(0);
-            mtimeTextView = (TextView) v.getChildAt(1);
+            nameTextView = (TextView) v.findViewById(R.id.text);
+            mtimeTextView = (TextView) v.findViewById(R.id.mtime);
         }
     }
 

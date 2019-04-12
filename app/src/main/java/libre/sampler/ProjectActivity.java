@@ -144,20 +144,18 @@ public class ProjectActivity extends AppCompatActivity {
     private void initInstrument() {
         Instrument t = new Instrument("Default");
         project.addInstrument(t);
-        Sample s0 = t.addSample(new SampleZone(36, 128, 0, 128));
-        s0.setFilename("sample.wav");
+        Sample s0 = t.addSample("sample.wav", new SampleZone(36, 128, 0, 128));
         s0.setBasePitch(60);
         s0.setLoop(0.769f, 5.900f, 7.500f);
         s0.setEnvelope(8, 80, 0.75f, 160);
 
-        Sample s1 = t.addSample(new SampleZone(0, 35, 0, 128));
-        s1.setFilename("sample1.wav");
+        Sample s1 = t.addSample("sample1.wav", new SampleZone(0, 35, 0, 128));
         s1.setBasePitch(24);
         s1.setLoop(7.894f, -1f, 8.500f);
         s1.setEnvelope(1, 240, 0.0f, 0);
 
-        PdBase.sendList("sample_file", s0.id, s0.filename);
-        PdBase.sendList("sample_file", s1.id, s1.filename);
+        PdBase.sendList("sample_file", s0.sampleIndex, s0.filename);
+        PdBase.sendList("sample_file", s1.sampleIndex, s1.filename);
     }
 
     @Override
@@ -200,7 +198,7 @@ public class ProjectActivity extends AppCompatActivity {
                         return;
                     }
                     Sample s = samples.get(0);
-                    if(!s.loaded) {
+                    if(!s.isLoaded) {
                         return;
                     }
 
@@ -216,7 +214,7 @@ public class ProjectActivity extends AppCompatActivity {
                         PdBase.sendList("note", voiceIndex, noteEvent.keyNum,
                                 /*velocity*/   noteEvent.velocity,
                                 /*ADSR*/       s.attack, s.decay, s.sustain, s.release,
-                                /*sampleInfo*/ s.id, s.startTime, s.resumeTime, s.endTime, s.sampleRate, s.basePitch);
+                                /*sampleInfo*/ s.sampleIndex, s.startTime, s.resumeTime, s.endTime, s.sampleRate, s.basePitch);
                     } else if(noteEvent.action == NoteEvent.ACTION_END) {
                         int voiceIndex = pdVoiceBindings.closeEvent(noteEvent);
                         if(voiceIndex == -1) {
@@ -226,7 +224,7 @@ public class ProjectActivity extends AppCompatActivity {
                             PdBase.sendList("note", voiceIndex, noteEvent.keyNum,
                                     /*velocity*/   0,
                                     /*ADSR*/       s.attack, s.decay, s.sustain, s.release,
-                                    /*sampleInfo*/ s.id, s.startTime, s.resumeTime, s.endTime, s.sampleRate, s.basePitch);
+                                    /*sampleInfo*/ s.sampleIndex, s.startTime, s.resumeTime, s.endTime, s.sampleRate, s.basePitch);
                         }
                     }
                 } catch(IOException e) {
@@ -270,8 +268,8 @@ public class ProjectActivity extends AppCompatActivity {
                     try {
                         int sampleIndex = (int)((float) args[0]);
                         Sample s = project.instruments.get(0).samples.get(sampleIndex);
-                        s.sampleRate = (int)((float) args[2]);
-                        s.loaded = true;
+                        s.setSampleInfo((int)((float) args[args.length - 1]), (int)((float) args[2]));
+                        s.isLoaded = true;
                         Log.d("pdReciever", String.format("sample_info index=%d rate=%d", sampleIndex, s.sampleRate));
                     } catch(ClassCastException e) {
                         e.printStackTrace();

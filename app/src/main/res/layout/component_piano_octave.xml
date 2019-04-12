@@ -48,20 +48,20 @@
 
 
     <View
-    android:id="@+id/piano_g"
-    android:layout_width="@dimen/piano_keywidth_w1"
-    android:layout_height="@dimen/piano_height"
-    android:layout_alignTop="@id/piano_c"
-    android:layout_toRightOf="@id/piano_f"
-    android:background="@drawable/piano_g" />
+        android:id="@+id/piano_g"
+        android:layout_width="@dimen/piano_keywidth_w1"
+        android:layout_height="@dimen/piano_height"
+        android:layout_alignTop="@id/piano_c"
+        android:layout_toRightOf="@id/piano_f"
+        android:background="@drawable/piano_g" />
 
     <View
-    android:id="@+id/piano_a"
-    android:layout_width="@dimen/piano_keywidth_w1"
-    android:layout_height="@dimen/piano_height"
-    android:layout_alignTop="@id/piano_c"
-    android:layout_toRightOf="@id/piano_g"
-    android:background="@drawable/piano_a" />
+        android:id="@+id/piano_a"
+        android:layout_width="@dimen/piano_keywidth_w1"
+        android:layout_height="@dimen/piano_height"
+        android:layout_alignTop="@id/piano_c"
+        android:layout_toRightOf="@id/piano_g"
+        android:background="@drawable/piano_a" />
 
     <View
         android:id="@+id/piano_b"

@@ -11,23 +11,23 @@
     android:paddingRight="@dimen/margin3">
 
     <TextView
-        android:id="@+id/dialog_create_title"
+        android:id="@+id/title"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginBottom="@dimen/margin2"
         android:layout_marginLeft="@dimen/margin1"
-        android:text="@string/dialog_create_title"
+        android:text="@string/dialog_project_create_title"
         android:textSize="@dimen/title"
         app:fontFamily="sans-serif-medium"
         android:layout_marginStart="@dimen/margin1" />
 
     <EditText
-        android:id="@+id/dialog_create_input_name"
+        android:id="@+id/input_name"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:ems="10"
         android:inputType="textPersonName"
-        android:hint="@string/dialog_create_name_hint" />
+        android:hint="@string/name_hint" />
 
 
 </LinearLayout>

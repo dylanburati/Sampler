@@ -1,6 +1,7 @@
 package libre.sampler.adapters;
 
 import android.content.res.Resources;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -15,12 +16,12 @@ import androidx.recyclerview.widget.RecyclerView;
 import libre.sampler.R;
 import libre.sampler.listeners.StatefulClickListener;
 import libre.sampler.models.Instrument;
-import libre.sampler.models.Project;
 import libre.sampler.utils.AdapterLoader;
 
 public class InstrumentListAdapter extends RecyclerView.Adapter<InstrumentListAdapter.ViewHolder> implements AdapterLoader.Loadable<Instrument> {
     public List<Instrument> items;
-    private Consumer<Instrument> clickPostHook;
+    private Consumer<Instrument> editPostHook;
+    private Runnable createPostHook;
     public boolean autoScrollOnInsert = false;  // todo
 
     @Override
@@ -36,15 +37,16 @@ public class InstrumentListAdapter extends RecyclerView.Adapter<InstrumentListAd
         public ViewHolder(LinearLayout v) {
             super(v);
             rootView = v;
-            iconAddView = v.getChildAt(0);
-            nameTextView = (TextView) v.getChildAt(1);
+            iconAddView = v.findViewById(R.id.icon_add);
+            nameTextView = (TextView) v.findViewById(R.id.text);
         }
     }
 
-    public InstrumentListAdapter(List<Instrument> items, Consumer<Instrument> clickPostHook) {
+    public InstrumentListAdapter(List<Instrument> items, Consumer<Instrument> editPostHook, Runnable createPostHook) {
         items.add(0, null);
         this.items = items;
-        this.clickPostHook = clickPostHook;
+        this.editPostHook = editPostHook;
+        this.createPostHook = createPostHook;
     }
 
     @NonNull
@@ -57,18 +59,27 @@ public class InstrumentListAdapter extends RecyclerView.Adapter<InstrumentListAd
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
+        Resources res = holder.rootView.getResources();
         if(position == 0) {
-            Resources res = holder.rootView.getResources();
             holder.iconAddView.setVisibility(View.VISIBLE);
             holder.rootView.setPadding((int) res.getDimension(R.dimen.margin3), holder.rootView.getPaddingTop(),
                     (int) res.getDimension(R.dimen.margin3), holder.rootView.getPaddingBottom());
             holder.nameTextView.setText(R.string.instrument_create);
+            holder.rootView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    createPostHook.run();
+                }
+            });
         } else {
             Instrument item = items.get(position);
+            holder.iconAddView.setVisibility(View.GONE);
+            holder.rootView.setPadding((int) res.getDimension(R.dimen.margin4), holder.rootView.getPaddingTop(),
+                    (int) res.getDimension(R.dimen.margin4), holder.rootView.getPaddingBottom());
             holder.rootView.setOnClickListener(new StatefulClickListener<Instrument>(item) {
                 @Override
                 public void onClick(View v) {
-                    clickPostHook.accept(this.data);
+                    editPostHook.accept(this.data);
                 }
             });
             holder.nameTextView.setText(item.name);

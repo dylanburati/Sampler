@@ -3,6 +3,8 @@ package libre.sampler.models;
 public class Sample {
     public int id;
     public String filename;
+    public int sampleIndex;
+    public int sampleLength;
     public int sampleRate;
 
     public float attack;
@@ -16,17 +18,17 @@ public class Sample {
     public float resumeTime;
     public float endTime;
 
-    public boolean loaded = false;
+    public boolean isLoaded = false;
+    public boolean isLoopConfigured = false;
 
-    public Sample(int id) {
+    public Sample(String filename, int sampleIndex, int id) {
+        this.filename = filename;
+        this.sampleIndex = sampleIndex;
         this.id = id;
     }
 
-    public void setFilename(String filename) {
-        this.filename = filename;
-    }
-
-    public void setSampleRate(int sampleRate) {
+    public void setSampleInfo(int sampleLength, int sampleRate) {
+        this.sampleLength = sampleLength;
         this.sampleRate = sampleRate;
     }
 
@@ -45,5 +47,17 @@ public class Sample {
         this.startTime = startTime;
         this.resumeTime = resumeTime;
         this.endTime = endTime;
+        this.isLoopConfigured = true;
+    }
+
+    public boolean setDefaultLoop() {
+        if(!this.isLoaded) {
+            return false;
+        }
+        this.startTime = 0;
+        this.resumeTime = -1;
+        this.endTime = sampleLength / 1.0f / sampleRate;
+        this.isLoopConfigured = true;
+        return true;
     }
 }
