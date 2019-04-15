@@ -11,6 +11,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 
+import java.io.File;
 import java.util.ArrayList;
 
 import androidx.annotation.NonNull;
@@ -19,24 +20,30 @@ import androidx.fragment.app.DialogFragment;
 import androidx.recyclerview.widget.RecyclerView;
 import libre.sampler.R;
 import libre.sampler.adapters.SampleListAdapter;
+import libre.sampler.models.Instrument;
 import libre.sampler.models.Sample;
 import libre.sampler.utils.AdapterLoader;
 
 public class InstrumentCreateDialog extends DialogFragment {
-    @Override
-    public void onAttach(@NonNull Context context) {
-        super.onAttach(context);
-    }
-
     private EditText nameInputView;
+
     private EditText sampleInputView;
     private Button sampleAddButton;
     private RecyclerView sampleData;
     private SampleListAdapter sampleDataAdapter;
+    private Instrument toCreate;
+    private InstrumentCreateDialogListener listener;
+
+    @Override
+    public void onAttach(@NonNull Context context) {
+        super.onAttach(context);
+        listener = (InstrumentCreateDialogListener) context;
+    }
 
     @NonNull
     @Override
     public Dialog onCreateDialog(@Nullable Bundle savedInstanceState) {
+        toCreate = new Instrument(null);
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
         LayoutInflater inflater = LayoutInflater.from(requireActivity());
         LinearLayout rootView = (LinearLayout) inflater.inflate(R.layout.dialog_instrument_create, null);
@@ -49,7 +56,11 @@ public class InstrumentCreateDialog extends DialogFragment {
         sampleAddButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                AdapterLoader.insertItem(sampleDataAdapter, null);
+                File sampleFile = new File(sampleInputView.getText().toString());
+                // todo support wildcard search: File.listFiles
+                if(sampleFile.isFile() && sampleFile.canRead()) {
+                    AdapterLoader.insertItem(sampleDataAdapter, new Sample(sampleFile.getAbsolutePath(), -1, -1));
+                }
             }
         });
 
@@ -57,7 +68,16 @@ public class InstrumentCreateDialog extends DialogFragment {
                 .setPositiveButton(R.string.dialog_project_create_submit, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        // if(listener != null) listener.onSubmitProjectCreate(nameInputView.getText().toString());
+                        String name = nameInputView.getText().toString();
+                        toCreate.name = name;
+
+                        for(Sample s : sampleDataAdapter.items) {
+                            if(s == null) {
+                                continue;
+                            }
+                            toCreate.addSample(s);
+                        }
+                        if(listener != null) listener.onInstrumentCreate(toCreate);
                         dialog.dismiss();
                     }
                 })
@@ -69,5 +89,9 @@ public class InstrumentCreateDialog extends DialogFragment {
                 });
 
         return builder.create();
+    }
+
+    public interface InstrumentCreateDialogListener {
+        public void onInstrumentCreate(Instrument instrument);
     }
 }

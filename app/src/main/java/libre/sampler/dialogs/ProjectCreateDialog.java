@@ -16,7 +16,7 @@ import libre.sampler.R;
 
 public class ProjectCreateDialog extends DialogFragment {
     public interface ProjectCreateDialogListener {
-        public void onSubmitProjectCreate(String projectName);
+        public void onProjectCreate(String projectName);
     }
 
     private ProjectCreateDialogListener listener;
@@ -39,7 +39,7 @@ public class ProjectCreateDialog extends DialogFragment {
                 .setPositiveButton(R.string.dialog_project_create_submit, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        if(listener != null) listener.onSubmitProjectCreate(nameInputView.getText().toString());
+                        if(listener != null) listener.onProjectCreate(nameInputView.getText().toString());
                         dialog.dismiss();
                     }
                 })

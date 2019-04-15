@@ -25,29 +25,23 @@ import libre.sampler.adapters.ProjectListAdapter;
 import libre.sampler.dialogs.InstrumentCreateDialog;
 import libre.sampler.models.Instrument;
 import libre.sampler.models.Project;
+import libre.sampler.utils.AdapterLoader;
 
 public class ProjectInstrumentsFragment extends Fragment {
     private RecyclerView data;
-    private InstrumentListAdapter dataAdapter;
+    private Project project;
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_project_instruments, container, false);
 
-        // tmp
-        List<String> inputData = new ArrayList<>();
-        List<Instrument> structuredData = new ArrayList<>();
-        Collections.addAll(inputData,"Anaconda3", "Android", "Autodesk", "Blender Foundation", "Bonjour", "Common Files", "Dell", "Docker", "GIMP 2", "Goodix", "Intel", "Java", "JetBrains", "Killer Networking", "Linux Containers", "MATLAB", "Microsoft Office 15", "Microsoft SQL Server", "Microsoft Visual Studio 10.0", "Microsoft.NET", "MiKTeX 2.9", "Mozilla Firefox", "MSBuild", "NVIDIA Corporation", "Oracle", "Reference Assemblies", "Shotcut", "SOLIDWORKS Corp", "VideoLAN", "VMware", "WindowsPowerShell");
-        for(String s : inputData) {
-            structuredData.add(new Instrument(s));
-        }
-        // tmp>
-
         this.data = (RecyclerView) rootView.findViewById(R.id.instruments_data);
-        this.dataAdapter = new InstrumentListAdapter(structuredData,
-                new InstrumentEditConsumer(), new InstrumentCreateRunnable(this));
-        data.setAdapter(this.dataAdapter);
+        InstrumentListAdapter adapter = new InstrumentListAdapter(new ArrayList<Instrument>(),
+                new InstrumentEditConsumer(), new InstrumentSelectConsumer(), new InstrumentCreateRunnable(this));
+        data.setAdapter(adapter);
+        ((ProjectActivity) getActivity()).instrumentListAdapter = adapter;
+        project = ((ProjectActivity) getActivity()).project;
 
         return rootView;
     }
@@ -72,6 +66,13 @@ public class ProjectInstrumentsFragment extends Fragment {
             if(fm != null) {
                 new InstrumentCreateDialog().show(fm, "dialog_instrument_create");
             }
+        }
+    }
+
+    private class InstrumentSelectConsumer implements Consumer<Instrument> {
+        @Override
+        public void accept(Instrument instrument) {
+            project.setActiveInstrument(instrument);
         }
     }
 }

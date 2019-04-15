@@ -28,4 +28,5 @@
     <string name="label_envelope">Envelope (ms, ms, dB, ms)</string>
     <string name="sample_remove_button">Remove</string>
     <string name="base">Base</string>
+    <string name="new_instrument">New instrument</string>
 </resources>

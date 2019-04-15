@@ -22,6 +22,7 @@ import libre.sampler.ProjectActivity;
 import libre.sampler.R;
 import libre.sampler.adapters.PianoAdapter;
 import libre.sampler.models.NoteEvent;
+import libre.sampler.publishers.InstrumentEventSource;
 import libre.sampler.publishers.NoteEventSource;
 
 public class ProjectKeyboardFragment extends Fragment {

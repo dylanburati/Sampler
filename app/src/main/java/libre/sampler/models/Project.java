@@ -13,6 +13,8 @@ import androidx.room.ColumnInfo;
 import androidx.room.Entity;
 import androidx.room.Ignore;
 import androidx.room.PrimaryKey;
+import libre.sampler.R;
+import libre.sampler.publishers.InstrumentEventSource;
 
 @Entity(tableName = "project")
 public class Project implements Parcelable {
@@ -29,6 +31,10 @@ public class Project implements Parcelable {
     private static final int SAMPLES_PER_INSTRUMENT = 24;
     @Ignore
     public List<Instrument> instruments;
+    @Ignore
+    private int activeIdx;
+    @Ignore
+    public InstrumentEventSource instrumentEventSource;
 
     public Project(int id, String name, Long mtime) {
         this.id = id;
@@ -36,6 +42,7 @@ public class Project implements Parcelable {
         if(mtime != null) this.mtime = mtime;
 
         this.instruments = new ArrayList<>();
+        this.instrumentEventSource = new InstrumentEventSource();
     }
 
     public String getRelativeTime() {
@@ -55,6 +62,7 @@ public class Project implements Parcelable {
         mtime = in.readLong();
 
         this.instruments = new ArrayList<>();
+        this.instrumentEventSource = new InstrumentEventSource();
     }
 
     @Override
@@ -82,20 +90,56 @@ public class Project implements Parcelable {
     };
 
     public int addInstrument(Instrument e) {
+        boolean uniqueName = checkName(e);
+        int suffix = 1;
+        String origName = e.name;
+        while(!uniqueName) {
+            e.name = String.format("%s (%d)", origName, suffix);
+            uniqueName = checkName(e);
+        }
         int insertIdx = instruments.size();
         instruments.add(insertIdx, e);
         return insertIdx;
     }
 
-    public List<Sample> getSamples(int instrumentIdx, NoteEvent event) {
-        Instrument instrument = this.instruments.get(instrumentIdx);
-        List<Sample> retval = new ArrayList<>(1);
+    public List<Sample> getSamples(NoteEvent event) {
+        return getSamples(getActiveInstrument(), event);
+    }
+
+    public List<Sample> getSamples(Instrument instrument, NoteEvent event) {
+        List<Sample> retval = new ArrayList<>(10);
         for(int i = 0; i < instrument.samples.size(); i++) {
-            if(instrument.sampleZones.get(i).contains(event)) {
+            if(instrument.samples.get(i).contains(event)) {
                 retval.add(instrument.samples.get(i));
-                return retval;  // todo allow multiple samples per event
+                // return retval;  // omitted to allow multiple samples per event
             }
         }
         return retval;
+    }
+
+    public boolean checkName(Instrument e) {
+        if(e.name == null || e.name.isEmpty()) {
+            e.name = "New instrument";
+        }
+        for(Instrument t : instruments) {
+            if(e.name.equals(t.name)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public Instrument getActiveInstrument() {
+        return this.instruments.get(activeIdx);
+    }
+
+    public void setActiveInstrument(Instrument t) {
+        int idx = this.instruments.indexOf(t);
+        if(idx == -1) {
+            idx = addInstrument(t);
+        }
+        activeIdx = idx;
+
+        instrumentEventSource.dispatch(t);
     }
 }

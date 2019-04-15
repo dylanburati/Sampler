@@ -4,13 +4,15 @@ import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.util.Consumer;
 import androidx.viewpager.widget.ViewPager;
+import libre.sampler.adapters.InstrumentListAdapter;
 import libre.sampler.adapters.ProjectFragmentAdapter;
+import libre.sampler.dialogs.InstrumentCreateDialog;
 import libre.sampler.models.Instrument;
 import libre.sampler.models.NoteEvent;
 import libre.sampler.models.Project;
 import libre.sampler.models.Sample;
-import libre.sampler.models.SampleZone;
 import libre.sampler.publishers.NoteEventSource;
+import libre.sampler.utils.AdapterLoader;
 import libre.sampler.utils.VoiceBindingList;
 
 import android.content.ComponentName;
@@ -35,7 +37,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 
-public class ProjectActivity extends AppCompatActivity {
+public class ProjectActivity extends AppCompatActivity implements InstrumentCreateDialog.InstrumentCreateDialogListener {
     public static final String TAG_EXTRA_PROJECT = "libre.sampler.tags.EXTRA_PROJECT";
 
     private ViewPager pager;
@@ -57,11 +59,12 @@ public class ProjectActivity extends AppCompatActivity {
         }
     };
 
-    private Project project;
+    public Project project;
 
     private final int pdVoiceBindingLen = 96;
     private VoiceBindingList pdVoiceBindings;
     private int pdPatchHandle;
+    public InstrumentListAdapter instrumentListAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -126,36 +129,22 @@ public class ProjectActivity extends AppCompatActivity {
             if(!PdBase.exists("voices")) {
                 patchFile = IoUtils.extractResource(in, "test.pd", getCacheDir());
                 pdPatchHandle = PdBase.openPatch(patchFile);
-                InputStream sampleIn0 = res.openRawResource(R.raw.sample);
-                InputStream sampleIn1 = res.openRawResource(R.raw.sample1);
-                IoUtils.extractResource(sampleIn0, "sample.wav", getCacheDir());
-                IoUtils.extractResource(sampleIn1, "sample1.wav", getCacheDir());
             }
             pdService.initAudio(AudioParameters.suggestSampleRate(), 0, 2, 8);
             pdService.startAudio();
-            initInstrument();
+            project.instrumentEventSource.add("keyboard", new Consumer<Instrument>() {
+                @Override
+                public void accept(Instrument instrument) {
+                    for(Sample s : instrument.samples) {
+                        PdBase.sendList("sample_file", s.sampleIndex, s.filename);
+                    }
+                }
+            });
         } catch (IOException e) {
             finish();
         } finally {
             if(patchFile != null) patchFile.delete();
         }
-    }
-
-    private void initInstrument() {
-        Instrument t = new Instrument("Default");
-        project.addInstrument(t);
-        Sample s0 = t.addSample("sample.wav", new SampleZone(36, 128, 0, 128));
-        s0.setBasePitch(60);
-        s0.setLoop(0.769f, 5.900f, 7.500f);
-        s0.setEnvelope(8, 80, 0.75f, 160);
-
-        Sample s1 = t.addSample("sample1.wav", new SampleZone(0, 35, 0, 128));
-        s1.setBasePitch(24);
-        s1.setLoop(7.894f, -1f, 8.500f);
-        s1.setEnvelope(1, 240, 0.0f, 0);
-
-        PdBase.sendList("sample_file", s0.sampleIndex, s0.filename);
-        PdBase.sendList("sample_file", s1.sampleIndex, s1.filename);
     }
 
     @Override
@@ -182,6 +171,15 @@ public class ProjectActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
+    @Override
+    public void onInstrumentCreate(Instrument instrument) {
+        project.addInstrument(instrument);
+        project.setActiveInstrument(instrument);
+        if(instrumentListAdapter != null) {
+            AdapterLoader.insertItem(instrumentListAdapter, instrument);
+        }
+    }
+
     private class KeyboardNoteEventConsumer implements Consumer<NoteEvent> {
         private final String name;
 
@@ -193,34 +191,33 @@ public class ProjectActivity extends AppCompatActivity {
         public void accept(NoteEvent noteEvent) {
             if(pdService != null) {
                 try {
-                    List<Sample> samples = project.getSamples(0, noteEvent);
+                    List<Sample> samples = project.getSamples(noteEvent);
                     if(samples.size() == 0) {
                         return;
                     }
-                    Sample s = samples.get(0);
-                    if(!s.isLoaded) {
-                        return;
+                    if(!pdService.isRunning()) {
+                        pdService.initAudio(AudioParameters.suggestSampleRate(), 0, 2, 8);
+                        pdService.startAudio();
                     }
+                    for(Sample s : samples) {
+                        if(!s.isInfoLoaded || !s.checkLoop()) {
+                            continue;
+                        }
 
-                    if(noteEvent.action == NoteEvent.ACTION_BEGIN) {
-                        if(!pdService.isRunning()) {
-                            pdService.initAudio(AudioParameters.suggestSampleRate(), 0, 2, 8);
-                            pdService.startAudio();
-                        }
-                        int voiceIndex = pdVoiceBindings.openEvent(noteEvent);
-                        if(voiceIndex == -1) {
-                            return;
-                        }
-                        PdBase.sendList("note", voiceIndex, noteEvent.keyNum,
-                                /*velocity*/   noteEvent.velocity,
-                                /*ADSR*/       s.attack, s.decay, s.sustain, s.release,
-                                /*sampleInfo*/ s.sampleIndex, s.startTime, s.resumeTime, s.endTime, s.sampleRate, s.basePitch);
-                    } else if(noteEvent.action == NoteEvent.ACTION_END) {
-                        int voiceIndex = pdVoiceBindings.closeEvent(noteEvent);
-                        if(voiceIndex == -1) {
-                            return;
-                        }
-                        if(pdService.isRunning()) {
+                        if(noteEvent.action == NoteEvent.ACTION_BEGIN) {
+                            int voiceIndex = pdVoiceBindings.getBinding(noteEvent, s.id);
+                            if(voiceIndex == -1) {
+                                continue;
+                            }
+                            PdBase.sendList("note", voiceIndex, noteEvent.keyNum,
+                                    /*velocity*/   noteEvent.velocity,
+                                    /*ADSR*/       s.attack, s.decay, s.sustain, s.release,
+                                    /*sampleInfo*/ s.sampleIndex, s.startTime, s.resumeTime, s.endTime, s.sampleRate, s.basePitch);
+                        } else if(noteEvent.action == NoteEvent.ACTION_END) {
+                            int voiceIndex = pdVoiceBindings.releaseBinding(noteEvent, s.id);
+                            if(voiceIndex == -1) {
+                                continue;
+                            }
                             PdBase.sendList("note", voiceIndex, noteEvent.keyNum,
                                     /*velocity*/   0,
                                     /*ADSR*/       s.attack, s.decay, s.sustain, s.release,
@@ -267,10 +264,15 @@ public class ProjectActivity extends AppCompatActivity {
                 if(args.length >= 3) {
                     try {
                         int sampleIndex = (int)((float) args[0]);
-                        Sample s = project.instruments.get(0).samples.get(sampleIndex);
-                        s.setSampleInfo((int)((float) args[args.length - 1]), (int)((float) args[2]));
-                        s.isLoaded = true;
-                        Log.d("pdReciever", String.format("sample_info index=%d rate=%d", sampleIndex, s.sampleRate));
+                        for(Sample s : project.getActiveInstrument().samples) {
+                            if(s.sampleIndex == sampleIndex) {
+                                s.setSampleInfo((int)((float) args[args.length - 1]), (int)((float) args[2]));
+                                s.isInfoLoaded = true;
+                                s.setDefaultLoop();
+                            }
+                        }
+                        Log.d("pdReciever", String.format("sample_info index=%d length=%d rate=%d",
+                                sampleIndex, (int)((float) args[args.length - 1]), (int)((float) args[2])));
                     } catch(ClassCastException e) {
                         e.printStackTrace();
                     }
@@ -284,4 +286,3 @@ public class ProjectActivity extends AppCompatActivity {
         }
     }
 }
-

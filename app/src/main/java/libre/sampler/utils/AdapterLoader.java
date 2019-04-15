@@ -30,7 +30,7 @@ public class AdapterLoader {
         ((RecyclerView.Adapter) adapter).notifyItemRangeInserted(insertIdx, e.size());
     }
 
-    public static <T> void insertItem(Loadable<T> adapter, int removeIdx) {
+    public static <T> void removeItem(Loadable<T> adapter, int removeIdx) {
         adapter.items().remove(removeIdx);
         ((RecyclerView.Adapter) adapter).notifyItemRemoved(removeIdx);
     }

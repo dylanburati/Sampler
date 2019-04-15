@@ -4,6 +4,8 @@ public class Sample {
     public int id;
     public String filename;
     public int sampleIndex;
+    public SampleZone zone;
+
     public int sampleLength;
     public int sampleRate;
 
@@ -18,13 +20,20 @@ public class Sample {
     public float resumeTime;
     public float endTime;
 
-    public boolean isLoaded = false;
-    public boolean isLoopConfigured = false;
+    public boolean isInfoLoaded = false;
+    public boolean shouldUseDefaultLoopStart = true;
+    public boolean shouldUseDefaultLoopResume = true;
+    public boolean shouldUseDefaultLoopEnd = true;
 
     public Sample(String filename, int sampleIndex, int id) {
         this.filename = filename;
         this.sampleIndex = sampleIndex;
         this.id = id;
+        this.zone = new SampleZone(-1, -1, 0, 128);
+    }
+
+    public void setSampleZone(int minPitch, int maxPitch, int minVelocity, int maxVelocity) {
+        this.zone = new SampleZone(minPitch, maxPitch, minVelocity, maxVelocity);
     }
 
     public void setSampleInfo(int sampleLength, int sampleRate) {
@@ -47,17 +56,54 @@ public class Sample {
         this.startTime = startTime;
         this.resumeTime = resumeTime;
         this.endTime = endTime;
-        this.isLoopConfigured = true;
+        this.shouldUseDefaultLoopStart = this.shouldUseDefaultLoopResume = this.shouldUseDefaultLoopEnd = false;
+    }
+
+    public void setLoopStart(float startTime) {
+        this.startTime = startTime;
+        this.shouldUseDefaultLoopStart = false;
+    }
+
+    public void setLoopResume(float resumeTime) {
+        this.resumeTime = resumeTime;
+        this.shouldUseDefaultLoopResume = false;
+    }
+
+    public void setLoopEnd(float endTime) {
+        this.endTime = endTime;
+        this.shouldUseDefaultLoopEnd = false;
     }
 
     public boolean setDefaultLoop() {
-        if(!this.isLoaded) {
+        if(!this.isInfoLoaded) {
             return false;
         }
-        this.startTime = 0;
-        this.resumeTime = -1;
-        this.endTime = sampleLength / 1.0f / sampleRate;
-        this.isLoopConfigured = true;
+        if(shouldUseDefaultLoopStart) this.startTime = 0;
+        if(shouldUseDefaultLoopResume) this.resumeTime = -1;
+        if(shouldUseDefaultLoopEnd) this.endTime = sampleLength / 1.0f / sampleRate;
+
+        this.shouldUseDefaultLoopStart = this.shouldUseDefaultLoopResume = this.shouldUseDefaultLoopEnd = false;
+        return true;
+    }
+
+    public boolean contains(NoteEvent e) {
+        if(this.zone == null) {
+            return false;
+        }
+        return this.zone.contains(e);
+    }
+
+    public boolean checkLoop() {
+        float loopLength0 = this.endTime - this.startTime;
+        if(loopLength0 < 1e-4) {
+            return false;
+        }
+        if(this.resumeTime >= 0) {
+            float loopLength1 = this.endTime - this.resumeTime;
+            if(loopLength1 < 1e-4) {
+                return false;
+            }
+        }
         return true;
     }
 }

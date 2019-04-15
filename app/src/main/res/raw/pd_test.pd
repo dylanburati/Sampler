@@ -52,7 +52,7 @@
 #X msg 25 100 read -resize \$2 array\$1;
 #X obj 25 125 soundfiler;
 #X floatatom 25 150 5 0 0 0 - - -;
-#X obj 75 150 list prepend;
+#X obj 75 150 list append;
 #X obj 25 175 list prepend;
 #X obj 25 200 s sample_info;
 #X obj 225 50 receive note;
@@ -15337,9 +15337,9 @@
 #X connect 50 0 51 0;
 #X connect 51 0 52 0;
 #X connect 51 1 53 0;
-#X connect 49 1 53 1;
-#X connect 52 0 54 0;
-#X connect 53 0 54 1;
+#X connect 51 0 53 1;
+#X connect 53 0 54 0;
+#X connect 49 1 54 1;
 #X connect 54 0 55 0;
 #X connect 56 0 57 0;
 #X connect 57 0 58 0;

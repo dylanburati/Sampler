@@ -109,7 +109,7 @@ public class MainActivity extends AppCompatActivity implements ProjectCreateDial
 
 
     @Override
-    public void onSubmitProjectCreate(String projectName) {
+    public void onProjectCreate(String projectName) {
         final Project toAdd = new Project(0, projectName, System.currentTimeMillis());
         final ProjectDao dao = DatabaseConnectionManager.getInstance(this).projectDao();
         DatabaseConnectionManager.execute(new Runnable() {

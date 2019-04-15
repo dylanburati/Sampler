@@ -21,6 +21,7 @@ import libre.sampler.utils.AdapterLoader;
 public class InstrumentListAdapter extends RecyclerView.Adapter<InstrumentListAdapter.ViewHolder> implements AdapterLoader.Loadable<Instrument> {
     public List<Instrument> items;
     private Consumer<Instrument> editPostHook;
+    private Consumer<Instrument> selectPostHook;
     private Runnable createPostHook;
     public boolean autoScrollOnInsert = false;  // todo
 
@@ -42,10 +43,12 @@ public class InstrumentListAdapter extends RecyclerView.Adapter<InstrumentListAd
         }
     }
 
-    public InstrumentListAdapter(List<Instrument> items, Consumer<Instrument> editPostHook, Runnable createPostHook) {
+    public InstrumentListAdapter(List<Instrument> items, Consumer<Instrument> editPostHook,
+                                 Consumer<Instrument> selectPostHook, Runnable createPostHook) {
         items.add(0, null);
         this.items = items;
         this.editPostHook = editPostHook;
+        this.selectPostHook = selectPostHook;
         this.createPostHook = createPostHook;
     }
 
