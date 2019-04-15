@@ -5,6 +5,7 @@ import android.os.Parcelable;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
@@ -32,7 +33,7 @@ public class Project implements Parcelable {
     @Ignore
     public List<Instrument> instruments;
     @Ignore
-    private int activeIdx;
+    private int activeIdx = -1;
     @Ignore
     public InstrumentEventSource instrumentEventSource;
 
@@ -107,6 +108,9 @@ public class Project implements Parcelable {
     }
 
     public List<Sample> getSamples(Instrument instrument, NoteEvent event) {
+        if(instrument == null) {
+            return Collections.emptyList();
+        }
         List<Sample> retval = new ArrayList<>(10);
         for(int i = 0; i < instrument.samples.size(); i++) {
             if(instrument.samples.get(i).contains(event)) {
@@ -130,6 +134,9 @@ public class Project implements Parcelable {
     }
 
     public Instrument getActiveInstrument() {
+        if(activeIdx < 0 || activeIdx >= this.instruments.size()) {
+            return null;
+        }
         return this.instruments.get(activeIdx);
     }
 

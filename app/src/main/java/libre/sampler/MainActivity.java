@@ -18,6 +18,7 @@ import libre.sampler.listeners.MySwipeRefreshListener;
 import libre.sampler.models.Project;
 import libre.sampler.tasks.GetProjectsTask;
 import libre.sampler.utils.AdapterLoader;
+import libre.sampler.utils.ApplicationTags;
 import libre.sampler.utils.DatabaseConnectionManager;
 
 import android.os.Parcelable;
@@ -65,7 +66,7 @@ public class MainActivity extends AppCompatActivity implements ProjectCreateDial
                 Intent intent = new Intent(MainActivity.this, ProjectActivity.class);
                 intent.setAction(Intent.ACTION_VIEW);
                 intent.putExtra(Intent.EXTRA_TITLE, project.name);
-                intent.putExtra(ProjectActivity.TAG_EXTRA_PROJECT, (Parcelable) project);
+                intent.putExtra(ApplicationTags.TAG_EXTRA_PROJECT, (Parcelable) project);
                 if(intent.resolveActivity(getPackageManager()) != null) {
                     startActivity(intent);
                 }

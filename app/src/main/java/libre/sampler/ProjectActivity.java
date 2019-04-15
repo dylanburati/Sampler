@@ -13,6 +13,7 @@ import libre.sampler.models.Project;
 import libre.sampler.models.Sample;
 import libre.sampler.publishers.NoteEventSource;
 import libre.sampler.utils.AdapterLoader;
+import libre.sampler.utils.ApplicationTags;
 import libre.sampler.utils.VoiceBindingList;
 
 import android.content.ComponentName;
@@ -38,8 +39,6 @@ import java.io.InputStream;
 import java.util.List;
 
 public class ProjectActivity extends AppCompatActivity implements InstrumentCreateDialog.InstrumentCreateDialogListener {
-    public static final String TAG_EXTRA_PROJECT = "libre.sampler.tags.EXTRA_PROJECT";
-
     private ViewPager pager;
     private ProjectFragmentAdapter adapter;
     public NoteEventSource noteEventSource;
@@ -75,7 +74,7 @@ public class ProjectActivity extends AppCompatActivity implements InstrumentCrea
             toolbar.setTitle(getIntent().getStringExtra(Intent.EXTRA_TITLE));
         }
 
-        project = getIntent().getParcelableExtra(TAG_EXTRA_PROJECT);
+        project = getIntent().getParcelableExtra(ApplicationTags.TAG_EXTRA_PROJECT);
         initNoteEventSource();
         initUI();
         initPdService();
@@ -190,11 +189,11 @@ public class ProjectActivity extends AppCompatActivity implements InstrumentCrea
         @Override
         public void accept(NoteEvent noteEvent) {
             if(pdService != null) {
+                List<Sample> samples = project.getSamples(noteEvent);
+                if(samples.size() == 0) {
+                    return;
+                }
                 try {
-                    List<Sample> samples = project.getSamples(noteEvent);
-                    if(samples.size() == 0) {
-                        return;
-                    }
                     if(!pdService.isRunning()) {
                         pdService.initAudio(AudioParameters.suggestSampleRate(), 0, 2, 8);
                         pdService.startAudio();

@@ -4,6 +4,7 @@ import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -23,6 +24,7 @@ import libre.sampler.adapters.SampleListAdapter;
 import libre.sampler.models.Instrument;
 import libre.sampler.models.Sample;
 import libre.sampler.utils.AdapterLoader;
+import libre.sampler.utils.ApplicationTags;
 
 public class InstrumentCreateDialog extends DialogFragment {
     private EditText nameInputView;
@@ -63,6 +65,13 @@ public class InstrumentCreateDialog extends DialogFragment {
                 }
             }
         });
+
+        final SharedPreferences sharedPreferences = rootView.getContext().getSharedPreferences(
+                ApplicationTags.TAG_SHARED_PREFS, Context.MODE_PRIVATE);
+        String defaultSamplePath = sharedPreferences.getString(ApplicationTags.PREF_DEFAULT_SAMPLE_PATH, null);
+        if(defaultSamplePath != null) {
+            sampleInputView.setText(defaultSamplePath);
+        }
 
         builder.setView(rootView)
                 .setPositiveButton(R.string.dialog_project_create_submit, new DialogInterface.OnClickListener() {
