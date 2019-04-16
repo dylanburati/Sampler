@@ -24,7 +24,7 @@ import libre.sampler.adapters.SampleListAdapter;
 import libre.sampler.models.Instrument;
 import libre.sampler.models.Sample;
 import libre.sampler.utils.AdapterLoader;
-import libre.sampler.utils.ApplicationTags;
+import libre.sampler.utils.AppConstants;
 
 public class InstrumentCreateDialog extends DialogFragment {
     private EditText nameInputView;
@@ -67,8 +67,8 @@ public class InstrumentCreateDialog extends DialogFragment {
         });
 
         final SharedPreferences sharedPreferences = rootView.getContext().getSharedPreferences(
-                ApplicationTags.TAG_SHARED_PREFS, Context.MODE_PRIVATE);
-        String defaultSamplePath = sharedPreferences.getString(ApplicationTags.PREF_DEFAULT_SAMPLE_PATH, null);
+                AppConstants.TAG_SHARED_PREFS, Context.MODE_PRIVATE);
+        String defaultSamplePath = sharedPreferences.getString(AppConstants.PREF_DEFAULT_SAMPLE_PATH, null);
         if(defaultSamplePath != null) {
             sampleInputView.setText(defaultSamplePath);
         }

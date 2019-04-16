@@ -1,6 +1,7 @@
 package libre.sampler.adapters;
 
 import android.content.res.Resources;
+import android.os.Handler;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -8,18 +9,25 @@ import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import androidx.annotation.NonNull;
 import androidx.core.util.Consumer;
 import androidx.recyclerview.widget.RecyclerView;
 import libre.sampler.R;
 import libre.sampler.listeners.StatefulClickListener;
+import libre.sampler.listeners.StatefulLongClickListener;
 import libre.sampler.models.Instrument;
 import libre.sampler.utils.AdapterLoader;
 
 public class InstrumentListAdapter extends RecyclerView.Adapter<InstrumentListAdapter.ViewHolder> implements AdapterLoader.Loadable<Instrument> {
     public List<Instrument> items;
+    private final Set<ViewHolder> viewHolderSet;
+
+    private int activateOnBind = -1;
+
     private Consumer<Instrument> editPostHook;
     private Consumer<Instrument> selectPostHook;
     private Runnable createPostHook;
@@ -50,6 +58,8 @@ public class InstrumentListAdapter extends RecyclerView.Adapter<InstrumentListAd
         this.editPostHook = editPostHook;
         this.selectPostHook = selectPostHook;
         this.createPostHook = createPostHook;
+
+        this.viewHolderSet = new HashSet<>();
     }
 
     @NonNull
@@ -62,6 +72,7 @@ public class InstrumentListAdapter extends RecyclerView.Adapter<InstrumentListAd
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
+        viewHolderSet.add(holder);
         Resources res = holder.rootView.getResources();
         if(position == 0) {
             holder.iconAddView.setVisibility(View.VISIBLE);
@@ -75,6 +86,9 @@ public class InstrumentListAdapter extends RecyclerView.Adapter<InstrumentListAd
                 }
             });
         } else {
+            if(position == activateOnBind) {
+                holder.nameTextView.setActivated(true);
+            }
             Instrument item = items.get(position);
             holder.iconAddView.setVisibility(View.GONE);
             holder.rootView.setPadding((int) res.getDimension(R.dimen.margin4), holder.rootView.getPaddingTop(),
@@ -82,7 +96,14 @@ public class InstrumentListAdapter extends RecyclerView.Adapter<InstrumentListAd
             holder.rootView.setOnClickListener(new StatefulClickListener<Instrument>(item) {
                 @Override
                 public void onClick(View v) {
+                    selectPostHook.accept(this.data);
+                }
+            });
+            holder.rootView.setOnLongClickListener(new StatefulLongClickListener<Instrument>(item) {
+                @Override
+                public boolean onLongClick(View v) {
                     editPostHook.accept(this.data);
+                    return true;
                 }
             });
             holder.nameTextView.setText(item.name);
@@ -92,5 +113,24 @@ public class InstrumentListAdapter extends RecyclerView.Adapter<InstrumentListAd
     @Override
     public int getItemCount() {
         return this.items.size();
+    }
+
+    public void activateItem(int position) {
+        boolean done = false;
+        for(ViewHolder vh : viewHolderSet) {
+            if(vh != null) {
+                if(vh.getAdapterPosition() == position) {
+                    vh.nameTextView.setActivated(true);
+                    done = true;
+                } else {
+                    vh.nameTextView.setActivated(false);
+                }
+            }
+        }
+        if(!done) {
+            activateOnBind = position;
+        } else {
+            activateOnBind = -1;
+        }
     }
 }

@@ -53,7 +53,7 @@ public class VoiceBindingList {
     }
 
     public void voiceFree(int voiceIndex) {
-        if(voiceIndex > 0 && voiceIndex <= bindings.size()) {
+        if(voiceIndex >= 0 && voiceIndex <= bindings.size()) {
             bindings.set(voiceIndex, null);
         }
     }

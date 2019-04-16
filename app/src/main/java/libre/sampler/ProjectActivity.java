@@ -6,14 +6,18 @@ import androidx.core.util.Consumer;
 import androidx.viewpager.widget.ViewPager;
 import libre.sampler.adapters.InstrumentListAdapter;
 import libre.sampler.adapters.ProjectFragmentAdapter;
+import libre.sampler.databases.InstrumentDao;
+import libre.sampler.databases.SampleDao;
 import libre.sampler.dialogs.InstrumentCreateDialog;
 import libre.sampler.models.Instrument;
 import libre.sampler.models.NoteEvent;
 import libre.sampler.models.Project;
 import libre.sampler.models.Sample;
 import libre.sampler.publishers.NoteEventSource;
+import libre.sampler.tasks.GetInstrumentsTask;
 import libre.sampler.utils.AdapterLoader;
-import libre.sampler.utils.ApplicationTags;
+import libre.sampler.utils.AppConstants;
+import libre.sampler.utils.DatabaseConnectionManager;
 import libre.sampler.utils.VoiceBindingList;
 
 import android.content.ComponentName;
@@ -74,7 +78,19 @@ public class ProjectActivity extends AppCompatActivity implements InstrumentCrea
             toolbar.setTitle(getIntent().getStringExtra(Intent.EXTRA_TITLE));
         }
 
-        project = getIntent().getParcelableExtra(ApplicationTags.TAG_EXTRA_PROJECT);
+        project = getIntent().getParcelableExtra(AppConstants.TAG_EXTRA_PROJECT);
+        DatabaseConnectionManager.runTask(new GetInstrumentsTask(project.id, new Consumer<List<Instrument>>() {
+            @Override
+            public void accept(List<Instrument> instruments) {
+                project.setInstruments(instruments);
+                AdapterLoader.insertAll(instrumentListAdapter, instruments);
+                int activeIdx = project.getActiveIdx();
+                if(activeIdx >= 0) {
+                    project.setActiveIdx(activeIdx);
+                    instrumentListAdapter.activateItem(activeIdx + 1);
+                }
+            }
+        }));
         initNoteEventSource();
         initUI();
         initPdService();
@@ -134,7 +150,7 @@ public class ProjectActivity extends AppCompatActivity implements InstrumentCrea
             project.instrumentEventSource.add("keyboard", new Consumer<Instrument>() {
                 @Override
                 public void accept(Instrument instrument) {
-                    for(Sample s : instrument.samples) {
+                    for(Sample s : instrument.getSamples()) {
                         PdBase.sendList("sample_file", s.sampleIndex, s.filename);
                     }
                 }
@@ -167,13 +183,32 @@ public class ProjectActivity extends AppCompatActivity implements InstrumentCrea
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
+        if(item.getItemId() == R.id.appbar_save) {
+            final InstrumentDao instrumentDao = DatabaseConnectionManager.getInstance(this).instrumentDao();
+            final SampleDao sampleDao = DatabaseConnectionManager.getInstance(this).sampleDao();
+            DatabaseConnectionManager.execute(new Runnable() {
+                @Override
+                public void run() {
+                    instrumentDao.insertAll(project.getInstruments());
+                    for(Instrument t : project.getInstruments()) {
+                        sampleDao.insertAll(t.getSamples());
+                    }
+                }
+            });
+            DatabaseConnectionManager.runTask(new GetInstrumentsTask(project.id, new Consumer<List<Instrument>>() {
+                @Override
+                public void accept(List<Instrument> instruments) {
+                    Log.d("GetInstrumentsTask", "");
+                }
+            }));
+            return true;
+        }
         return super.onOptionsItemSelected(item);
     }
 
     @Override
     public void onInstrumentCreate(Instrument instrument) {
         project.addInstrument(instrument);
-        project.setActiveInstrument(instrument);
         if(instrumentListAdapter != null) {
             AdapterLoader.insertItem(instrumentListAdapter, instrument);
         }
@@ -211,7 +246,7 @@ public class ProjectActivity extends AppCompatActivity implements InstrumentCrea
                             PdBase.sendList("note", voiceIndex, noteEvent.keyNum,
                                     /*velocity*/   noteEvent.velocity,
                                     /*ADSR*/       s.attack, s.decay, s.sustain, s.release,
-                                    /*sampleInfo*/ s.sampleIndex, s.startTime, s.resumeTime, s.endTime, s.sampleRate, s.basePitch);
+                                    /*sampleInfo*/ s.sampleIndex, s.getStartTime(), s.getResumeTime(), s.getEndTime(), s.sampleRate, s.basePitch);
                         } else if(noteEvent.action == NoteEvent.ACTION_END) {
                             int voiceIndex = pdVoiceBindings.releaseBinding(noteEvent, s.id);
                             if(voiceIndex == -1) {
@@ -220,7 +255,7 @@ public class ProjectActivity extends AppCompatActivity implements InstrumentCrea
                             PdBase.sendList("note", voiceIndex, noteEvent.keyNum,
                                     /*velocity*/   0,
                                     /*ADSR*/       s.attack, s.decay, s.sustain, s.release,
-                                    /*sampleInfo*/ s.sampleIndex, s.startTime, s.resumeTime, s.endTime, s.sampleRate, s.basePitch);
+                                    /*sampleInfo*/ s.sampleIndex, s.getStartTime(), s.getResumeTime(), s.getEndTime(), s.sampleRate, s.basePitch);
                         }
                     }
                 } catch(IOException e) {
@@ -263,11 +298,10 @@ public class ProjectActivity extends AppCompatActivity implements InstrumentCrea
                 if(args.length >= 3) {
                     try {
                         int sampleIndex = (int)((float) args[0]);
-                        for(Sample s : project.getActiveInstrument().samples) {
+                        for(Sample s : project.getActiveInstrument().getSamples()) {
                             if(s.sampleIndex == sampleIndex) {
                                 s.setSampleInfo((int)((float) args[args.length - 1]), (int)((float) args[2]));
                                 s.isInfoLoaded = true;
-                                s.setDefaultLoop();
                             }
                         }
                         Log.d("pdReciever", String.format("sample_info index=%d length=%d rate=%d",

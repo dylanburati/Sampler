@@ -147,13 +147,13 @@ public class SampleListAdapter extends RecyclerView.Adapter<SampleListAdapter.Vi
                     switch(this.data.viewId) {
                         case R.id.pitch_min:
                             try {
-                                this.data.sample.zone.minPitch = Integer.parseInt(s.toString());
+                                this.data.sample.minPitch = Integer.parseInt(s.toString());
                             } catch(NumberFormatException ignored) {
                             }
                             break;
                         case R.id.pitch_max:
                             try {
-                                this.data.sample.zone.maxPitch = Integer.parseInt(s.toString());
+                                this.data.sample.maxPitch = Integer.parseInt(s.toString());
                             } catch(NumberFormatException ignored) {
                             }
                             break;
@@ -165,13 +165,13 @@ public class SampleListAdapter extends RecyclerView.Adapter<SampleListAdapter.Vi
                             break;
                         case R.id.velocity_min:
                             try {
-                                this.data.sample.zone.minVelocity = Integer.parseInt(s.toString());
+                                this.data.sample.minVelocity = Integer.parseInt(s.toString());
                             } catch(NumberFormatException ignored) {
                             }
                             break;
                         case R.id.velocity_max:
                             try {
-                                this.data.sample.zone.maxVelocity = Integer.parseInt(s.toString());
+                                this.data.sample.maxVelocity = Integer.parseInt(s.toString());
                             } catch(NumberFormatException ignored) {
                             }
                             break;

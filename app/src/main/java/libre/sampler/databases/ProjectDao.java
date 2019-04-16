@@ -11,12 +11,15 @@ import libre.sampler.models.Project;
 @Dao
 public interface ProjectDao {
     @Insert
+    long insert(Project toAdd);
+
+    @Insert
     void insertAll(Project... projects);
 
     @Update
     void updateAll(Project... projects);
 
-    @Query("SELECT id, name, mtime FROM project ORDER BY mtime DESC")
+    @Query("SELECT * FROM project ORDER BY mtime DESC")
     List<Project> getAll();
 
     @Query("DELETE FROM project")

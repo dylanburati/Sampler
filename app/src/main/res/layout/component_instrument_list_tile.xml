@@ -24,6 +24,8 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:id="@+id/text"
+        android:textColor="@drawable/activatable_text"
+        android:text="AAAAA"
         android:layout_weight="1"
         android:layout_marginTop="@dimen/margin3"
         android:layout_marginBottom="@dimen/margin3" />

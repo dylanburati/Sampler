@@ -7,6 +7,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.Locale;
 
@@ -16,6 +17,7 @@ import androidx.room.Ignore;
 import androidx.room.PrimaryKey;
 import libre.sampler.R;
 import libre.sampler.publishers.InstrumentEventSource;
+import libre.sampler.utils.AppConstants;
 
 @Entity(tableName = "project")
 public class Project implements Parcelable {
@@ -29,11 +31,10 @@ public class Project implements Parcelable {
     public long mtime;
 
     @Ignore
-    private static final int SAMPLES_PER_INSTRUMENT = 24;
-    @Ignore
-    public List<Instrument> instruments;
-    @Ignore
+    private List<Instrument> instruments;
+
     private int activeIdx = -1;
+
     @Ignore
     public InstrumentEventSource instrumentEventSource;
 
@@ -57,40 +58,9 @@ public class Project implements Parcelable {
         }
     }
 
-    protected Project(Parcel in) {
-        id = in.readInt();
-        name = in.readString();
-        mtime = in.readLong();
-
-        this.instruments = new ArrayList<>();
-        this.instrumentEventSource = new InstrumentEventSource();
-    }
-
-    @Override
-    public void writeToParcel(Parcel dest, int flags) {
-        dest.writeInt(id);
-        dest.writeString(name);
-        dest.writeLong(mtime);
-    }
-
-    @Override
-    public int describeContents() {
-        return 0;
-    }
-
-    public static final Creator<Project> CREATOR = new Creator<Project>() {
-        @Override
-        public Project createFromParcel(Parcel in) {
-            return new Project(in);
-        }
-
-        @Override
-        public Project[] newArray(int size) {
-            return new Project[size];
-        }
-    };
-
     public int addInstrument(Instrument e) {
+        e.projectId = this.id;
+
         boolean uniqueName = checkName(e);
         int suffix = 1;
         String origName = e.name;
@@ -99,8 +69,13 @@ public class Project implements Parcelable {
             uniqueName = checkName(e);
         }
         int insertIdx = instruments.size();
+        e.setInstrumentId(this.id * AppConstants.MAX_INSTRUMENTS_PER_PROJECT + insertIdx);
         instruments.add(insertIdx, e);
         return insertIdx;
+    }
+
+    public void setInstruments(List<Instrument> instruments) {
+        this.instruments = instruments;
     }
 
     public List<Sample> getSamples(NoteEvent event) {
@@ -112,9 +87,9 @@ public class Project implements Parcelable {
             return Collections.emptyList();
         }
         List<Sample> retval = new ArrayList<>(10);
-        for(int i = 0; i < instrument.samples.size(); i++) {
-            if(instrument.samples.get(i).contains(event)) {
-                retval.add(instrument.samples.get(i));
+        for(int i = 0; i < instrument.getSamples().size(); i++) {
+            if(instrument.getSamples().get(i).contains(event)) {
+                retval.add(instrument.getSamples().get(i));
                 // return retval;  // omitted to allow multiple samples per event
             }
         }
@@ -133,6 +108,13 @@ public class Project implements Parcelable {
         return true;
     }
 
+    public int getActiveIdx() {
+        if(activeIdx >= this.instruments.size()) {
+            return -1;
+        }
+        return activeIdx;
+    }
+
     public Instrument getActiveInstrument() {
         if(activeIdx < 0 || activeIdx >= this.instruments.size()) {
             return null;
@@ -140,7 +122,7 @@ public class Project implements Parcelable {
         return this.instruments.get(activeIdx);
     }
 
-    public void setActiveInstrument(Instrument t) {
+    public int setActiveInstrument(Instrument t) {
         int idx = this.instruments.indexOf(t);
         if(idx == -1) {
             idx = addInstrument(t);
@@ -148,5 +130,51 @@ public class Project implements Parcelable {
         activeIdx = idx;
 
         instrumentEventSource.dispatch(t);
+        return activeIdx;
     }
+
+    public void setActiveIdx(int activeIdx) {
+        this.activeIdx = activeIdx;
+        instrumentEventSource.dispatch(getActiveInstrument());
+    }
+
+    public List<Instrument> getInstruments() {
+        return instruments;
+    }
+
+    protected Project(Parcel in) {
+        id = in.readInt();
+        name = in.readString();
+        mtime = in.readLong();
+        instruments = in.createTypedArrayList(Instrument.CREATOR);
+        activeIdx = in.readInt();
+
+        this.instrumentEventSource = new InstrumentEventSource();
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeInt(id);
+        dest.writeString(name);
+        dest.writeLong(mtime);
+        dest.writeTypedList(instruments);
+        dest.writeInt(activeIdx);
+    }
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    public static final Creator<Project> CREATOR = new Creator<Project>() {
+        @Override
+        public Project createFromParcel(Parcel in) {
+            return new Project(in);
+        }
+
+        @Override
+        public Project[] newArray(int size) {
+            return new Project[size];
+        }
+    };
 }

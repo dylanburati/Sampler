@@ -1,13 +1,16 @@
 package libre.sampler;
 
+import android.Manifest;
 import android.content.Intent;
-import android.os.AsyncTask;
+import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.core.content.ContextCompat;
 import androidx.core.util.Consumer;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
@@ -18,7 +21,7 @@ import libre.sampler.listeners.MySwipeRefreshListener;
 import libre.sampler.models.Project;
 import libre.sampler.tasks.GetProjectsTask;
 import libre.sampler.utils.AdapterLoader;
-import libre.sampler.utils.ApplicationTags;
+import libre.sampler.utils.AppConstants;
 import libre.sampler.utils.DatabaseConnectionManager;
 
 import android.os.Parcelable;
@@ -26,13 +29,13 @@ import android.view.Menu;
 import android.view.MenuItem;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity implements ProjectCreateDialog.ProjectCreateDialogListener {
     private SwipeRefreshLayout refreshLayout;
     private RecyclerView data;
     private ProjectListAdapter dataAdapter;
+    private ProjectCreateDialog projectCreateDialog;
 
     @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
@@ -50,15 +53,6 @@ public class MainActivity extends AppCompatActivity implements ProjectCreateDial
             }
         });
 
-        // tmp
-//        List<String> inputData = new ArrayList<>();
-//        List<Project> structuredData = new ArrayList<>();
-//        Collections.addAll(inputData,"Anaconda3", "Android", "Autodesk", "Blender Foundation", "Bonjour", "Common Files", "Dell", "Docker", "GIMP 2", "Goodix", "Intel", "Java", "JetBrains", "Killer Networking", "Linux Containers", "MATLAB", "Microsoft Office 15", "Microsoft SQL Server", "Microsoft Visual Studio 10.0", "Microsoft.NET", "MiKTeX 2.9", "Mozilla Firefox", "MSBuild", "NVIDIA Corporation", "Oracle", "Reference Assemblies", "Shotcut", "SOLIDWORKS Corp", "VideoLAN", "VMware", "WindowsPowerShell");
-//        for(String s : inputData) {
-//            structuredData.add(new Project(0, s, (long) s.hashCode()));
-//        }
-        // tmp>
-
         this.data = (RecyclerView) findViewById(R.id.main_data);
         this.dataAdapter = new ProjectListAdapter(new ArrayList<Project>(), new Consumer<Project>() {
             @Override
@@ -66,7 +60,7 @@ public class MainActivity extends AppCompatActivity implements ProjectCreateDial
                 Intent intent = new Intent(MainActivity.this, ProjectActivity.class);
                 intent.setAction(Intent.ACTION_VIEW);
                 intent.putExtra(Intent.EXTRA_TITLE, project.name);
-                intent.putExtra(ApplicationTags.TAG_EXTRA_PROJECT, (Parcelable) project);
+                intent.putExtra(AppConstants.TAG_EXTRA_PROJECT, (Parcelable) project);
                 if(intent.resolveActivity(getPackageManager()) != null) {
                     startActivity(intent);
                 }
@@ -93,7 +87,14 @@ public class MainActivity extends AppCompatActivity implements ProjectCreateDial
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         if(item.getItemId() == R.id.appbar_create) {
-            new ProjectCreateDialog().show(getSupportFragmentManager(), "dialog_project_create");
+            if(ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+                if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    requestPermissions(new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, AppConstants.PERM_REQUEST_READ_EXTERNAL_STORAGE);
+                }
+            } else {
+                projectCreateDialog = new ProjectCreateDialog();
+                projectCreateDialog.show(getSupportFragmentManager(), "dialog_project_create");
+            }
             return true;
         } else if(item.getItemId() == R.id.appbar_delete) {
             final ProjectDao dao = DatabaseConnectionManager.getInstance(this).projectDao();
@@ -104,6 +105,7 @@ public class MainActivity extends AppCompatActivity implements ProjectCreateDial
                 }
             });
             AdapterLoader.clear(dataAdapter);
+            return true;
         }
         return super.onOptionsItemSelected(item);
     }
@@ -116,9 +118,23 @@ public class MainActivity extends AppCompatActivity implements ProjectCreateDial
         DatabaseConnectionManager.execute(new Runnable() {
             @Override
             public void run() {
-                dao.insertAll(toAdd);
+                toAdd.id = (int) dao.insert(toAdd);
             }
         });
         AdapterLoader.insertItem(this.dataAdapter, 0, toAdd);
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        switch(requestCode) {
+            case AppConstants.PERM_REQUEST_READ_EXTERNAL_STORAGE:
+                if(grantResults.length >= 1 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    projectCreateDialog = new ProjectCreateDialog();
+                    projectCreateDialog.show(getSupportFragmentManager(), "dialog_project_create");
+                }
+                break;
+            default:
+                break;
+        }
     }
 }

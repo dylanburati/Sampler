@@ -30,6 +30,7 @@ import libre.sampler.utils.AdapterLoader;
 public class ProjectInstrumentsFragment extends Fragment {
     private RecyclerView data;
     private Project project;
+    private InstrumentListAdapter adapter;
 
     @Nullable
     @Override
@@ -37,11 +38,11 @@ public class ProjectInstrumentsFragment extends Fragment {
         View rootView = inflater.inflate(R.layout.fragment_project_instruments, container, false);
 
         this.data = (RecyclerView) rootView.findViewById(R.id.instruments_data);
-        InstrumentListAdapter adapter = new InstrumentListAdapter(new ArrayList<Instrument>(),
+        project = ((ProjectActivity) getActivity()).project;
+        adapter = new InstrumentListAdapter(new ArrayList<Instrument>(),
                 new InstrumentEditConsumer(), new InstrumentSelectConsumer(), new InstrumentCreateRunnable(this));
         data.setAdapter(adapter);
         ((ProjectActivity) getActivity()).instrumentListAdapter = adapter;
-        project = ((ProjectActivity) getActivity()).project;
 
         return rootView;
     }
@@ -72,7 +73,8 @@ public class ProjectInstrumentsFragment extends Fragment {
     private class InstrumentSelectConsumer implements Consumer<Instrument> {
         @Override
         public void accept(Instrument instrument) {
-            project.setActiveInstrument(instrument);
+            int activeIdx = project.setActiveInstrument(instrument);
+            adapter.activateItem(activeIdx + 1);
         }
     }
 }
