@@ -23,6 +23,7 @@ import libre.sampler.R;
 import libre.sampler.adapters.InstrumentListAdapter;
 import libre.sampler.adapters.ProjectListAdapter;
 import libre.sampler.dialogs.InstrumentCreateDialog;
+import libre.sampler.dialogs.InstrumentEditDialog;
 import libre.sampler.models.Instrument;
 import libre.sampler.models.Project;
 import libre.sampler.utils.AdapterLoader;
@@ -40,17 +41,28 @@ public class ProjectInstrumentsFragment extends Fragment {
         this.data = (RecyclerView) rootView.findViewById(R.id.instruments_data);
         project = ((ProjectActivity) getActivity()).project;
         adapter = new InstrumentListAdapter(new ArrayList<Instrument>(),
-                new InstrumentEditConsumer(), new InstrumentSelectConsumer(), new InstrumentCreateRunnable(this));
+                new InstrumentEditConsumer(this), new InstrumentSelectConsumer(), new InstrumentCreateRunnable(this));
         data.setAdapter(adapter);
-        ((ProjectActivity) getActivity()).instrumentListAdapter = adapter;
+        ((ProjectActivity) getActivity()).setInstrumentListAdapter(adapter);
 
         return rootView;
     }
 
     private static class InstrumentEditConsumer implements Consumer<Instrument> {
+        private final Fragment ctx;
+
+        private InstrumentEditConsumer(Fragment ctx) {
+            this.ctx = ctx;
+        }
+
         @Override
         public void accept(Instrument instrument) {
-            Log.d("InstrumentListAdapter", "" + instrument.name + " clicked");
+            FragmentManager fm = ctx.getFragmentManager();
+            if(fm != null) {
+                InstrumentEditDialog dialog = new InstrumentEditDialog();
+                dialog.previousInstrument = instrument;
+                dialog.show(fm, "dialog_instrument_edit");
+            }
         }
     }
 

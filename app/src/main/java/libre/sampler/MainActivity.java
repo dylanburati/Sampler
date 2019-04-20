@@ -19,12 +19,14 @@ import libre.sampler.databases.ProjectDao;
 import libre.sampler.dialogs.ProjectCreateDialog;
 import libre.sampler.listeners.MySwipeRefreshListener;
 import libre.sampler.models.Project;
+import libre.sampler.tasks.DeleteProjectsTask;
 import libre.sampler.tasks.GetProjectsTask;
 import libre.sampler.utils.AdapterLoader;
 import libre.sampler.utils.AppConstants;
 import libre.sampler.utils.DatabaseConnectionManager;
 
 import android.os.Parcelable;
+import android.os.PersistableBundle;
 import android.view.Menu;
 import android.view.MenuItem;
 
@@ -36,8 +38,9 @@ public class MainActivity extends AppCompatActivity implements ProjectCreateDial
     private RecyclerView data;
     private ProjectListAdapter dataAdapter;
     private ProjectCreateDialog projectCreateDialog;
+    private boolean projectsLoaded;
+    private ArrayList<Project> projects;
 
-    @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -53,8 +56,17 @@ public class MainActivity extends AppCompatActivity implements ProjectCreateDial
             }
         });
 
+        projectsLoaded = false;
+        if(savedInstanceState != null) {
+            projects = savedInstanceState.getParcelableArrayList(AppConstants.TAG_SAVED_STATE_PROJECT_LIST);
+            projectsLoaded = projects != null;
+        }
+        if(!projectsLoaded) {
+            projects = new ArrayList<>();
+        }
+
         this.data = (RecyclerView) findViewById(R.id.main_data);
-        this.dataAdapter = new ProjectListAdapter(new ArrayList<Project>(), new Consumer<Project>() {
+        this.dataAdapter = new ProjectListAdapter(projects, new Consumer<Project>() {
             @Override
             public void accept(Project project) {
                 Intent intent = new Intent(MainActivity.this, ProjectActivity.class);
@@ -68,14 +80,24 @@ public class MainActivity extends AppCompatActivity implements ProjectCreateDial
         });
         data.setAdapter(this.dataAdapter);
 
-        DatabaseConnectionManager.getInstance(this);  // initialize database
-        DatabaseConnectionManager.runTask(new GetProjectsTask(new Consumer<List<Project>>() {
-            @Override
-            public void accept(List<Project> projects) {
-                AdapterLoader.insertAll(dataAdapter, projects);
-                dataAdapter.autoScrollOnInsert = true;
-            }
-        }));
+        if(!projectsLoaded) {
+            DatabaseConnectionManager.getInstance(this);  // initialize database
+            DatabaseConnectionManager.runTask(new GetProjectsTask(new Consumer<List<Project>>() {
+                @Override
+                public void accept(List<Project> prjs) {
+                    AdapterLoader.insertAll(dataAdapter, prjs);
+                    dataAdapter.autoScrollOnInsert = true;
+                }
+            }));
+        } else {
+            dataAdapter.autoScrollOnInsert = true;
+        }
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putParcelableArrayList(AppConstants.TAG_SAVED_STATE_PROJECT_LIST, projects);
     }
 
     @Override
@@ -97,19 +119,16 @@ public class MainActivity extends AppCompatActivity implements ProjectCreateDial
             }
             return true;
         } else if(item.getItemId() == R.id.appbar_delete) {
-            final ProjectDao dao = DatabaseConnectionManager.getInstance(this).projectDao();
-            DatabaseConnectionManager.execute(new Runnable() {
+            DatabaseConnectionManager.runTask(new DeleteProjectsTask(dataAdapter.items, new Runnable() {
                 @Override
                 public void run() {
-                    dao.deleteAll();
+                    AdapterLoader.clear(dataAdapter);
                 }
-            });
-            AdapterLoader.clear(dataAdapter);
+            }));
             return true;
         }
         return super.onOptionsItemSelected(item);
     }
-
 
     @Override
     public void onProjectCreate(String projectName) {

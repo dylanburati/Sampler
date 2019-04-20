@@ -12,9 +12,9 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
+import android.widget.TextView;
 
 import java.io.File;
-import java.util.ArrayList;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -27,39 +27,40 @@ import libre.sampler.models.Sample;
 import libre.sampler.utils.AdapterLoader;
 import libre.sampler.utils.AppConstants;
 
-public class InstrumentCreateDialog extends DialogFragment {
+public class InstrumentEditDialog extends DialogFragment {
     private EditText nameInputView;
 
     private EditText sampleInputView;
     private Button sampleAddButton;
     private RecyclerView sampleData;
     private SampleListAdapter sampleDataAdapter;
-    private Instrument toCreate;
-    private InstrumentCreateDialogListener listener;
+    private InstrumentEditDialogListener listener;
+    private Button instrumentDeleteButton;
+
+    public Instrument previousInstrument;
 
     @Override
     public void onAttach(@NonNull Context context) {
         super.onAttach(context);
-        listener = (InstrumentCreateDialogListener) context;
+        listener = (InstrumentEditDialogListener) context;
     }
 
     @NonNull
     @Override
     public Dialog onCreateDialog(@Nullable Bundle savedInstanceState) {
         if(savedInstanceState != null) {
-            toCreate = savedInstanceState.getParcelable(AppConstants.TAG_SAVED_STATE_INSTRUMENT);
-        } else {
-            toCreate = new Instrument(null);
+            previousInstrument = savedInstanceState.getParcelable(AppConstants.TAG_SAVED_STATE_INSTRUMENT);
         }
 
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
         LayoutInflater inflater = LayoutInflater.from(requireActivity());
-        LinearLayout rootView = (LinearLayout) inflater.inflate(R.layout.dialog_instrument_create, null);
+        LinearLayout rootView = (LinearLayout) inflater.inflate(R.layout.dialog_instrument_edit, null);
         nameInputView = (EditText) rootView.findViewById(R.id.input_name);
+        instrumentDeleteButton = (Button) rootView.findViewById(R.id.delete_instrument);
         sampleInputView = (EditText) rootView.findViewById(R.id.input_sample_paths);
         sampleAddButton = (Button) rootView.findViewById(R.id.submit_sample_paths);
         sampleData = (RecyclerView) rootView.findViewById(R.id.sample_data);
-        sampleDataAdapter = new SampleListAdapter(new ArrayList<Sample>());
+        sampleDataAdapter = new SampleListAdapter(previousInstrument.getSamples());
         sampleData.setAdapter(sampleDataAdapter);
         sampleAddButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -72,34 +73,33 @@ public class InstrumentCreateDialog extends DialogFragment {
             }
         });
 
+        nameInputView.setText(previousInstrument.name);
+
         final SharedPreferences sharedPreferences = rootView.getContext().getSharedPreferences(
                 AppConstants.TAG_SHARED_PREFS, Context.MODE_PRIVATE);
         String defaultSamplePath = sharedPreferences.getString(AppConstants.PREF_DEFAULT_SAMPLE_PATH, null);
         if(defaultSamplePath != null) {
             sampleInputView.setText(defaultSamplePath);
         }
+        
+        instrumentDeleteButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                getDialog().cancel();
+                listener.onInstrumentDelete(previousInstrument);
+            }
+        });
 
         builder.setView(rootView)
-                .setPositiveButton(R.string.dialog_project_create_submit, new DialogInterface.OnClickListener() {
+                .setPositiveButton(R.string.dialog_project_edit_submit, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         String name = nameInputView.getText().toString();
-                        toCreate.name = name;
+                        previousInstrument.name = name;
 
-                        for(Sample s : sampleDataAdapter.items) {
-                            if(s == null) {
-                                continue;
-                            }
-                            toCreate.addSample(s);
-                        }
-                        if(listener != null) listener.onInstrumentCreate(toCreate);
+                        previousInstrument.setSamples(sampleDataAdapter.items);
+                        listener.onInstrumentEdit(previousInstrument);
                         dialog.dismiss();
-                    }
-                })
-                .setNegativeButton(R.string.dialog_project_create_cancel, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        dialog.cancel();
                     }
                 });
 
@@ -108,10 +108,11 @@ public class InstrumentCreateDialog extends DialogFragment {
 
     @Override
     public void onSaveInstanceState(@NonNull Bundle outState) {
-        outState.putParcelable(AppConstants.TAG_SAVED_STATE_INSTRUMENT, (Parcelable) toCreate);
+        outState.putParcelable(AppConstants.TAG_SAVED_STATE_INSTRUMENT, (Parcelable) previousInstrument);
     }
 
-    public interface InstrumentCreateDialogListener {
-        public void onInstrumentCreate(Instrument instrument);
+    public interface InstrumentEditDialogListener {
+        public void onInstrumentEdit(Instrument instrument);
+        public void onInstrumentDelete(Instrument instrument);
     }
 }

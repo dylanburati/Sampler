@@ -1,5 +1,6 @@
 package libre.sampler;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.util.Consumer;
@@ -9,12 +10,14 @@ import libre.sampler.adapters.ProjectFragmentAdapter;
 import libre.sampler.databases.InstrumentDao;
 import libre.sampler.databases.SampleDao;
 import libre.sampler.dialogs.InstrumentCreateDialog;
+import libre.sampler.dialogs.InstrumentEditDialog;
 import libre.sampler.models.Instrument;
 import libre.sampler.models.NoteEvent;
 import libre.sampler.models.Project;
 import libre.sampler.models.Sample;
 import libre.sampler.publishers.NoteEventSource;
 import libre.sampler.tasks.GetInstrumentsTask;
+import libre.sampler.tasks.UpdateInstrumentsTask;
 import libre.sampler.utils.AdapterLoader;
 import libre.sampler.utils.AppConstants;
 import libre.sampler.utils.DatabaseConnectionManager;
@@ -25,7 +28,9 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.res.Resources;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.IBinder;
+import android.os.Parcelable;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -42,7 +47,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 
-public class ProjectActivity extends AppCompatActivity implements InstrumentCreateDialog.InstrumentCreateDialogListener {
+public class ProjectActivity extends AppCompatActivity implements
+        InstrumentCreateDialog.InstrumentCreateDialogListener, InstrumentEditDialog.InstrumentEditDialogListener {
     private ViewPager pager;
     private ProjectFragmentAdapter adapter;
     public NoteEventSource noteEventSource;
@@ -63,6 +69,7 @@ public class ProjectActivity extends AppCompatActivity implements InstrumentCrea
     };
 
     public Project project;
+    private boolean projectLoaded;
 
     private final int pdVoiceBindingLen = 96;
     private VoiceBindingList pdVoiceBindings;
@@ -78,22 +85,41 @@ public class ProjectActivity extends AppCompatActivity implements InstrumentCrea
             toolbar.setTitle(getIntent().getStringExtra(Intent.EXTRA_TITLE));
         }
 
-        project = getIntent().getParcelableExtra(AppConstants.TAG_EXTRA_PROJECT);
-        DatabaseConnectionManager.runTask(new GetInstrumentsTask(project.id, new Consumer<List<Instrument>>() {
-            @Override
-            public void accept(List<Instrument> instruments) {
-                project.setInstruments(instruments);
-                AdapterLoader.insertAll(instrumentListAdapter, instruments);
-                int activeIdx = project.getActiveIdx();
-                if(activeIdx >= 0) {
-                    project.setActiveIdx(activeIdx);
-                    instrumentListAdapter.activateItem(activeIdx + 1);
+        projectLoaded = false;
+        if(savedInstanceState != null) {
+            project = savedInstanceState.getParcelable(AppConstants.TAG_SAVED_STATE_PROJECT);
+            projectLoaded = (project != null);
+        }
+        if(!projectLoaded) {
+            project = getIntent().getParcelableExtra(AppConstants.TAG_EXTRA_PROJECT);
+            DatabaseConnectionManager.runTask(new GetInstrumentsTask(project.id, new Consumer<List<Instrument>>() {
+                @Override
+                public void accept(List<Instrument> instruments) {
+                    project.setInstruments(instruments);
+                    projectLoaded = true;
+                    updateInstrumentListAdapter();
                 }
-            }
-        }));
+            }));
+        }
         initNoteEventSource();
         initUI();
         initPdService();
+    }
+
+    public void setInstrumentListAdapter(InstrumentListAdapter adapter) {
+        this.instrumentListAdapter = adapter;
+        if(projectLoaded) updateInstrumentListAdapter();
+    }
+
+    public void updateInstrumentListAdapter() {
+        if(project != null) {
+            AdapterLoader.insertAll(instrumentListAdapter, project.getInstruments());
+            int activeIdx = project.getActiveIdx();
+            if(activeIdx >= 0) {
+                project.updateActiveInstrument();
+                instrumentListAdapter.activateItem(activeIdx + 1);
+            }
+        }
     }
 
     private void initNoteEventSource() {
@@ -175,6 +201,12 @@ public class ProjectActivity extends AppCompatActivity implements InstrumentCrea
     }
 
     @Override
+    protected void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putParcelable(AppConstants.TAG_SAVED_STATE_PROJECT, (Parcelable) project);
+    }
+
+    @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.menu_project, menu);
@@ -184,17 +216,7 @@ public class ProjectActivity extends AppCompatActivity implements InstrumentCrea
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         if(item.getItemId() == R.id.appbar_save) {
-            final InstrumentDao instrumentDao = DatabaseConnectionManager.getInstance(this).instrumentDao();
-            final SampleDao sampleDao = DatabaseConnectionManager.getInstance(this).sampleDao();
-            DatabaseConnectionManager.execute(new Runnable() {
-                @Override
-                public void run() {
-                    instrumentDao.insertAll(project.getInstruments());
-                    for(Instrument t : project.getInstruments()) {
-                        sampleDao.insertAll(t.getSamples());
-                    }
-                }
-            });
+            DatabaseConnectionManager.runTask(new UpdateInstrumentsTask(project));
             DatabaseConnectionManager.runTask(new GetInstrumentsTask(project.id, new Consumer<List<Instrument>>() {
                 @Override
                 public void accept(List<Instrument> instruments) {
@@ -212,6 +234,19 @@ public class ProjectActivity extends AppCompatActivity implements InstrumentCrea
         if(instrumentListAdapter != null) {
             AdapterLoader.insertItem(instrumentListAdapter, instrument);
         }
+    }
+
+    @Override
+    public void onInstrumentEdit(Instrument instrument) {
+        if(instrument == project.getActiveInstrument()) {
+            project.updateActiveInstrument();
+        }
+    }
+
+    @Override
+    public void onInstrumentDelete(Instrument instrument) {
+        int removeIdx = project.removeInstrument(instrument);
+        AdapterLoader.removeItem(instrumentListAdapter, removeIdx + 1);
     }
 
     private class KeyboardNoteEventConsumer implements Consumer<NoteEvent> {

@@ -1,17 +1,9 @@
 package libre.sampler.adapters;
 
-import android.animation.LayoutTransition;
-import android.content.res.Resources;
 import android.text.Editable;
-import android.text.TextWatcher;
-import android.transition.AutoTransition;
 import android.transition.ChangeBounds;
 import android.transition.Transition;
-import android.transition.TransitionInflater;
 import android.transition.TransitionManager;
-import android.transition.TransitionPropagation;
-import android.util.AttributeSet;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -19,7 +11,7 @@ import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -29,13 +21,13 @@ import androidx.recyclerview.widget.RecyclerView;
 import libre.sampler.R;
 import libre.sampler.listeners.StatefulClickListener;
 import libre.sampler.listeners.StatefulTextWatcher;
-import libre.sampler.models.Instrument;
 import libre.sampler.models.Sample;
 import libre.sampler.utils.AdapterLoader;
 
 public class SampleListAdapter extends RecyclerView.Adapter<SampleListAdapter.ViewHolder> implements AdapterLoader.Loadable<Sample> {
     public List<Sample> items;
     private final Set<ViewHolder> viewHolderSet;
+    private int prevSize;
 
     @Override
     public List<Sample> items() {
@@ -82,6 +74,9 @@ public class SampleListAdapter extends RecyclerView.Adapter<SampleListAdapter.Vi
 
     public SampleListAdapter(List<Sample> items) {
         this.items = items;
+        this.prevSize = items.size();
+        // this.edited = new boolean[this.prevSize];
+        // Arrays.fill(edited, false);
         this.viewHolderSet = new HashSet<>();
     }
 
@@ -121,7 +116,6 @@ public class SampleListAdapter extends RecyclerView.Adapter<SampleListAdapter.Vi
             }
         });
 
-
         Sample sample = this.items.get(position);
         String label = String.format("%03d %s", position + 1, sample.filename);
         ((TextView) holder.collapsedView.findViewById(R.id.sample_label)).setText(label);
@@ -130,78 +124,145 @@ public class SampleListAdapter extends RecyclerView.Adapter<SampleListAdapter.Vi
                 R.id.velocity_min, R.id.velocity_max,
                 R.id.position_start, R.id.position_end, R.id.position_loop,
                 R.id.envelope_attack, R.id.envelope_decay, R.id.envelope_sustain, R.id.envelope_release};
+
         for(int id : inputs) {
             EditText ed = ((EditText) holder.expandedView.findViewById(id));
-            ed.setText("");
-            ed.addTextChangedListener(new StatefulTextWatcher<SampleInputField>(new SampleInputField(sample, id)) {
+            if(position < this.prevSize) {
+                switch(id) {
+                    case R.id.pitch_min:
+                        ed.setText(String.format("%d", sample.minPitch));
+                        break;
+                    case R.id.pitch_max:
+                        ed.setText(String.format("%d", sample.maxPitch));
+                        break;
+                    case R.id.pitch_base:
+                        ed.setText(String.format("%d", sample.basePitch));
+                        break;
+                    case R.id.velocity_min:
+                        ed.setText(String.format("%d", sample.minVelocity));
+                        break;
+                    case R.id.velocity_max:
+                        ed.setText(String.format("%d", sample.maxVelocity));
+                        break;
+                    case R.id.position_start:
+                        if(!sample.shouldUseDefaultLoopStart) {
+                            ed.setText(String.format("%.3f", sample.startTime));
+                        }
+                        break;
+                    case R.id.position_end:
+                        if(!sample.shouldUseDefaultLoopResume) {
+                            ed.setText(String.format("%.3f", sample.resumeTime));
+                        }
+                        break;
+                    case R.id.position_loop:
+                        if(!sample.shouldUseDefaultLoopEnd) {
+                            ed.setText(String.format("%.3f", sample.endTime));
+                        }
+                        break;
+                    case R.id.envelope_attack:
+                        ed.setText(String.format("%.1f", sample.attack));
+                        break;
+                    case R.id.envelope_decay:
+                        ed.setText(String.format("%.1f", sample.decay));
+                        break;
+                    case R.id.envelope_sustain:
+                        float m = 20 * (float) Math.log10((double) sample.sustain);
+                        if(m > 0) {
+                            m = 0;
+                        } else if(m < -120) {
+                            m = -120;
+                        }
+                        ed.setText(String.format("%.1f", m));
+                        break;
+                    case R.id.envelope_release:
+                        ed.setText(String.format("%.1f", sample.release));
+                        break;
+                    default:
+                        break;
+                }
+            } else {
+                ed.setText("");
+            }
+
+            ed.addTextChangedListener(new StatefulTextWatcher<SampleInputField>(new SampleInputField(holder, ed)) {
                 @Override
                 public void beforeTextChanged(CharSequence s, int start, int count, int after) {
                 }
 
                 @Override
                 public void onTextChanged(CharSequence s, int start, int before, int count) {
-                    if(this.data.sample == null || items.indexOf(this.data.sample) == -1) {
-                        this.data.sample = null;
+                    // tmp
+                    if(!this.data.view.equals(this.data.viewHolder.expandedView.findViewById(this.data.view.getId()))) {
+                        throw new RuntimeException();
+                    }
+                    // tmp>
+
+                    int position = this.data.viewHolder.getAdapterPosition();
+                    if(position > items.size()) {
                         return;
                     }
-                    switch(this.data.viewId) {
+                    Sample edSample = items.get(position);
+                    if(edSample == null) {
+                        return;
+                    }
+                    switch(this.data.view.getId()) {
                         case R.id.pitch_min:
                             try {
-                                this.data.sample.minPitch = Integer.parseInt(s.toString());
+                                edSample.minPitch = Integer.parseInt(s.toString());
                             } catch(NumberFormatException ignored) {
                             }
                             break;
                         case R.id.pitch_max:
                             try {
-                                this.data.sample.maxPitch = Integer.parseInt(s.toString());
+                                edSample.maxPitch = Integer.parseInt(s.toString());
                             } catch(NumberFormatException ignored) {
                             }
                             break;
                         case R.id.pitch_base:
                             try {
-                                this.data.sample.basePitch = Integer.parseInt(s.toString());
+                                edSample.basePitch = Integer.parseInt(s.toString());
                             } catch(NumberFormatException ignored) {
                             }
                             break;
                         case R.id.velocity_min:
                             try {
-                                this.data.sample.minVelocity = Integer.parseInt(s.toString());
+                                edSample.minVelocity = Integer.parseInt(s.toString());
                             } catch(NumberFormatException ignored) {
                             }
                             break;
                         case R.id.velocity_max:
                             try {
-                                this.data.sample.maxVelocity = Integer.parseInt(s.toString());
+                                edSample.maxVelocity = Integer.parseInt(s.toString());
                             } catch(NumberFormatException ignored) {
                             }
                             break;
                         case R.id.position_start:
                             try {
-                                this.data.sample.setLoopStart(Float.parseFloat(s.toString()));
+                                edSample.setLoopStart(Float.parseFloat(s.toString()));
                             } catch(NumberFormatException ignored) {
                             }
                             break;
                         case R.id.position_end:
                             try {
-                                this.data.sample.setLoopEnd(Float.parseFloat(s.toString()));
+                                edSample.setLoopEnd(Float.parseFloat(s.toString()));
                             } catch(NumberFormatException ignored) {
                             }
                             break;
                         case R.id.position_loop:
                             try {
-                                this.data.sample.setLoopResume(Float.parseFloat(s.toString()));
+                                edSample.setLoopResume(Float.parseFloat(s.toString()));
                             } catch(NumberFormatException ignored) {
                             }
                             break;
                         case R.id.envelope_attack:
                             try {
-                                this.data.sample.attack = Float.parseFloat(s.toString());
+                                edSample.attack = Float.parseFloat(s.toString());
                             } catch(NumberFormatException ignored) {
                             }
                             break;
                         case R.id.envelope_decay:
                             try {
-                                this.data.sample.decay = Float.parseFloat(s.toString());
+                                edSample.decay = Float.parseFloat(s.toString());
                             } catch(NumberFormatException ignored) {
                             }
                             break;
@@ -213,13 +274,13 @@ public class SampleListAdapter extends RecyclerView.Adapter<SampleListAdapter.Vi
                                 } else {
                                     m = (float) Math.pow(10, m / 20.0);  // dB to amplitude
                                 }
-                                this.data.sample.sustain = m;
+                                edSample.sustain = m;
                             } catch(NumberFormatException ignored) {
                             }
                             break;
                         case R.id.envelope_release:
                             try {
-                                this.data.sample.release = Float.parseFloat(s.toString());
+                                edSample.release = Float.parseFloat(s.toString());
                             } catch(NumberFormatException ignored) {
                             }
                             break;
@@ -241,12 +302,12 @@ public class SampleListAdapter extends RecyclerView.Adapter<SampleListAdapter.Vi
     }
 
     private static class SampleInputField {
-        public Sample sample;
-        public int viewId;
+        public ViewHolder viewHolder;
+        public View view;
 
-        public SampleInputField(Sample sample, int viewId) {
-            this.sample = sample;
-            this.viewId = viewId;
+        public SampleInputField(ViewHolder viewHolder, View view) {
+            this.viewHolder = viewHolder;
+            this.view = view;
         }
     }
 }

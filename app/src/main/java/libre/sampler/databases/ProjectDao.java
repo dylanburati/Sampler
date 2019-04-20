@@ -22,6 +22,6 @@ public interface ProjectDao {
     @Query("SELECT * FROM project ORDER BY mtime DESC")
     List<Project> getAll();
 
-    @Query("DELETE FROM project")
-    void deleteAll();
+    @Query("DELETE FROM project WHERE id IN (:projectIds)")
+    void deleteAll(List<Integer> projectIds);
 }

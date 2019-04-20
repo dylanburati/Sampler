@@ -30,4 +30,7 @@
     <string name="base">Base</string>
     <string name="new_instrument">New instrument</string>
     <string name="default_sample_path">Default Sample Directory</string>
+    <string name="delete">Delete</string>
+    <string name="dialog_instrument_edit_title">Edit instrument</string>
+    <string name="dialog_project_edit_submit">Done</string>
 </resources>

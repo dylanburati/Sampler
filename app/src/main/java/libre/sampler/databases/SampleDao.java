@@ -21,6 +21,12 @@ public interface SampleDao {
     @Query("SELECT * FROM instrument WHERE id IN (:instrumentIds)")
     List<InstrumentSampleRelation> getAll(List<Integer> instrumentIds);
 
+    @Query("DELETE FROM sample WHERE instrumentId = :instrumentId")
+    void deleteAll(int instrumentId);
+
+    @Query("DELETE FROM sample WHERE instrumentId IN (:instrumentIds)")
+    void deleteAll(List<Integer> instrumentIds);
+
     class InstrumentSampleRelation {
         @Embedded
         public Instrument instrument;

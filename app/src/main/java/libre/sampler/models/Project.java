@@ -74,6 +74,18 @@ public class Project implements Parcelable {
         return insertIdx;
     }
 
+    public int removeInstrument(Instrument e) {
+        int removeIdx = instruments.indexOf(e);
+        if(removeIdx == -1) {
+            return -1;
+        }
+        instruments.remove(removeIdx);
+        for(int i = removeIdx; i < instruments.size(); i++) {
+            instruments.get(i).setInstrumentId(this.id * AppConstants.MAX_INSTRUMENTS_PER_PROJECT + i);
+        }
+        return removeIdx;
+    }
+
     public void setInstruments(List<Instrument> instruments) {
         this.instruments = instruments;
     }
@@ -131,6 +143,10 @@ public class Project implements Parcelable {
 
         instrumentEventSource.dispatch(t);
         return activeIdx;
+    }
+
+    public void updateActiveInstrument() {
+        instrumentEventSource.dispatch(getActiveInstrument());
     }
 
     public void setActiveIdx(int activeIdx) {
