@@ -59,7 +59,7 @@ public class MainActivity extends AppCompatActivity implements ProjectCreateDial
         projectsLoaded = false;
         if(savedInstanceState != null) {
             projects = savedInstanceState.getParcelableArrayList(AppConstants.TAG_SAVED_STATE_PROJECT_LIST);
-            projectsLoaded = projects != null;
+            projectsLoaded = (projects != null);
         }
         if(!projectsLoaded) {
             projects = new ArrayList<>();
@@ -85,12 +85,47 @@ public class MainActivity extends AppCompatActivity implements ProjectCreateDial
             DatabaseConnectionManager.runTask(new GetProjectsTask(new Consumer<List<Project>>() {
                 @Override
                 public void accept(List<Project> prjs) {
-                    AdapterLoader.insertAll(dataAdapter, prjs);
                     dataAdapter.autoScrollOnInsert = true;
+                    AdapterLoader.insertAll(dataAdapter, prjs);
                 }
             }));
         } else {
             dataAdapter.autoScrollOnInsert = true;
+        }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        projectsLoaded = (projects != null);
+        if(!projectsLoaded) {
+            projects = new ArrayList<>();
+        }
+        if(data == null) {
+            this.data = (RecyclerView) findViewById(R.id.main_data);
+            this.dataAdapter = new ProjectListAdapter(projects, new Consumer<Project>() {
+                @Override
+                public void accept(Project project) {
+                    Intent intent = new Intent(MainActivity.this, ProjectActivity.class);
+                    intent.setAction(Intent.ACTION_VIEW);
+                    intent.putExtra(Intent.EXTRA_TITLE, project.name);
+                    intent.putExtra(AppConstants.TAG_EXTRA_PROJECT, (Parcelable) project);
+                    if(intent.resolveActivity(getPackageManager()) != null) {
+                        startActivity(intent);
+                    }
+                }
+            });
+            data.setAdapter(this.dataAdapter);
+        }
+        if(!projectsLoaded) {
+            DatabaseConnectionManager.getInstance(this);  // initialize database
+            DatabaseConnectionManager.runTask(new GetProjectsTask(new Consumer<List<Project>>() {
+                @Override
+                public void accept(List<Project> prjs) {
+                    dataAdapter.autoScrollOnInsert = true;
+                    AdapterLoader.insertAll(dataAdapter, prjs);
+                }
+            }));
         }
     }
 

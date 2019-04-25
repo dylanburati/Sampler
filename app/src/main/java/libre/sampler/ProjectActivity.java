@@ -108,11 +108,15 @@ public class ProjectActivity extends AppCompatActivity implements
 
     public void setInstrumentListAdapter(InstrumentListAdapter adapter) {
         this.instrumentListAdapter = adapter;
-        if(projectLoaded) updateInstrumentListAdapter();
+        if(projectLoaded) {
+            // project was loaded before adapter
+            updateInstrumentListAdapter();
+        }
+        // else update from GetInstrumentsTask callback
     }
 
     public void updateInstrumentListAdapter() {
-        if(project != null) {
+        if(project != null && instrumentListAdapter != null) {
             AdapterLoader.insertAll(instrumentListAdapter, project.getInstruments());
             int activeIdx = project.getActiveIdx();
             if(activeIdx >= 0) {
