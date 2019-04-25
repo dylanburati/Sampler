@@ -11,7 +11,7 @@ import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import java.util.Arrays;
+import java.text.DecimalFormat;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -27,7 +27,6 @@ import libre.sampler.utils.AdapterLoader;
 public class SampleListAdapter extends RecyclerView.Adapter<SampleListAdapter.ViewHolder> implements AdapterLoader.Loadable<Sample> {
     public List<Sample> items;
     private final Set<ViewHolder> viewHolderSet;
-    private int prevSize;
 
     @Override
     public List<Sample> items() {
@@ -74,7 +73,6 @@ public class SampleListAdapter extends RecyclerView.Adapter<SampleListAdapter.Vi
 
     public SampleListAdapter(List<Sample> items) {
         this.items = items;
-        this.prevSize = items.size();
         // this.edited = new boolean[this.prevSize];
         // Arrays.fill(edited, false);
         this.viewHolderSet = new HashSet<>();
@@ -125,63 +123,102 @@ public class SampleListAdapter extends RecyclerView.Adapter<SampleListAdapter.Vi
                 R.id.position_start, R.id.position_end, R.id.position_loop,
                 R.id.envelope_attack, R.id.envelope_decay, R.id.envelope_sustain, R.id.envelope_release};
 
+        DecimalFormat fmt = new DecimalFormat("0.###");
         for(int id : inputs) {
             EditText ed = ((EditText) holder.expandedView.findViewById(id));
-            if(position < this.prevSize) {
-                switch(id) {
-                    case R.id.pitch_min:
+            switch(id) {
+                case R.id.pitch_min:
+                    if(sample.shouldDisplay(Sample.FIELD_MIN_PITCH)) {
                         ed.setText(String.format("%d", sample.minPitch));
-                        break;
-                    case R.id.pitch_max:
+                    } else {
+                        ed.setText("");
+                    }
+                    break;
+                case R.id.pitch_max:
+                    if(sample.shouldDisplay(Sample.FIELD_MAX_PITCH)) {
                         ed.setText(String.format("%d", sample.maxPitch));
-                        break;
-                    case R.id.pitch_base:
+                    } else {
+                        ed.setText("");
+                    }
+                    break;
+                case R.id.pitch_base:
+                    if(sample.shouldDisplay(Sample.FIELD_BASE_PITCH)) {
                         ed.setText(String.format("%d", sample.basePitch));
-                        break;
-                    case R.id.velocity_min:
+                    } else {
+                        ed.setText("");
+                    }
+                    break;
+                case R.id.velocity_min:
+                    if(sample.shouldDisplay(Sample.FIELD_MIN_VELOCITY)) {
                         ed.setText(String.format("%d", sample.minVelocity));
-                        break;
-                    case R.id.velocity_max:
+                    } else {
+                        ed.setText("");
+                    }
+                    break;
+                case R.id.velocity_max:
+                    if(sample.shouldDisplay(Sample.FIELD_MAX_VELOCITY)) {
                         ed.setText(String.format("%d", sample.maxVelocity));
-                        break;
-                    case R.id.position_start:
-                        if(!sample.shouldUseDefaultLoopStart) {
-                            ed.setText(String.format("%.3f", sample.startTime));
-                        }
-                        break;
-                    case R.id.position_end:
-                        if(!sample.shouldUseDefaultLoopResume) {
-                            ed.setText(String.format("%.3f", sample.resumeTime));
-                        }
-                        break;
-                    case R.id.position_loop:
-                        if(!sample.shouldUseDefaultLoopEnd) {
-                            ed.setText(String.format("%.3f", sample.endTime));
-                        }
-                        break;
-                    case R.id.envelope_attack:
-                        ed.setText(String.format("%.1f", sample.attack));
-                        break;
-                    case R.id.envelope_decay:
-                        ed.setText(String.format("%.1f", sample.decay));
-                        break;
-                    case R.id.envelope_sustain:
+                    } else {
+                        ed.setText("");
+                    }
+                    break;
+                case R.id.position_start:
+                    if(!sample.shouldUseDefaultLoopStart) {
+                        ed.setText(fmt.format(sample.startTime));
+                    } else {
+                        ed.setText("");
+                    }
+                    break;
+                case R.id.position_end:
+                    if(!sample.shouldUseDefaultLoopResume) {
+                        ed.setText(fmt.format(sample.endTime));
+                    } else {
+                        ed.setText("");
+                    }
+                    break;
+                case R.id.position_loop:
+                    if(!sample.shouldUseDefaultLoopEnd) {
+                        ed.setText(fmt.format(sample.resumeTime));
+                    } else {
+                        ed.setText("");
+                    }
+                    break;
+                case R.id.envelope_attack:
+                    if(sample.shouldDisplay(Sample.FIELD_ATTACK)) {
+                        ed.setText(fmt.format(sample.attack));
+                    } else {
+                        ed.setText("");
+                    }
+                    break;
+                case R.id.envelope_decay:
+                    if(sample.shouldDisplay(Sample.FIELD_DECAY)) {
+                        ed.setText(fmt.format(sample.decay));
+                    } else {
+                        ed.setText("");
+                    }
+                    break;
+                case R.id.envelope_sustain:
+                    if(sample.shouldDisplay(Sample.FIELD_SUSTAIN)) {
                         float m = 20 * (float) Math.log10((double) sample.sustain);
                         if(m > 0) {
                             m = 0;
                         } else if(m < -120) {
                             m = -120;
                         }
-                        ed.setText(String.format("%.1f", m));
-                        break;
-                    case R.id.envelope_release:
-                        ed.setText(String.format("%.1f", sample.release));
-                        break;
-                    default:
-                        break;
-                }
-            } else {
-                ed.setText("");
+                        ed.setText(fmt.format(m));
+                    } else {
+                        ed.setText("");
+                    }
+                    break;
+                case R.id.envelope_release:
+                    if(sample.shouldDisplay(Sample.FIELD_RELEASE)) {
+                        ed.setText(fmt.format(sample.release));
+                    } else {
+                        ed.setText("");
+                    }
+                    break;
+                default:
+                    break;
             }
 
             ed.addTextChangedListener(new StatefulTextWatcher<SampleInputField>(new SampleInputField(holder, ed)) {
@@ -208,31 +245,31 @@ public class SampleListAdapter extends RecyclerView.Adapter<SampleListAdapter.Vi
                     switch(this.data.view.getId()) {
                         case R.id.pitch_min:
                             try {
-                                edSample.minPitch = Integer.parseInt(s.toString());
+                                edSample.setMinPitch(Integer.parseInt(s.toString()));
                             } catch(NumberFormatException ignored) {
                             }
                             break;
                         case R.id.pitch_max:
                             try {
-                                edSample.maxPitch = Integer.parseInt(s.toString());
+                                edSample.setMaxPitch(Integer.parseInt(s.toString()));
                             } catch(NumberFormatException ignored) {
                             }
                             break;
                         case R.id.pitch_base:
                             try {
-                                edSample.basePitch = Integer.parseInt(s.toString());
+                                edSample.setBasePitch(Integer.parseInt(s.toString()));
                             } catch(NumberFormatException ignored) {
                             }
                             break;
                         case R.id.velocity_min:
                             try {
-                                edSample.minVelocity = Integer.parseInt(s.toString());
+                                edSample.setMinVelocity(Integer.parseInt(s.toString()));
                             } catch(NumberFormatException ignored) {
                             }
                             break;
                         case R.id.velocity_max:
                             try {
-                                edSample.maxVelocity = Integer.parseInt(s.toString());
+                                edSample.setMaxVelocity(Integer.parseInt(s.toString()));
                             } catch(NumberFormatException ignored) {
                             }
                             break;
@@ -256,13 +293,13 @@ public class SampleListAdapter extends RecyclerView.Adapter<SampleListAdapter.Vi
                             break;
                         case R.id.envelope_attack:
                             try {
-                                edSample.attack = Float.parseFloat(s.toString());
+                                edSample.setAttack(Float.parseFloat(s.toString()));
                             } catch(NumberFormatException ignored) {
                             }
                             break;
                         case R.id.envelope_decay:
                             try {
-                                edSample.decay = Float.parseFloat(s.toString());
+                                edSample.setDecay(Float.parseFloat(s.toString()));
                             } catch(NumberFormatException ignored) {
                             }
                             break;
@@ -274,13 +311,13 @@ public class SampleListAdapter extends RecyclerView.Adapter<SampleListAdapter.Vi
                                 } else {
                                     m = (float) Math.pow(10, m / 20.0);  // dB to amplitude
                                 }
-                                edSample.sustain = m;
+                                edSample.setSustain(m);
                             } catch(NumberFormatException ignored) {
                             }
                             break;
                         case R.id.envelope_release:
                             try {
-                                edSample.release = Float.parseFloat(s.toString());
+                                edSample.setRelease(Float.parseFloat(s.toString()));
                             } catch(NumberFormatException ignored) {
                             }
                             break;

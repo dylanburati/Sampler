@@ -40,6 +40,7 @@ public class Sample implements Parcelable {
     public boolean shouldUseDefaultLoopStart = true;
     public boolean shouldUseDefaultLoopResume = true;
     public boolean shouldUseDefaultLoopEnd = true;
+    public int displayFlags;
 
     @Ignore
     public boolean isInfoLoaded = false;
@@ -70,30 +71,67 @@ public class Sample implements Parcelable {
         this.release = release;
     }
 
-    public void setBasePitch(int basePitch) {
-        this.basePitch = basePitch;
+    public void setMinPitch(int minPitch) {
+        this.minPitch = minPitch;
+        this.displayFlags |= FIELD_MIN_PITCH;
     }
 
-    public void setLoop(float startTime, float resumeTime, float endTime) {
-        this.startTime = startTime;
-        this.resumeTime = resumeTime;
-        this.endTime = endTime;
-        this.shouldUseDefaultLoopStart = this.shouldUseDefaultLoopResume = this.shouldUseDefaultLoopEnd = false;
+    public void setMaxPitch(int maxPitch) {
+        this.maxPitch = maxPitch;
+        this.displayFlags |= FIELD_MAX_PITCH;
+    }
+
+    public void setBasePitch(int basePitch) {
+        this.basePitch = basePitch;
+        this.displayFlags |= FIELD_BASE_PITCH;
+    }
+
+    public void setMinVelocity(int minVelocity) {
+        this.minVelocity = minVelocity;
+        this.displayFlags |= FIELD_MIN_VELOCITY;
+    }
+
+    public void setMaxVelocity(int maxVelocity) {
+        this.maxVelocity = maxVelocity;
+        this.displayFlags |= FIELD_MAX_VELOCITY;
     }
 
     public void setLoopStart(float startTime) {
         this.startTime = startTime;
         this.shouldUseDefaultLoopStart = false;
-    }
-
-    public void setLoopResume(float resumeTime) {
-        this.resumeTime = resumeTime;
-        this.shouldUseDefaultLoopResume = false;
+        this.displayFlags |= FIELD_LOOP_START;
     }
 
     public void setLoopEnd(float endTime) {
         this.endTime = endTime;
         this.shouldUseDefaultLoopEnd = false;
+        this.displayFlags |= FIELD_LOOP_END;
+    }
+
+    public void setLoopResume(float resumeTime) {
+        this.resumeTime = resumeTime;
+        this.shouldUseDefaultLoopResume = false;
+        this.displayFlags |= FIELD_LOOP_RESUME;
+    }
+
+    public void setAttack(float attack) {
+        this.attack = attack;
+        this.displayFlags |= FIELD_ATTACK;
+    }
+
+    public void setDecay(float decay) {
+        this.decay = decay;
+        this.displayFlags |= FIELD_DECAY;
+    }
+
+    public void setSustain(float sustain) {
+        this.sustain = sustain;
+        this.displayFlags |= FIELD_SUSTAIN;
+    }
+
+    public void setRelease(float release) {
+        this.release = release;
+        this.displayFlags |= FIELD_RELEASE;
     }
 
     public float getStartTime() {
@@ -137,6 +175,22 @@ public class Sample implements Parcelable {
             }
         }
         return true;
+    }
+
+    public static final int FIELD_MIN_PITCH = 0x01;
+    public static final int FIELD_MAX_PITCH = 0x02;
+    public static final int FIELD_BASE_PITCH = 0x04;
+    public static final int FIELD_MIN_VELOCITY = 0x08;
+    public static final int FIELD_MAX_VELOCITY = 0x10;
+    public static final int FIELD_LOOP_START = 0x20;
+    public static final int FIELD_LOOP_END = 0x40;
+    public static final int FIELD_LOOP_RESUME = 0x80;
+    public static final int FIELD_ATTACK = 0x100;
+    public static final int FIELD_DECAY = 0x200;
+    public static final int FIELD_SUSTAIN = 0x400;
+    public static final int FIELD_RELEASE = 0x800;
+    public boolean shouldDisplay(int field) {
+        return (displayFlags & field) != 0;
     }
 
     public Sample() {
