@@ -41,43 +41,40 @@ public class ProjectInstrumentsFragment extends Fragment {
         this.data = (RecyclerView) rootView.findViewById(R.id.instruments_data);
         project = ((ProjectActivity) getActivity()).project;
         adapter = new InstrumentListAdapter(new ArrayList<Instrument>(),
-                new InstrumentEditConsumer(this), new InstrumentSelectConsumer(), new InstrumentCreateRunnable(this));
+                new InstrumentEditConsumer(), new InstrumentSelectConsumer(), new InstrumentCreateRunnable());
         data.setAdapter(adapter);
         ((ProjectActivity) getActivity()).setInstrumentListAdapter(adapter);
 
         return rootView;
     }
 
-    private static class InstrumentEditConsumer implements Consumer<Instrument> {
-        private final Fragment ctx;
-
-        private InstrumentEditConsumer(Fragment ctx) {
-            this.ctx = ctx;
+    private class InstrumentEditConsumer implements Consumer<Instrument> {
+        public InstrumentEditConsumer() {
         }
 
         @Override
         public void accept(Instrument instrument) {
-            FragmentManager fm = ctx.getFragmentManager();
+            FragmentManager fm = ProjectInstrumentsFragment.this.getFragmentManager();
             if(fm != null) {
                 InstrumentEditDialog dialog = new InstrumentEditDialog();
+                dialog.defaultSamplePath = project.getDefaultSamplePath();
                 dialog.previousInstrument = instrument;
                 dialog.show(fm, "dialog_instrument_edit");
             }
         }
     }
 
-    private static class InstrumentCreateRunnable implements Runnable {
-        private final Fragment ctx;
-
-        public InstrumentCreateRunnable(Fragment ctx) {
-            this.ctx = ctx;
+    private class InstrumentCreateRunnable implements Runnable {
+        public InstrumentCreateRunnable() {
         }
 
         @Override
         public void run() {
-            FragmentManager fm = ctx.getFragmentManager();
+            FragmentManager fm = ProjectInstrumentsFragment.this.getFragmentManager();
             if(fm != null) {
-                new InstrumentCreateDialog().show(fm, "dialog_instrument_create");
+                InstrumentCreateDialog dialog = new InstrumentCreateDialog();
+                dialog.defaultSamplePath = project.getDefaultSamplePath();
+                dialog.show(fm, "dialog_instrument_create");
             }
         }
     }

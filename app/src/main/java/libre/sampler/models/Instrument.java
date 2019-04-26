@@ -111,4 +111,12 @@ public class Instrument implements Parcelable {
             return new Instrument[size];
         }
     };
+
+
+    public String firstFilename() {
+        if(this.filenames.size() < 1) {
+            return null;
+        }
+        return this.filenames.get(0);
+    }
 }

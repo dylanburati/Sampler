@@ -6,22 +6,26 @@ import java.util.ArrayList;
 import java.util.List;
 
 import libre.sampler.databases.InstrumentDao;
+import libre.sampler.databases.ProjectDao;
 import libre.sampler.databases.SampleDao;
 import libre.sampler.models.Instrument;
 import libre.sampler.models.Project;
 import libre.sampler.utils.DatabaseConnectionManager;
 
-public class UpdateInstrumentsTask extends AsyncTask<Void, Void, Void> {
+public class UpdateProjectTask extends AsyncTask<Void, Void, Void> {
     private Project project;
 
-    public UpdateInstrumentsTask(Project project) {
+    public UpdateProjectTask(Project project) {
         this.project = project;
     }
 
     @Override
     protected Void doInBackground(Void... voids) {
+        ProjectDao projectDao = DatabaseConnectionManager.getInstance(null).projectDao();
         InstrumentDao instrumentDao = DatabaseConnectionManager.getInstance(null).instrumentDao();
         SampleDao sampleDao = DatabaseConnectionManager.getInstance(null).sampleDao();
+
+        projectDao.updateAll(project);
         List<InstrumentDao.ProjectInstrumentRelation> data = instrumentDao.getAll(project.id);
         for(InstrumentDao.ProjectInstrumentRelation d : data) {
             if(d.project.id == project.id) {

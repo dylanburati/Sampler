@@ -7,8 +7,6 @@ import androidx.core.util.Consumer;
 import androidx.viewpager.widget.ViewPager;
 import libre.sampler.adapters.InstrumentListAdapter;
 import libre.sampler.adapters.ProjectFragmentAdapter;
-import libre.sampler.databases.InstrumentDao;
-import libre.sampler.databases.SampleDao;
 import libre.sampler.dialogs.InstrumentCreateDialog;
 import libre.sampler.dialogs.InstrumentEditDialog;
 import libre.sampler.models.Instrument;
@@ -17,7 +15,7 @@ import libre.sampler.models.Project;
 import libre.sampler.models.Sample;
 import libre.sampler.publishers.NoteEventSource;
 import libre.sampler.tasks.GetInstrumentsTask;
-import libre.sampler.tasks.UpdateInstrumentsTask;
+import libre.sampler.tasks.UpdateProjectTask;
 import libre.sampler.utils.AdapterLoader;
 import libre.sampler.utils.AppConstants;
 import libre.sampler.utils.DatabaseConnectionManager;
@@ -28,7 +26,6 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.res.Resources;
 import android.os.Bundle;
-import android.os.Handler;
 import android.os.IBinder;
 import android.os.Parcelable;
 import android.util.Log;
@@ -220,7 +217,7 @@ public class ProjectActivity extends AppCompatActivity implements
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         if(item.getItemId() == R.id.appbar_save) {
-            DatabaseConnectionManager.runTask(new UpdateInstrumentsTask(project));
+            DatabaseConnectionManager.runTask(new UpdateProjectTask(project));
             DatabaseConnectionManager.runTask(new GetInstrumentsTask(project.id, new Consumer<List<Instrument>>() {
                 @Override
                 public void accept(List<Instrument> instruments) {

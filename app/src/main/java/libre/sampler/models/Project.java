@@ -8,14 +8,19 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.GregorianCalendar;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 import androidx.room.ColumnInfo;
 import androidx.room.Entity;
 import androidx.room.Ignore;
 import androidx.room.PrimaryKey;
+import androidx.room.TypeConverter;
+import androidx.room.TypeConverters;
 import libre.sampler.R;
+import libre.sampler.databases.ProjectSettingsConverter;
 import libre.sampler.publishers.InstrumentEventSource;
 import libre.sampler.utils.AppConstants;
 
@@ -24,16 +29,16 @@ public class Project implements Parcelable {
     @PrimaryKey(autoGenerate = true)
     public int id;
 
-    @ColumnInfo(name = "name")
     public String name;
-
-    @ColumnInfo(name = "mtime")
     public long mtime;
+    private int activeIdx = -1;
+
+    @TypeConverters(ProjectSettingsConverter.class)
+    public Map<String, Object> settings;
 
     @Ignore
     private List<Instrument> instruments;
 
-    private int activeIdx = -1;
 
     @Ignore
     public InstrumentEventSource instrumentEventSource;
@@ -42,7 +47,7 @@ public class Project implements Parcelable {
         this.id = id;
         this.name = name;
         if(mtime != null) this.mtime = mtime;
-
+        this.settings = new HashMap<>();
         this.instruments = new ArrayList<>();
         this.instrumentEventSource = new InstrumentEventSource();
     }
@@ -158,12 +163,25 @@ public class Project implements Parcelable {
         return instruments;
     }
 
+    public String getDefaultSamplePath() {
+        String s = (String) settings.get(AppConstants.PREF_DEFAULT_SAMPLE_PATH);
+        if(s == null) {
+            return "";
+        }
+        return s;
+    }
+
+    public void setDefaultSamplePath(String s) {
+        settings.put(AppConstants.PREF_DEFAULT_SAMPLE_PATH, s);
+    }
+
     protected Project(Parcel in) {
         id = in.readInt();
         name = in.readString();
         mtime = in.readLong();
         instruments = in.createTypedArrayList(Instrument.CREATOR);
         activeIdx = in.readInt();
+        settings = ProjectSettingsConverter.deserializeSettings(in.readString());
 
         this.instrumentEventSource = new InstrumentEventSource();
     }
@@ -175,6 +193,7 @@ public class Project implements Parcelable {
         dest.writeLong(mtime);
         dest.writeTypedList(instruments);
         dest.writeInt(activeIdx);
+        dest.writeString(ProjectSettingsConverter.serializeSettings(settings));
     }
 
     @Override

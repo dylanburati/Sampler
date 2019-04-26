@@ -7,6 +7,7 @@ import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Parcelable;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
@@ -29,13 +30,14 @@ import libre.sampler.utils.AppConstants;
 
 public class InstrumentCreateDialog extends DialogFragment {
     private EditText nameInputView;
-
     private EditText sampleInputView;
     private Button sampleAddButton;
     private RecyclerView sampleData;
     private SampleListAdapter sampleDataAdapter;
+
     private Instrument toCreate;
     private InstrumentCreateDialogListener listener;
+    public String defaultSamplePath;
 
     @Override
     public void onAttach(@NonNull Context context) {
@@ -46,12 +48,6 @@ public class InstrumentCreateDialog extends DialogFragment {
     @NonNull
     @Override
     public Dialog onCreateDialog(@Nullable Bundle savedInstanceState) {
-        if(savedInstanceState != null) {
-            toCreate = savedInstanceState.getParcelable(AppConstants.TAG_SAVED_STATE_INSTRUMENT);
-        } else {
-            toCreate = new Instrument(null);
-        }
-
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
         LayoutInflater inflater = LayoutInflater.from(requireActivity());
         LinearLayout rootView = (LinearLayout) inflater.inflate(R.layout.dialog_instrument_create, null);
@@ -59,6 +55,18 @@ public class InstrumentCreateDialog extends DialogFragment {
         sampleInputView = (EditText) rootView.findViewById(R.id.input_sample_paths);
         sampleAddButton = (Button) rootView.findViewById(R.id.submit_sample_paths);
         sampleData = (RecyclerView) rootView.findViewById(R.id.sample_data);
+
+        if(savedInstanceState != null) {
+            toCreate = savedInstanceState.getParcelable(AppConstants.TAG_SAVED_STATE_INSTRUMENT);
+            nameInputView.setText(savedInstanceState.getString(AppConstants.TAG_SAVED_STATE_INSTRUMENT_CREATE_NAME));
+            sampleInputView.setText(savedInstanceState.getString(AppConstants.TAG_SAVED_STATE_INSTRUMENT_CREATE_PATH));
+        } else {
+            toCreate = new Instrument(null);
+            if(defaultSamplePath != null) {
+                sampleInputView.setText(defaultSamplePath);
+            }
+        }
+
         sampleDataAdapter = new SampleListAdapter(new ArrayList<Sample>());
         sampleData.setAdapter(sampleDataAdapter);
         sampleAddButton.setOnClickListener(new View.OnClickListener() {
@@ -71,13 +79,6 @@ public class InstrumentCreateDialog extends DialogFragment {
                 }
             }
         });
-
-        final SharedPreferences sharedPreferences = rootView.getContext().getSharedPreferences(
-                AppConstants.TAG_SHARED_PREFS, Context.MODE_PRIVATE);
-        String defaultSamplePath = sharedPreferences.getString(AppConstants.PREF_DEFAULT_SAMPLE_PATH, null);
-        if(defaultSamplePath != null) {
-            sampleInputView.setText(defaultSamplePath);
-        }
 
         builder.setView(rootView)
                 .setPositiveButton(R.string.dialog_project_create_submit, new DialogInterface.OnClickListener() {
@@ -109,6 +110,8 @@ public class InstrumentCreateDialog extends DialogFragment {
     @Override
     public void onSaveInstanceState(@NonNull Bundle outState) {
         outState.putParcelable(AppConstants.TAG_SAVED_STATE_INSTRUMENT, (Parcelable) toCreate);
+        outState.putString(AppConstants.TAG_SAVED_STATE_INSTRUMENT_CREATE_NAME, nameInputView.getText().toString());
+        outState.putString(AppConstants.TAG_SAVED_STATE_INSTRUMENT_CREATE_PATH, sampleInputView.getText().toString());
     }
 
     public interface InstrumentCreateDialogListener {
