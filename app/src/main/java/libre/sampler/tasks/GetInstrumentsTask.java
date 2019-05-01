@@ -26,14 +26,14 @@ public class GetInstrumentsTask extends AsyncTask<Void, Void, List<Instrument>> 
     @Override
     protected List<Instrument> doInBackground(Void... voids) {
         List<Instrument> out = new ArrayList<>();
-        List<InstrumentDao.ProjectInstrumentRelation> data = DatabaseConnectionManager.getInstance(null).instrumentDao().getAll(projectId);
+        List<InstrumentDao.ProjectInstrumentRelation> data = DatabaseConnectionManager.getInstance().instrumentDao().getAll(projectId);
         for(InstrumentDao.ProjectInstrumentRelation d : data) {
             if(d.project.id == projectId) {
                 List<Integer> instrumentIds = new ArrayList<>();
                 for(Instrument t : d.instruments) {
                     instrumentIds.add(t.id);
                 }
-                List<SampleDao.InstrumentSampleRelation> sampleData = DatabaseConnectionManager.getInstance(null).sampleDao().getAll(instrumentIds);
+                List<SampleDao.InstrumentSampleRelation> sampleData = DatabaseConnectionManager.getInstance().sampleDao().getAll(instrumentIds);
                 for(SampleDao.InstrumentSampleRelation r : sampleData) {
                     Collections.sort(r.samples, new Comparator<Sample>() {
                         @Override

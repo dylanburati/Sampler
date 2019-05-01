@@ -18,7 +18,7 @@ public class GetProjectsTask extends AsyncTask<Void, Void, List<Project>> {
 
     @Override
     protected List<Project> doInBackground(Void... voids) {
-        List<Project> projects = DatabaseConnectionManager.getInstance(null).projectDao().getAll();
+        List<Project> projects = DatabaseConnectionManager.getInstance().projectDao().getAll();
         return projects;
     }
 

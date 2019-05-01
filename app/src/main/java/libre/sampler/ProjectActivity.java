@@ -4,6 +4,7 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.util.Consumer;
+import androidx.room.Database;
 import androidx.viewpager.widget.ViewPager;
 import libre.sampler.adapters.InstrumentListAdapter;
 import libre.sampler.adapters.ProjectFragmentAdapter;
@@ -13,6 +14,7 @@ import libre.sampler.models.Instrument;
 import libre.sampler.models.NoteEvent;
 import libre.sampler.models.Project;
 import libre.sampler.models.Sample;
+import libre.sampler.publishers.MidiEventDispatcher;
 import libre.sampler.publishers.NoteEventSource;
 import libre.sampler.tasks.GetInstrumentsTask;
 import libre.sampler.tasks.UpdateProjectTask;
@@ -21,16 +23,22 @@ import libre.sampler.utils.AppConstants;
 import libre.sampler.utils.DatabaseConnectionManager;
 import libre.sampler.utils.VoiceBindingList;
 
+import android.annotation.SuppressLint;
 import android.content.ComponentName;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.res.Resources;
+import android.media.midi.MidiDeviceInfo;
+import android.media.midi.MidiManager;
+import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.IBinder;
 import android.os.Parcelable;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 
 import org.puredata.android.io.AudioParameters;
 import org.puredata.android.service.PdPreferences;
@@ -72,6 +80,7 @@ public class ProjectActivity extends AppCompatActivity implements
     private VoiceBindingList pdVoiceBindings;
     private int pdPatchHandle;
     public InstrumentListAdapter instrumentListAdapter;
+    private MidiEventDispatcher midiEventDispatcher;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -82,13 +91,22 @@ public class ProjectActivity extends AppCompatActivity implements
             toolbar.setTitle(getIntent().getStringExtra(Intent.EXTRA_TITLE));
         }
 
+        initNoteEventSource();
+        initUI();
+        initPdService();
+
         projectLoaded = false;
         if(savedInstanceState != null) {
             project = savedInstanceState.getParcelable(AppConstants.TAG_SAVED_STATE_PROJECT);
             projectLoaded = (project != null);
+            if(savedInstanceState.getByte(AppConstants.TAG_SAVED_STATE_MIDI_CONNECTED) != 0) {
+                refreshMidiConnection();
+            }
         }
         if(!projectLoaded) {
+            Log.d("ProjectActivity","Project load");
             project = getIntent().getParcelableExtra(AppConstants.TAG_EXTRA_PROJECT);
+            DatabaseConnectionManager.initialize(this);
             DatabaseConnectionManager.runTask(new GetInstrumentsTask(project.id, new Consumer<List<Instrument>>() {
                 @Override
                 public void accept(List<Instrument> instruments) {
@@ -98,9 +116,6 @@ public class ProjectActivity extends AppCompatActivity implements
                 }
             }));
         }
-        initNoteEventSource();
-        initUI();
-        initPdService();
     }
 
     public void setInstrumentListAdapter(InstrumentListAdapter adapter) {
@@ -117,7 +132,6 @@ public class ProjectActivity extends AppCompatActivity implements
             AdapterLoader.insertAll(instrumentListAdapter, project.getInstruments());
             int activeIdx = project.getActiveIdx();
             if(activeIdx >= 0) {
-                project.updateActiveInstrument();
                 instrumentListAdapter.activateItem(activeIdx + 1);
             }
         }
@@ -182,6 +196,10 @@ public class ProjectActivity extends AppCompatActivity implements
                     }
                 }
             });
+            int activeIdx = project.getActiveIdx();
+            if(activeIdx >= 0) {
+                project.updateActiveInstrument();
+            }
         } catch (IOException e) {
             finish();
         } finally {
@@ -195,16 +213,21 @@ public class ProjectActivity extends AppCompatActivity implements
         pdService.stopAudio();
     }
 
+    @SuppressLint("NewApi")
     @Override
     protected void onDestroy() {
         super.onDestroy();
         unbindService(pdConnection);
+        if(midiEventDispatcher != null) {
+            midiEventDispatcher.closeMidi();
+        }
     }
 
     @Override
     protected void onSaveInstanceState(@NonNull Bundle outState) {
         super.onSaveInstanceState(outState);
         outState.putParcelable(AppConstants.TAG_SAVED_STATE_PROJECT, (Parcelable) project);
+        outState.putByte(AppConstants.TAG_SAVED_STATE_MIDI_CONNECTED, (byte) (midiEventDispatcher != null ? 1 : 0));
     }
 
     @Override
@@ -217,6 +240,7 @@ public class ProjectActivity extends AppCompatActivity implements
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         if(item.getItemId() == R.id.appbar_save) {
+            DatabaseConnectionManager.initialize(this);
             DatabaseConnectionManager.runTask(new UpdateProjectTask(project));
             DatabaseConnectionManager.runTask(new GetInstrumentsTask(project.id, new Consumer<List<Instrument>>() {
                 @Override
@@ -225,8 +249,25 @@ public class ProjectActivity extends AppCompatActivity implements
                 }
             }));
             return true;
+        } else if(item.getItemId() == R.id.appbar_refresh_midi) {
+            refreshMidiConnection();
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    private void refreshMidiConnection() {
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            MidiManager midiManager = (MidiManager) getSystemService(MIDI_SERVICE);
+            MidiDeviceInfo[] midiDeviceInfos = midiManager.getDevices();
+            if(midiDeviceInfos.length > 0) {
+                if(midiEventDispatcher == null) {
+                    midiEventDispatcher = new MidiEventDispatcher();  // ((View) item).getHandler()
+                }
+                midiManager.openDevice(midiDeviceInfos[0], midiEventDispatcher, new Handler());
+                Log.d("midiManager", "openDevice called");
+                midiEventDispatcher.noteEventSource = noteEventSource;
+            }
+        }
     }
 
     @Override
@@ -239,6 +280,10 @@ public class ProjectActivity extends AppCompatActivity implements
 
     @Override
     public void onInstrumentEdit(Instrument instrument) {
+        int changeIdx = instrumentListAdapter.items.indexOf(instrument);
+        if(changeIdx != -1) {
+            instrumentListAdapter.notifyItemChanged(changeIdx);
+        }
         if(instrument == project.getActiveInstrument()) {
             project.updateActiveInstrument();
         }
@@ -274,7 +319,7 @@ public class ProjectActivity extends AppCompatActivity implements
                             continue;
                         }
 
-                        if(noteEvent.action == NoteEvent.ACTION_BEGIN) {
+                        if(noteEvent.action == NoteEvent.NOTE_ON) {
                             int voiceIndex = pdVoiceBindings.getBinding(noteEvent, s.id);
                             if(voiceIndex == -1) {
                                 continue;
@@ -283,7 +328,7 @@ public class ProjectActivity extends AppCompatActivity implements
                                     /*velocity*/   noteEvent.velocity,
                                     /*ADSR*/       s.attack, s.decay, s.sustain, s.release,
                                     /*sampleInfo*/ s.sampleIndex, s.getStartTime(), s.getResumeTime(), s.getEndTime(), s.sampleRate, s.basePitch);
-                        } else if(noteEvent.action == NoteEvent.ACTION_END) {
+                        } else if(noteEvent.action == NoteEvent.NOTE_OFF) {
                             int voiceIndex = pdVoiceBindings.releaseBinding(noteEvent, s.id);
                             if(voiceIndex == -1) {
                                 continue;

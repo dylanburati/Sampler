@@ -21,9 +21,9 @@ public class UpdateProjectTask extends AsyncTask<Void, Void, Void> {
 
     @Override
     protected Void doInBackground(Void... voids) {
-        ProjectDao projectDao = DatabaseConnectionManager.getInstance(null).projectDao();
-        InstrumentDao instrumentDao = DatabaseConnectionManager.getInstance(null).instrumentDao();
-        SampleDao sampleDao = DatabaseConnectionManager.getInstance(null).sampleDao();
+        ProjectDao projectDao = DatabaseConnectionManager.getInstance().projectDao();
+        InstrumentDao instrumentDao = DatabaseConnectionManager.getInstance().instrumentDao();
+        SampleDao sampleDao = DatabaseConnectionManager.getInstance().sampleDao();
 
         projectDao.updateAll(project);
         List<InstrumentDao.ProjectInstrumentRelation> data = instrumentDao.getAll(project.id);

@@ -84,7 +84,7 @@ public class ProjectKeyboardFragment extends Fragment {
         noteEventSource.add("logger", new Consumer<NoteEvent>() {
             @Override
             public void accept(NoteEvent noteEvent) {
-                Log.d("ProjectKeyboardFragment", String.format("noteEvent: keynum=%d action=%d", noteEvent.keyNum, noteEvent.action));
+                Log.d("ProjectKeyboardFragment", String.format("noteEvent: action=%d keynum=%d velocity=%d", noteEvent.action, noteEvent.keyNum, noteEvent.velocity));
             }
         });
         
@@ -111,7 +111,7 @@ public class ProjectKeyboardFragment extends Fragment {
                             || (eventAction == MotionEvent.ACTION_POINTER_UP && e.getActionIndex() == i)) {
                         KeyData previous = noteQueue.get(eventId);
                         if(previous != null) {
-                            NoteEvent prevEndEvent = new NoteEvent(previous.keyNum, NoteEvent.ACTION_END, eventId);
+                            NoteEvent prevEndEvent = new NoteEvent(NoteEvent.NOTE_OFF, previous.keyNum, 100, eventId);
                             noteEventSource.dispatch(prevEndEvent);
                             noteQueue.remove(eventId);
                             previous.keyView.setActivated(false);
@@ -121,7 +121,7 @@ public class ProjectKeyboardFragment extends Fragment {
 
                     if(eventAction == MotionEvent.ACTION_DOWN || eventAction == MotionEvent.ACTION_POINTER_DOWN) {
                         if(keyData.keyNum != -1 && !noteQueue.containsKey(eventId)) {
-                            NoteEvent noteEvent = new NoteEvent(keyData.keyNum, NoteEvent.ACTION_BEGIN, eventId);
+                            NoteEvent noteEvent = new NoteEvent(NoteEvent.NOTE_ON, keyData.keyNum, 100, eventId);
                             noteEventSource.dispatch(noteEvent);
                             noteQueue.put(eventId, keyData);
                             keyData.keyView.setActivated(true);
@@ -129,11 +129,11 @@ public class ProjectKeyboardFragment extends Fragment {
                     } else if(eventAction == MotionEvent.ACTION_MOVE) {
                         KeyData previous = noteQueue.get(eventId);
                         if(previous != null && previous.keyNum != keyData.keyNum) {
-                            NoteEvent prevEndEvent = new NoteEvent(previous.keyNum, NoteEvent.ACTION_END, eventId);
+                            NoteEvent prevEndEvent = new NoteEvent(NoteEvent.NOTE_OFF, previous.keyNum, 100, eventId);
                             noteEventSource.dispatch(prevEndEvent);
                             previous.keyView.setActivated(false);
                             if(keyData.keyNum != -1) {
-                                NoteEvent noteEvent = new NoteEvent(keyData.keyNum, NoteEvent.ACTION_BEGIN, eventId);
+                                NoteEvent noteEvent = new NoteEvent(NoteEvent.NOTE_ON, keyData.keyNum, 100, eventId);
                                 noteEventSource.dispatch(noteEvent);
                                 noteQueue.put(eventId, keyData);
                                 keyData.keyView.setActivated(true);

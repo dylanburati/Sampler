@@ -14755,13 +14755,13 @@
 #X obj 25 50 samplerate~;
 #X floatatom 25 75 5 0 0 0 - - -;
 #X obj 225 50 inlet~;
-#X obj 225 75 delwrite~ limiter 12;
+#X obj 225 75 delwrite~ limiter 2;
 #X obj 225 150 abs~;
-#X obj 275 150 expr 1-pow(0.001 \, 1000.0/2.0/$f1);
+#X obj 275 150 expr 1-pow(0.001 \, 1000.0/0.1/$f1);
 #X obj 505 150 expr 1-pow(0.001 \, 1000.0/600.0/$f1);
 #X obj 225 175 fexpr~ if($x1 > $y1 \, (1-$f2)*$y1+$f2*$x1 \, (1-$f3)*$y1+$f3*$x1);
 #X obj 225 200 expr~ max(1.5 * $v1 \, 1.003);
-#X obj 50 300 delread~ limiter 12;
+#X obj 50 300 delread~ limiter 1;
 #X obj 50 325 /~;
 #X obj 50 350 outlet~;
 #X connect 0 0 1 0;

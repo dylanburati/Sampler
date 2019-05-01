@@ -3,6 +3,8 @@ package libre.sampler;
 import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.media.midi.MidiDeviceInfo;
+import android.media.midi.MidiManager;
 import android.os.Build;
 import android.os.Bundle;
 
@@ -18,15 +20,19 @@ import libre.sampler.adapters.ProjectListAdapter;
 import libre.sampler.databases.ProjectDao;
 import libre.sampler.dialogs.ProjectCreateDialog;
 import libre.sampler.listeners.MySwipeRefreshListener;
+import libre.sampler.models.NoteEvent;
 import libre.sampler.models.Project;
+import libre.sampler.publishers.MidiEventDispatcher;
 import libre.sampler.tasks.DeleteProjectsTask;
 import libre.sampler.tasks.GetProjectsTask;
 import libre.sampler.utils.AdapterLoader;
 import libre.sampler.utils.AppConstants;
 import libre.sampler.utils.DatabaseConnectionManager;
 
+import android.os.Handler;
 import android.os.Parcelable;
 import android.os.PersistableBundle;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 
@@ -81,7 +87,7 @@ public class MainActivity extends AppCompatActivity implements ProjectCreateDial
         data.setAdapter(this.dataAdapter);
 
         if(!projectsLoaded) {
-            DatabaseConnectionManager.getInstance(this);  // initialize database
+            DatabaseConnectionManager.initialize(this);
             DatabaseConnectionManager.runTask(new GetProjectsTask(new Consumer<List<Project>>() {
                 @Override
                 public void accept(List<Project> prjs) {
@@ -118,7 +124,7 @@ public class MainActivity extends AppCompatActivity implements ProjectCreateDial
             data.setAdapter(this.dataAdapter);
         }
         if(!projectsLoaded) {
-            DatabaseConnectionManager.getInstance(this);  // initialize database
+            DatabaseConnectionManager.initialize(this);
             DatabaseConnectionManager.runTask(new GetProjectsTask(new Consumer<List<Project>>() {
                 @Override
                 public void accept(List<Project> prjs) {
@@ -154,12 +160,15 @@ public class MainActivity extends AppCompatActivity implements ProjectCreateDial
             }
             return true;
         } else if(item.getItemId() == R.id.appbar_delete) {
+            DatabaseConnectionManager.initialize(this);
             DatabaseConnectionManager.runTask(new DeleteProjectsTask(dataAdapter.items, new Runnable() {
                 @Override
                 public void run() {
                     AdapterLoader.clear(dataAdapter);
                 }
             }));
+            return true;
+        } else if(item.getItemId() == R.id.appbar_about) {
             return true;
         }
         return super.onOptionsItemSelected(item);

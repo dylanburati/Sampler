@@ -23,9 +23,9 @@ public class DeleteProjectsTask extends AsyncTask<Void, Void, Void> {
 
     @Override
     protected Void doInBackground(Void... voids) {
-        ProjectDao projectDao = DatabaseConnectionManager.getInstance(null).projectDao();
-        InstrumentDao instrumentDao = DatabaseConnectionManager.getInstance(null).instrumentDao();
-        SampleDao sampleDao = DatabaseConnectionManager.getInstance(null).sampleDao();
+        ProjectDao projectDao = DatabaseConnectionManager.getInstance().projectDao();
+        InstrumentDao instrumentDao = DatabaseConnectionManager.getInstance().instrumentDao();
+        SampleDao sampleDao = DatabaseConnectionManager.getInstance().sampleDao();
 
         List<Integer> projectIds = new ArrayList<>();
         for(Project p : projects) {

@@ -10,4 +10,8 @@
     <item android:id="@+id/appbar_delete"
         android:title="@string/appbar_delete"
         app:showAsAction="never" />
+
+    <item android:id="@+id/appbar_about"
+        android:title="@string/appbar_about"
+        app:showAsAction="never" />
 </menu>

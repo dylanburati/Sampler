@@ -10,6 +10,7 @@ public class AppConstants {
     public static final String TAG_SAVED_STATE_INSTRUMENT = "libre.sampler.tags.SAVED_STATE_INSTRUMENT";
     public static final String TAG_SAVED_STATE_INSTRUMENT_CREATE_NAME = "libre.sampler.tags.SAVED_STATE_INSTRUMENT_CREATE_NAME";
     public static final String TAG_SAVED_STATE_INSTRUMENT_CREATE_PATH = "libre.sampler.tags.SAVED_STATE_INSTRUMENT_CREATE_PATH";
+    public static final String TAG_SAVED_STATE_MIDI_CONNECTED = "libre.sampler.tags.SAVED_STATE_MIDI_CONNECTED";
 
     public static final int MAX_INSTRUMENTS_PER_PROJECT = 65536;
 

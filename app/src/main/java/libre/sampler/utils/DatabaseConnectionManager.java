@@ -12,16 +12,22 @@ import libre.sampler.databases.AppDatabase;
 public class DatabaseConnectionManager {
     private static AppDatabase instance = null;
     private static ExecutorService executor = Executors.newSingleThreadExecutor();
-    public static boolean ready = false;
 
-    public static AppDatabase getInstance(Context ctx) {
+    public static void initialize(Context ctx) {
         if(instance == null) {
             if(ctx == null) {
                 throw new NullPointerException("A valid context must be provided to initialize the database");
             }
             instance = Room.databaseBuilder(ctx, AppDatabase.class, "sampler").addMigrations(AppDatabase.MIGRATION_1_2).build();
         }
-        ready = true;
+    }
+
+    public static AppDatabase getInstance(Context ctx) {
+        initialize(ctx);
+        return instance;
+    }
+
+    public static AppDatabase getInstance() {
         return instance;
     }
 
