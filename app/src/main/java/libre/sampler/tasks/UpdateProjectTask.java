@@ -14,9 +14,11 @@ import libre.sampler.utils.DatabaseConnectionManager;
 
 public class UpdateProjectTask extends AsyncTask<Void, Void, Void> {
     private Project project;
+    private Runnable onCompleted;
 
-    public UpdateProjectTask(Project project) {
+    public UpdateProjectTask(Project project, Runnable onCompleted) {
         this.project = project;
+        this.onCompleted = onCompleted;
     }
 
     @Override
@@ -42,5 +44,10 @@ public class UpdateProjectTask extends AsyncTask<Void, Void, Void> {
             sampleDao.insertAll(t.getSamples());
         }
         return null;
+    }
+
+    @Override
+    protected void onPostExecute(Void aVoid) {
+        if(this.onCompleted != null) this.onCompleted.run();
     }
 }

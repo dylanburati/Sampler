@@ -74,6 +74,8 @@ public class ProjectInstrumentsFragment extends Fragment {
             if(fm != null) {
                 InstrumentCreateDialog dialog = new InstrumentCreateDialog();
                 dialog.defaultSamplePath = project.getDefaultSamplePath();
+                dialog.toCreate = new Instrument(null);
+                project.registerInstrument(dialog.toCreate);
                 dialog.show(fm, "dialog_instrument_create");
             }
         }

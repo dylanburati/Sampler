@@ -24,6 +24,7 @@ import libre.sampler.utils.AdapterLoader;
 import libre.sampler.utils.AppConstants;
 import libre.sampler.utils.DatabaseConnectionManager;
 import libre.sampler.utils.PatternThread;
+import libre.sampler.utils.SampleBindingList;
 import libre.sampler.utils.VoiceBindingList;
 
 import android.annotation.SuppressLint;
@@ -42,6 +43,7 @@ import android.util.Log;
 import android.util.Pair;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.Toast;
 
 import org.puredata.android.io.AudioParameters;
 import org.puredata.android.service.PdPreferences;
@@ -56,9 +58,9 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
+import java.util.Map;
 
 import static libre.sampler.utils.AppConstants.NANOS_PER_MILLI;
 
@@ -89,9 +91,10 @@ public class ProjectActivity extends AppCompatActivity implements
     public Project project;
     private boolean projectLoaded;
 
-    private final int pdVoiceBindingLen = 96;
     private VoiceBindingList pdVoiceBindings;
+    private SampleBindingList pdSampleBindings;
     private int pdPatchHandle;
+
     public InstrumentListAdapter instrumentListAdapter;
     private MidiEventDispatcher midiEventDispatcher;
 
@@ -222,7 +225,8 @@ public class ProjectActivity extends AppCompatActivity implements
     }
 
     private void initPd() {
-        pdVoiceBindings = new VoiceBindingList(pdVoiceBindingLen);
+        pdVoiceBindings = new VoiceBindingList(AppConstants.PD_NUM_VOICES);
+        pdSampleBindings = new SampleBindingList(AppConstants.PD_NUM_SAMPLES);
 
         Resources res = getResources();
         File patchFile = null;
@@ -241,7 +245,9 @@ public class ProjectActivity extends AppCompatActivity implements
                 @Override
                 public void accept(Instrument instrument) {
                     for(Sample s : instrument.getSamples()) {
-                        PdBase.sendList("sample_file", s.sampleIndex, s.filename);
+                        if(pdSampleBindings.getBinding(s)) {
+                            PdBase.sendList("sample_file", s.sampleIndex, s.filename);
+                        }
                     }
                 }
             });
@@ -291,12 +297,12 @@ public class ProjectActivity extends AppCompatActivity implements
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         if(item.getItemId() == R.id.appbar_save) {
+            project.mtime = System.currentTimeMillis();
             DatabaseConnectionManager.initialize(this);
-            DatabaseConnectionManager.runTask(new UpdateProjectTask(project));
-            DatabaseConnectionManager.runTask(new GetInstrumentsTask(project.id, new Consumer<List<Instrument>>() {
+            DatabaseConnectionManager.runTask(new UpdateProjectTask(project, new Runnable() {
                 @Override
-                public void accept(List<Instrument> instruments) {
-                    Log.d("GetInstrumentsTask", "");
+                public void run() {
+                    Toast.makeText(ProjectActivity.this, R.string.project_saved, Toast.LENGTH_SHORT).show();
                 }
             }));
             return true;

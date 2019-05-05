@@ -3,13 +3,10 @@ package libre.sampler;
 import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.media.midi.MidiDeviceInfo;
-import android.media.midi.MidiManager;
 import android.os.Build;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.content.ContextCompat;
@@ -20,19 +17,16 @@ import libre.sampler.adapters.ProjectListAdapter;
 import libre.sampler.databases.ProjectDao;
 import libre.sampler.dialogs.ProjectCreateDialog;
 import libre.sampler.listeners.MySwipeRefreshListener;
-import libre.sampler.models.NoteEvent;
 import libre.sampler.models.Project;
-import libre.sampler.publishers.MidiEventDispatcher;
+import libre.sampler.tasks.CreateProjectTask;
 import libre.sampler.tasks.DeleteProjectsTask;
 import libre.sampler.tasks.GetProjectsTask;
 import libre.sampler.utils.AdapterLoader;
 import libre.sampler.utils.AppConstants;
 import libre.sampler.utils.DatabaseConnectionManager;
+import libre.sampler.utils.SingleStateHolder;
 
-import android.os.Handler;
 import android.os.Parcelable;
-import android.os.PersistableBundle;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 
@@ -176,14 +170,14 @@ public class MainActivity extends AppCompatActivity implements ProjectCreateDial
 
     @Override
     public void onProjectCreate(String projectName) {
-        final Project toAdd = new Project(0, projectName, System.currentTimeMillis());
-        final ProjectDao dao = DatabaseConnectionManager.getInstance(this).projectDao();
-        DatabaseConnectionManager.execute(new Runnable() {
+        final Project toAdd = new Project(projectName, System.currentTimeMillis());
+        DatabaseConnectionManager.initialize(this);
+        DatabaseConnectionManager.runTask(new CreateProjectTask(toAdd, new Consumer<Integer>() {
             @Override
-            public void run() {
-                toAdd.id = (int) dao.insert(toAdd);
+            public void accept(Integer id) {
+                toAdd.setProjectId(id);
             }
-        });
+        }));
         AdapterLoader.insertItem(this.dataAdapter, 0, toAdd);
     }
 

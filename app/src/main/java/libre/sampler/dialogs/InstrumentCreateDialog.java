@@ -16,6 +16,7 @@ import android.widget.LinearLayout;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.List;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -35,9 +36,10 @@ public class InstrumentCreateDialog extends DialogFragment {
     private RecyclerView sampleData;
     private SampleListAdapter sampleDataAdapter;
 
-    private Instrument toCreate;
+    public Instrument toCreate;
     private InstrumentCreateDialogListener listener;
     public String defaultSamplePath;
+    private List<Sample> sampleList;
 
     @Override
     public void onAttach(@NonNull Context context) {
@@ -61,13 +63,13 @@ public class InstrumentCreateDialog extends DialogFragment {
             nameInputView.setText(savedInstanceState.getString(AppConstants.TAG_SAVED_STATE_INSTRUMENT_CREATE_NAME));
             sampleInputView.setText(savedInstanceState.getString(AppConstants.TAG_SAVED_STATE_INSTRUMENT_CREATE_PATH));
         } else {
-            toCreate = new Instrument(null);
             if(defaultSamplePath != null) {
                 sampleInputView.setText(defaultSamplePath);
             }
         }
 
-        sampleDataAdapter = new SampleListAdapter(new ArrayList<Sample>());
+        sampleList = toCreate.getSamples();
+        sampleDataAdapter = new SampleListAdapter(sampleList);
         sampleData.setAdapter(sampleDataAdapter);
         sampleAddButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -75,7 +77,9 @@ public class InstrumentCreateDialog extends DialogFragment {
                 File sampleFile = new File(sampleInputView.getText().toString());
                 // todo support wildcard search: File.listFiles
                 if(sampleFile.isFile() && sampleFile.canRead()) {
-                    AdapterLoader.insertItem(sampleDataAdapter, new Sample(sampleFile.getAbsolutePath(), -1, -1));
+                    int insertIdx = sampleList.size();
+                    toCreate.addSample(sampleFile.getAbsolutePath());
+                    sampleDataAdapter.notifyItemInserted(insertIdx);
                 }
             }
         });
@@ -87,12 +91,7 @@ public class InstrumentCreateDialog extends DialogFragment {
                         String name = nameInputView.getText().toString();
                         toCreate.name = name;
 
-                        for(Sample s : sampleDataAdapter.items) {
-                            if(s == null) {
-                                continue;
-                            }
-                            toCreate.addSample(s);
-                        }
+                        toCreate.setSamples(sampleList);
                         if(listener != null) listener.onInstrumentCreate(toCreate);
                         dialog.dismiss();
                     }

@@ -35,4 +35,5 @@
     <string name="dialog_project_edit_submit">Done</string>
     <string name="appbar_about">About</string>
     <string name="action_refresh_midi">Refresh MIDI</string>
+    <string name="project_saved">Saved project</string>
 </resources>

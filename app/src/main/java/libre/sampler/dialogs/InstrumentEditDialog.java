@@ -15,6 +15,7 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import java.io.File;
+import java.util.List;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -39,6 +40,7 @@ public class InstrumentEditDialog extends DialogFragment {
 
     public Instrument previousInstrument;
     public String defaultSamplePath;
+    private List<Sample> sampleList;
 
     @Override
     public void onAttach(@NonNull Context context) {
@@ -72,8 +74,8 @@ public class InstrumentEditDialog extends DialogFragment {
             }
         }
 
-
-        sampleDataAdapter = new SampleListAdapter(previousInstrument.getSamples());
+        sampleList = previousInstrument.getSamples();
+        sampleDataAdapter = new SampleListAdapter(sampleList);
         sampleData.setAdapter(sampleDataAdapter);
         sampleAddButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -81,7 +83,9 @@ public class InstrumentEditDialog extends DialogFragment {
                 File sampleFile = new File(sampleInputView.getText().toString());
                 // todo support wildcard search: File.listFiles
                 if(sampleFile.isFile() && sampleFile.canRead()) {
-                    AdapterLoader.insertItem(sampleDataAdapter, new Sample(sampleFile.getAbsolutePath(), -1, -1));
+                    int insertIdx = sampleList.size();
+                    previousInstrument.addSample(sampleFile.getAbsolutePath());
+                    sampleDataAdapter.notifyItemInserted(insertIdx);
                 }
             }
         });
@@ -101,7 +105,7 @@ public class InstrumentEditDialog extends DialogFragment {
                         String name = nameInputView.getText().toString();
                         previousInstrument.name = name;
 
-                        previousInstrument.setSamples(sampleDataAdapter.items);
+                        previousInstrument.setSamples(sampleList);
                         listener.onInstrumentEdit(previousInstrument);
                         dialog.dismiss();
                     }

@@ -45,9 +45,8 @@ public class Sample implements Parcelable {
     @Ignore
     public boolean isInfoLoaded = false;
 
-    public Sample(String filename, int sampleIndex, int id) {
+    public Sample(String filename, int id) {
         this.filename = filename;
-        this.sampleIndex = sampleIndex;
         this.id = id;
         this.setSampleZone(-1, -1, 0, 128);
     }
@@ -191,9 +190,6 @@ public class Sample implements Parcelable {
     public static final int FIELD_RELEASE = 0x800;
     public boolean shouldDisplay(int field) {
         return (displayFlags & field) != 0;
-    }
-
-    public Sample() {
     }
 
     protected Sample(Parcel in) {

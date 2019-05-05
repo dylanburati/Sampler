@@ -17,4 +17,7 @@ public class AppConstants {
     public static final int PERM_REQUEST_READ_EXTERNAL_STORAGE = 0;
 
     public static final long NANOS_PER_MILLI = 1000000;
+
+    public static final int PD_NUM_VOICES = 96;
+    public static final int PD_NUM_SAMPLES = 48;
 }
