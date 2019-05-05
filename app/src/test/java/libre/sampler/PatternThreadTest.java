@@ -1,0 +1,113 @@
+package libre.sampler;
+
+import org.junit.Test;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+
+import androidx.core.util.Consumer;
+import libre.sampler.models.NoteEvent;
+import libre.sampler.models.ScheduledNoteEvent;
+import libre.sampler.publishers.NoteEventSource;
+import libre.sampler.utils.PatternThread;
+import libre.sampler.utils.SingleStateHolder;
+
+import static libre.sampler.utils.AppConstants.NANOS_PER_MILLI;
+import static org.junit.Assert.*;
+
+public class PatternThreadTest {
+    public void printFormattedArray(String format, long[] arr) {
+        System.out.print("[");
+        for(int i = 0; i < arr.length; i++) {
+            System.out.format(format, arr[i]);
+            if(i < arr.length - 1) {
+                System.out.print(", ");
+            }
+        }
+        System.out.println("]");
+    }
+
+    @Test
+    public void patternThread() {
+        final int TEST_RESULTS_SIZE = 20;
+        final int LOOP_SIZE = 10;
+
+        TestNoteEventConsumer noteEventConsumer = new TestNoteEventConsumer(TEST_RESULTS_SIZE);
+        final NoteEventSource noteEventSource = new NoteEventSource();
+        noteEventSource.add("test", noteEventConsumer);
+
+        PatternThread patternThread = new PatternThread(noteEventSource);
+        patternThread.start();
+
+        int[] expectedResults = new int[]{56, 49, 37, 56, 61, 61, 64, 64, 49, 37, 56, 49, 37, 56, 61, 61, 64, 64, 49, 37};
+        long[] expectedTimings = new long[]{0, 0, 0, 400, 400, 800, 800, 1200, 1200, 1200, 1600, 1600, 1600, 2000, 2000, 2400, 2400, 2800, 2800, 2800};
+        for(int i = 0; i < expectedTimings.length; i++) {
+            expectedTimings[i] *= NANOS_PER_MILLI;
+        }
+
+        List<ScheduledNoteEvent> events = new ArrayList<>();
+        for(int i = 0; i < LOOP_SIZE; i++) {
+            events.add(new ScheduledNoteEvent(expectedTimings[i], new NoteEvent(NoteEvent.NOTE_OFF, expectedResults[i], 0, null)));
+        }
+
+        patternThread.addPattern(events, 1600 * NANOS_PER_MILLI);
+
+        try {
+            Thread.sleep(3100L);
+            patternThread.finish();
+            patternThread.join();
+        } catch(InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        try {
+            assertArrayEquals("Events were not fired in order", noteEventConsumer.testResults, expectedResults);
+        } finally {
+            System.out.println("Events");
+            System.out.println("Expected: " + Arrays.toString(expectedResults));
+            System.out.println("Actual:   " + Arrays.toString(noteEventConsumer.testResults));
+        }
+
+        // Calculate deviance from expected timings
+        long zeroTimeNs = noteEventConsumer.testTimings[0] - expectedTimings[0];
+        long averageDevianceNs = 0;
+        for(int i = 0; i < expectedTimings.length; i++) {
+            noteEventConsumer.testTimings[i] -= zeroTimeNs;
+            averageDevianceNs += Math.abs(noteEventConsumer.testTimings[i] - expectedTimings[i]);
+        }
+        averageDevianceNs /= (TEST_RESULTS_SIZE - 1);
+
+        try {
+            assertTrue("Events were not fired at the correct times", averageDevianceNs < 3 * NANOS_PER_MILLI);
+        } finally {
+            System.out.println("\nTimings");
+            System.out.print("Expected: ");
+            printFormattedArray("% 11d", expectedTimings);
+
+            System.out.print("Actual:   ");
+            printFormattedArray("% 11d", noteEventConsumer.testTimings);
+        }
+    }
+
+    private static class TestNoteEventConsumer implements Consumer<NoteEvent> {
+        private int noteIdx = 0;
+        private final int[] testResults;
+        private final long[] testTimings;
+
+        public TestNoteEventConsumer(int TEST_RESULTS_SIZE) {
+            this.testResults = new int[TEST_RESULTS_SIZE];
+            this.testTimings = new long[TEST_RESULTS_SIZE];
+        }
+
+        @Override
+        public void accept(NoteEvent noteEvent) {
+            if(noteIdx < testResults.length) {
+                testResults[noteIdx] = noteEvent.keyNum;
+                testTimings[noteIdx] = System.nanoTime();
+                noteIdx++;
+            }
+        }
+    }
+}

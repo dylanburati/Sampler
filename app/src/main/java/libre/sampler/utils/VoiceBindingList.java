@@ -6,10 +6,10 @@ import java.util.List;
 import libre.sampler.models.NoteEvent;
 
 public class VoiceBindingList {
-    private static class VoiceBindingData {
-        private NoteEvent event;
-        private int sampleId;
-        private boolean closed;
+    public static class VoiceBindingData {
+        public NoteEvent event;
+        public int sampleId;
+        public boolean closed;
     
         public VoiceBindingData(NoteEvent evt, int sampleId) {
             this.event = evt;
@@ -56,5 +56,16 @@ public class VoiceBindingList {
         if(voiceIndex >= 0 && voiceIndex <= bindings.size()) {
             bindings.set(voiceIndex, null);
         }
+    }
+
+    public List<NoteEvent> getCloseEvents() {
+        List<NoteEvent> events = new ArrayList<>();
+        for(VoiceBindingData b : bindings) {
+            if(b != null) {
+                b.closed = false;  // re-close all with zero release time
+                events.add(new NoteEvent(NoteEvent.CLOSE, b.event.keyNum, 0, b.event.eventId));
+            }
+        }
+        return events;
     }
 }

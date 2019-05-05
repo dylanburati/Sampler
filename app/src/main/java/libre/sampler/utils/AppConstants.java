@@ -15,4 +15,6 @@ public class AppConstants {
     public static final int MAX_INSTRUMENTS_PER_PROJECT = 65536;
 
     public static final int PERM_REQUEST_READ_EXTERNAL_STORAGE = 0;
+
+    public static final long NANOS_PER_MILLI = 1000000;
 }

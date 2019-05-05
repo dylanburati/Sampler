@@ -13,11 +13,13 @@ import java.util.Arrays;
 
 import androidx.annotation.RequiresApi;
 import libre.sampler.models.NoteEvent;
+import libre.sampler.models.PatternEvent;
 import libre.sampler.utils.MidiConstants;
 
 @RequiresApi(api = Build.VERSION_CODES.M)
 public class MidiEventDispatcher implements MidiManager.OnDeviceOpenedListener {
     public NoteEventSource noteEventSource;
+    public PatternEventSource patternEventSource;
 
     private MidiReceiver receiver;
     private MidiOutputPort receivePort;
@@ -64,6 +66,15 @@ public class MidiEventDispatcher implements MidiManager.OnDeviceOpenedListener {
                     Pair<Long, Integer> eventId = new Pair<>(-1L, keyNum);  // associate event with key
                     NoteEvent event = new NoteEvent(NoteEvent.NOTE_OFF, keyNum, velocity, eventId);
                     noteEventSource.dispatch(event);
+                } else if(command == MidiConstants.STATUS_CONTROL_CHANGE) {
+                    int controller = data[commandIdx + 1] & 0xFF;
+                    if(controller == 0x30) {
+                        if(data[commandIdx + 2] != 0) {
+                            patternEventSource.dispatch(new PatternEvent(PatternEvent.PATTERN_ON));
+                        } else {
+                            patternEventSource.dispatch(new PatternEvent(PatternEvent.PATTERN_OFF));
+                        }
+                    }
                 }
                 commandIdx += MidiConstants.getBytesPerMessage(data[commandIdx]);
             }
