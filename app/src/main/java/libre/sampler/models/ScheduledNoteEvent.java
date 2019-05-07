@@ -1,11 +1,11 @@
 package libre.sampler.models;
 
 public class ScheduledNoteEvent {
-    public Long offsetNanos;
+    public Long offsetTicks;
     public NoteEvent event;
 
-    public ScheduledNoteEvent(Long offsetNanos, NoteEvent event) {
-        this.offsetNanos = offsetNanos;
+    public ScheduledNoteEvent(Long offsetTicks, NoteEvent event) {
+        this.offsetTicks = offsetTicks;
         this.event = event;
     }
 }

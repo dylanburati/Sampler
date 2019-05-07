@@ -4,15 +4,14 @@ import org.junit.Test;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
 import androidx.core.util.Consumer;
 import libre.sampler.models.NoteEvent;
+import libre.sampler.models.Pattern;
 import libre.sampler.models.ScheduledNoteEvent;
 import libre.sampler.publishers.NoteEventSource;
 import libre.sampler.utils.PatternThread;
-import libre.sampler.utils.SingleStateHolder;
 
 import static libre.sampler.utils.AppConstants.NANOS_PER_MILLI;
 import static org.junit.Assert.*;
@@ -42,17 +41,22 @@ public class PatternThreadTest {
         patternThread.start();
 
         int[] expectedResults = new int[]{56, 49, 37, 56, 61, 61, 64, 64, 49, 37, 56, 49, 37, 56, 61, 61, 64, 64, 49, 37};
-        long[] expectedTimings = new long[]{0, 0, 0, 400, 400, 800, 800, 1200, 1200, 1200, 1600, 1600, 1600, 2000, 2000, 2400, 2400, 2800, 2800, 2800};
+        long[] offsetTicks = new long[]{0, 0, 0, 1, 1, 2, 2, 3, 3, 3, 4, 4, 4, 5, 5, 6, 6, 7, 7, 7};
+        long[] expectedTimings = new long[offsetTicks.length];
+        long nanosPerTick = 400 * NANOS_PER_MILLI;
         for(int i = 0; i < expectedTimings.length; i++) {
-            expectedTimings[i] *= NANOS_PER_MILLI;
+            expectedTimings[i] = offsetTicks[i] * nanosPerTick;
         }
 
         List<ScheduledNoteEvent> events = new ArrayList<>();
         for(int i = 0; i < LOOP_SIZE; i++) {
-            events.add(new ScheduledNoteEvent(expectedTimings[i], new NoteEvent(NoteEvent.NOTE_OFF, expectedResults[i], 0, null)));
+            events.add(new ScheduledNoteEvent(offsetTicks[i], new NoteEvent(NoteEvent.NOTE_OFF, expectedResults[i], 0, null)));
         }
 
-        patternThread.addPattern(events, 1600 * NANOS_PER_MILLI);
+        Pattern pattern = new Pattern(events);
+        pattern.setLoopLengthTicks(4);
+        pattern.setNanosPerTick(400 * NANOS_PER_MILLI);
+        patternThread.addPattern("test", pattern);
 
         try {
             Thread.sleep(3100L);

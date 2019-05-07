@@ -20,4 +20,6 @@ public class AppConstants {
 
     public static final int PD_NUM_VOICES = 96;
     public static final int PD_NUM_SAMPLES = 48;
+
+    public static final int TICKS_PER_BEAT = 48 * 256;
 }

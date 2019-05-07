@@ -11,6 +11,7 @@ import libre.sampler.dialogs.InstrumentCreateDialog;
 import libre.sampler.dialogs.InstrumentEditDialog;
 import libre.sampler.models.Instrument;
 import libre.sampler.models.NoteEvent;
+import libre.sampler.models.Pattern;
 import libre.sampler.models.PatternEvent;
 import libre.sampler.models.Project;
 import libre.sampler.models.Sample;
@@ -58,11 +59,7 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-
-import static libre.sampler.utils.AppConstants.NANOS_PER_MILLI;
 
 public class ProjectActivity extends AppCompatActivity implements
         InstrumentCreateDialog.InstrumentCreateDialogListener, InstrumentEditDialog.InstrumentEditDialogListener {
@@ -71,7 +68,7 @@ public class ProjectActivity extends AppCompatActivity implements
 
     public NoteEventSource noteEventSource;
     public PatternEventSource patternEventSource;
-    private PatternThread patternThread;
+    public PatternThread patternThread;
 
     private PdService pdService = null;
     private PdReceiver pdReceiver = new MyPdReceiver();
@@ -182,21 +179,25 @@ public class ProjectActivity extends AppCompatActivity implements
                     long[] offsetsOff = new long[]{2, 3, 4, 5, 6, 7, 8, 9, 10,11,12,13,13,13,14,15,16,17,18,19,20,21,22,23,24,25,25,25};
                     int[] keyNumsOff = new int[]  {56,61,64,56,61,64,56,61,64,56,61,64,49,37,56,61,64,56,61,64,56,61,64,56,61,64,47,35};
                     for(int i = 0; i < offsetsOn.length; i++) {
-                        events.add(new ScheduledNoteEvent((offsetsOn[i] - 1) * 400 * NANOS_PER_MILLI,
+                        events.add(new ScheduledNoteEvent((offsetsOn[i] - 1) * AppConstants.TICKS_PER_BEAT,
                                 new NoteEvent(NoteEvent.NOTE_ON, keyNumsOn[i], 100, new Pair<>(-2L, keyNumsOn[i]))));
                     }
                     for(int i = 0; i < offsetsOff.length; i++) {
-                        events.add(new ScheduledNoteEvent((offsetsOff[i] - 1) * 400 * NANOS_PER_MILLI,
+                        events.add(new ScheduledNoteEvent((offsetsOff[i] - 1) * AppConstants.TICKS_PER_BEAT,
                                 new NoteEvent(NoteEvent.NOTE_OFF, keyNumsOff[i], 100, new Pair<>(-2L, keyNumsOff[i]))));
                     }
                     Collections.sort(events, new Comparator<ScheduledNoteEvent>() {
                         @Override
                         public int compare(ScheduledNoteEvent o1, ScheduledNoteEvent o2) {
-                            return o1.offsetNanos.compareTo(o2.offsetNanos);
+                            return o1.offsetTicks.compareTo(o2.offsetTicks);
                         }
                     });
-                    patternThread.addPattern(events, 9600 * NANOS_PER_MILLI);
+                    Pattern pattern = new Pattern(events);
+                    pattern.setLoopLengthTicks(24 * AppConstants.TICKS_PER_BEAT);
+                    pattern.setTempo(153);
+                    patternThread.addPattern("test", pattern);
                 } else {
+                    closeNotes();
                     patternThread.clearPatterns();
                 }
             }
@@ -215,7 +216,10 @@ public class ProjectActivity extends AppCompatActivity implements
         super.onResume();
         if(noteEventSource == null) {
             initEventSources();
+        } else {
+            patternThread.resumeLoop();
         }
+
         if(adapter == null) {
             initUI();
         }
@@ -265,15 +269,16 @@ public class ProjectActivity extends AppCompatActivity implements
     @Override
     protected void onPause() {
         super.onPause();
+        patternThread.suspendLoop();
         closeNotes();
         pdService.stopAudio();
-        patternThread.finish();
     }
 
     @SuppressLint("NewApi")
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        patternThread.finish();
         unbindService(pdConnection);
         if(midiEventDispatcher != null) {
             midiEventDispatcher.closeMidi();
@@ -344,6 +349,7 @@ public class ProjectActivity extends AppCompatActivity implements
         }
         if(instrument == project.getActiveInstrument()) {
             project.updateActiveInstrument();
+            instrumentListAdapter.activateItem(changeIdx);
         }
     }
 

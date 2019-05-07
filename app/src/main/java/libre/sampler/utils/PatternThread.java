@@ -1,54 +1,82 @@
 package libre.sampler.utils;
 
-import java.util.ArrayList;
+import android.os.Parcelable;
+
 import java.util.Arrays;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
-import libre.sampler.models.ScheduledNoteEvent;
+import libre.sampler.models.NoteEvent;
+import libre.sampler.models.Pattern;
 import libre.sampler.publishers.NoteEventSource;
 
 import static libre.sampler.utils.AppConstants.NANOS_PER_MILLI;
 
 public class PatternThread extends Thread {
+    private static final long NANOS_FOR_WAIT = 2 * NANOS_PER_MILLI;
     private NoteEventSource noteEventSource;
-    private List<PatternInfo> runningPatterns;
-    private long runningPatternsLastModified = 0;
+    public Map<String, Pattern> runningPatterns;
+    private long runningPatternsModCount = 0;
+
+    private static final int EVENT_GROUP_SIZE = 4;
 
     private Lock lock = new ReentrantLock();
-    private Condition lockCondition = lock.newCondition();
+    private Condition patternsChangedTrigger = lock.newCondition();
+    private Condition suspendTrigger = lock.newCondition();
     private boolean done = false;
+    private boolean suspended = false;
 
     public PatternThread(NoteEventSource noteEventSource) {
         this.noteEventSource = noteEventSource;
-        this.runningPatterns = new ArrayList<>();
+        this.runningPatterns = new HashMap<>();
     }
     
-    public int addPattern(List<ScheduledNoteEvent> events, long loopLength) {
-        runningPatternsLastModified = System.nanoTime();
-        PatternInfo p = new PatternInfo(events, loopLength);
-        p.loopZeroStart = System.nanoTime();
-        p.id = runningPatterns.size();
-        runningPatterns.add(p);
-
-        lock.lock();
-        try {
-            lockCondition.signalAll();
-        } finally {
-            lock.unlock();
+    public void addPattern(String tag, Pattern p) {
+        runningPatternsModCount++;
+        runningPatterns.put(tag, p);
+        p.start();
+        if(suspended) {
+            p.pause();
         }
-        return p.id;
+
+        notifyPatternsChanged();
     }
 
     public void clearPatterns() {
-        runningPatternsLastModified = System.nanoTime();
+        runningPatternsModCount++;
         runningPatterns.clear();
 
+        notifyPatternsChanged();
+    }
+
+    public void notifyPatternsChanged() {
         lock.lock();
         try {
-            lockCondition.signalAll();
+            patternsChangedTrigger.signalAll();
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    public void suspendLoop() {
+        suspended = true;
+        for(Pattern p : runningPatterns.values()) {
+            p.pause();
+        }
+        notifyPatternsChanged();
+    }
+
+    public void resumeLoop() {
+        suspended = false;
+        for(Pattern p : runningPatterns.values()) {
+            p.resume();
+        }
+        lock.lock();
+        try {
+            suspendTrigger.signalAll();
         } finally {
             lock.unlock();
         }
@@ -56,49 +84,54 @@ public class PatternThread extends Thread {
 
     public void finish() {
         done = true;
+        clearPatterns();
+        if(suspended) {
+            suspended = false;
+            lock.lock();
+            try {
+                suspendTrigger.signalAll();
+            } finally {
+                lock.unlock();
+            }
+        }
     }
 
     @Override
     public void run() {
         while(!done) {
-            PatternInfo nextPattern = null;
-            int[] eventIndices = null;
-            long soonest = Long.MAX_VALUE;
-            long lastMod = runningPatternsLastModified;
+            Pattern nextPattern = null;
+            NoteEvent[] noteEvents = new NoteEvent[EVENT_GROUP_SIZE];
+            NoteEvent[] noteEventsMin = new NoteEvent[EVENT_GROUP_SIZE];
+            long minWaitTime = Long.MAX_VALUE;
+            long lastModCount = runningPatternsModCount;
 
-            for(PatternInfo p : runningPatterns) {
-                if(p.events.isEmpty()) {
+            for(Pattern p : runningPatterns.values()) {
+                if(p.events.isEmpty() || p.isPaused) {
                     continue;
                 }
 
-                long pLastLoopStart = p.getLastLoopStart();  // save before updating in getNextEventsIndices
-                int[] pIndices = p.getNextEventsIndices(2 * NANOS_PER_MILLI);
-                long pSoonest = p.events.get(pIndices[0]).offsetNanos + pLastLoopStart;
-
-                if(pSoonest < soonest) {
+                Arrays.fill(noteEvents, null);
+                long waitTime = p.getNextEvents(noteEvents, 2 * NANOS_PER_MILLI);
+                if(waitTime < minWaitTime) {
                     nextPattern = p;
-                    eventIndices = pIndices;
-                    soonest = pSoonest;
-                } else if(pSoonest - System.nanoTime() <= 2 * NANOS_PER_MILLI) {
-                    for(int i = pIndices[0]; i < pIndices[1]; i++) {
-                        noteEventSource.dispatch(p.events.get(i % p.eventCount).event);
-                    }
+                    minWaitTime = waitTime;
+                    System.arraycopy(noteEvents, 0, noteEventsMin, 0, EVENT_GROUP_SIZE);
                 }
             }
 
-            long waitTime = soonest - System.nanoTime();
-            if(waitTime > 2 * NANOS_PER_MILLI) {
+            if(minWaitTime > NANOS_FOR_WAIT) {
                 lock.lock();
                 try {
                     // awaiting allows lock to be used by other thread
-                    while(waitTime > 2 * NANOS_PER_MILLI) {
-                        lockCondition.awaitNanos(waitTime);
-                        if(runningPatternsLastModified > lastMod) {
+                    while(minWaitTime > NANOS_FOR_WAIT) {
+                        long t0 = System.nanoTime();
+                        patternsChangedTrigger.awaitNanos(minWaitTime);
+                        if(runningPatternsModCount > lastModCount) {
                             // stop waiting for `next` if patterns added or removed
-                            eventIndices = null;
+                            noteEventsMin = null;
                             break;
                         }
-                        waitTime = soonest - System.nanoTime();
+                        minWaitTime -= System.nanoTime() - t0;
                     }
                 } catch(InterruptedException e) {
                     e.printStackTrace();
@@ -106,60 +139,28 @@ public class PatternThread extends Thread {
                     lock.unlock();
                 }
             }
-            
-            if(!done && eventIndices != null) {
-                for(int i = eventIndices[0]; i < eventIndices[1]; i++) {
-                    noteEventSource.dispatch(nextPattern.events.get(i % nextPattern.eventCount).event);
+
+            if(suspended) {
+                lock.lock();
+                try {
+                    // awaiting allows lock to be used by other thread
+                    while(suspended) {
+                        suspendTrigger.awaitNanos(Long.MAX_VALUE);
+                    }
+                } catch(InterruptedException e) {
+                    e.printStackTrace();
+                } finally {
+                    lock.unlock();
                 }
-            }
-        }
-    }
-
-    private class PatternInfo {
-        public Integer id;
-        public long loopLength;
-        private int loopIndex = 0;
-        public long loopZeroStart;
-
-        public List<ScheduledNoteEvent> events;
-        private int eventIndex = 0;
-        public int eventCount;
-
-        public PatternInfo(List<ScheduledNoteEvent> events, long loopLength) {
-            this.events = events;
-            this.eventCount = events.size();
-            this.loopLength = loopLength;
-        }
-
-        public long getLastLoopStart() {
-            return loopZeroStart + (loopIndex * loopLength);
-        }
-
-        public int[] getNextEventsIndices(long tolerance) {
-            int[] indices = new int[2];
-            indices[0] = indices[1] = this.eventIndex;
-
-            boolean toleranceExceeded = false;
-            long nextOffset = Long.MIN_VALUE;
-            while(!toleranceExceeded) {
-                ScheduledNoteEvent n = events.get(this.eventIndex);
-                if(indices[0] == indices[1]) {
-                    nextOffset = n.offsetNanos;
-                } else {
-                    toleranceExceeded = (n.offsetNanos - nextOffset) > tolerance;
-                }
-
-                if(!toleranceExceeded) {
-                    this.eventIndex++;
-                    indices[1]++;  // exclusive
-                    if(this.eventIndex >= this.eventCount) {
-                        nextOffset -= loopLength;
-                        loopIndex++;
-                        this.eventIndex = 0;
+            } else if(!done && noteEventsMin != null) {
+                for(NoteEvent e : noteEventsMin) {
+                    if(e != null) {
+                        noteEventSource.dispatch(e);
+                    } else {
+                        break;
                     }
                 }
             }
-            return indices;
         }
     }
 }

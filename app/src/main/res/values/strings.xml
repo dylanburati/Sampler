@@ -36,4 +36,6 @@
     <string name="appbar_about">About</string>
     <string name="action_refresh_midi">Refresh MIDI</string>
     <string name="project_saved">Saved project</string>
+    <string name="play">PLAY</string>
+    <string name="pause">PAUSE</string>
 </resources>
