@@ -5,8 +5,10 @@ public class PatternEvent {
     public static final int PATTERN_OFF = 0;
 
     public int action;
+    public Pattern pattern;
 
-    public PatternEvent(int action) {
+    public PatternEvent(int action, Pattern pattern) {
         this.action = action;
+        this.pattern = pattern;
     }
 }

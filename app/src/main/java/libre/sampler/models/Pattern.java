@@ -1,5 +1,8 @@
 package libre.sampler.models;
 
+import android.util.Log;
+
+import java.util.ArrayList;
 import java.util.List;
 
 import libre.sampler.utils.AppConstants;
@@ -8,6 +11,7 @@ public class Pattern {
     public int projectId;
     public int id;
     public List<ScheduledNoteEvent> events;
+    private List<ScheduledNoteEvent> eventsToRemoveAfterNextSchedule;
 
     private long nanosPerTick;
     private long loopLengthTicks;
@@ -22,32 +26,39 @@ public class Pattern {
 
     public Pattern(List<ScheduledNoteEvent> events) {
         this.events = events;
+        // Placeholder event so scheduler loop is not ignored
+        events.add(0, new ScheduledNoteEvent(0L, NoteEvent.NOTHING, 0, 0, 0));
+        this.eventsToRemoveAfterNextSchedule = new ArrayList<>(2);
     }
 
     public void setPatternId(int id) {
         this.id = id;
     }
 
-    public synchronized void setLoopLengthTicks(long ticks) {
+    // All of the following methods should be called
+    // by a thread holding the patternThread.lock
+    public void setLoopLengthTicks(long ticks) {
         this.loopLengthTicks = ticks;
-        this.checkpointTicks = 0;
-        this.checkpointNanos = getLastLoopStartTime();
-        this.nextScheduledLoopIndex = 0;
+        if(isStarted) {
+            this.checkpointTicks = 0;
+            this.checkpointNanos = getLastLoopStartTime();
+            this.nextScheduledLoopIndex = 0;
+        }
     }
 
-    public synchronized void setTempo(double bpm) {
+    public void setTempo(double bpm) {
         long updatedNanosPerTick = (long) (60 * 1e9 / (1.0 * AppConstants.TICKS_PER_BEAT * bpm));
         setNanosPerTick(updatedNanosPerTick);
     }
 
-    public synchronized double getTempo() {
+    public double getTempo() {
         if(nanosPerTick == 0) {
             return 0;
         }
         return (60 * 1e9 / (1.0 * AppConstants.TICKS_PER_BEAT * nanosPerTick));
     }
 
-    public synchronized void setNanosPerTick(long updatedNanosPerTick) {
+    public void setNanosPerTick(long updatedNanosPerTick) {
         if(isStarted && !isPaused) {
             long now = System.nanoTime();
             checkpointTicks = getTicksAtTime(now) - loopLengthTicks * this.nextScheduledLoopIndex;
@@ -55,6 +66,39 @@ public class Pattern {
             nextScheduledLoopIndex = 0;
         }
         nanosPerTick = updatedNanosPerTick;
+    }
+
+    public void addEvent(int insertIdx, ScheduledNoteEvent event) {
+        events.add(insertIdx, event);
+        incrementEventIndex();
+        backtrack(getTicksAtTime(System.nanoTime()));
+    }
+
+    public void removeEvent(int removeIdx) {
+        // Removes event and moves to next index according to time
+        // Last scheduled events will be invalidated
+        events.remove(removeIdx);
+        if(nextScheduledEventIndex >= events.size()) {
+            nextScheduledEventIndex = events.size() - 1;
+        }
+        if(events.size() == 0) {
+            nextScheduledEventIndex = 0;
+        } else {
+            backtrack(getTicksAtTime(System.nanoTime()));
+        }
+    }
+
+    public void removeEventInPlace(int removeIdx) {
+        // Removes event and moves to next index according to scheduler
+        events.remove(removeIdx);
+        if(nextScheduledEventIndex >= events.size()) {
+            nextScheduledLoopIndex++;
+            nextScheduledEventIndex = 0;
+        }
+    }
+
+    public void removeEventAfterNextSchedule(ScheduledNoteEvent noteEventOff) {
+        eventsToRemoveAfterNextSchedule.add(noteEventOff);
     }
 
     public void start() {
@@ -65,23 +109,14 @@ public class Pattern {
         checkpointTicks = 0;
     }
 
-    public synchronized void pause() {
+    public void pause() {
         isPaused = true;
         checkpointTicks = getTicksAtTime(System.nanoTime());
 
-        // Backtrack to first event to be scheduled after resume
-        boolean correctNextScheduledEventIndex = false;
-        ScheduledNoteEvent n;
-        while(!correctNextScheduledEventIndex) {
-            decrementEventIndex();
-            n = events.get(this.nextScheduledEventIndex);
-            correctNextScheduledEventIndex = (getScheduledEventTicks(n) <= checkpointTicks);
-        }
-        incrementEventIndex();
-        // loopResumePosition = System.nanoTime() - loopZeroStart;
+        backtrack(checkpointTicks);
     }
 
-    public synchronized void resume() {
+    public void resume() {
         if(!isPaused) {
             return;
         }
@@ -89,28 +124,45 @@ public class Pattern {
         checkpointNanos = System.nanoTime();
     }
 
-    private synchronized long getTicksAtTime(long time) {
+    private void backtrack(long targetTicks) {
+        // Backtrack to first event to be scheduled after resume/refresh
+        if(events.size() == 0) {
+            return;
+        }
+
+        boolean correctNextScheduledEventIndex = false;
+        ScheduledNoteEvent n;
+        while(!correctNextScheduledEventIndex) {
+            decrementEventIndex();
+            n = events.get(this.nextScheduledEventIndex);
+            correctNextScheduledEventIndex = (getScheduledEventTicks(n) <= targetTicks);
+        }
+        incrementEventIndex();
+        // loopResumePosition = System.nanoTime() - loopZeroStart;
+    }
+
+    private long getTicksAtTime(long time) {
         long afterCheckpointTicks = (time - checkpointNanos) / nanosPerTick;
         return checkpointTicks + afterCheckpointTicks;
     }
 
-    private synchronized long getTimeAtTicks(long ticks) {
+    private long getTimeAtTicks(long ticks) {
         return (ticks - checkpointTicks) * this.nanosPerTick + checkpointNanos;
     }
 
-    private synchronized long getLoopLengthNanos() {
+    private long getLoopLengthNanos() {
         return loopLengthTicks * nanosPerTick;
     }
 
-    public synchronized long getLastLoopStartTicks() {
+    public void jumpToCorrectLoopIndex() {
+        // Used after multiple empty loops
         if(nanosPerTick == 0) {
-            return 0;
+            return;
         }
-        int fullLoops = (int) ((System.nanoTime() - checkpointNanos) / getLoopLengthNanos());
-        return checkpointTicks + fullLoops * loopLengthTicks;
+        nextScheduledLoopIndex = (int) ((System.nanoTime() - checkpointNanos) / getLoopLengthNanos());
     }
 
-    public synchronized long getLastLoopStartTime() {
+    public long getLastLoopStartTime() {
         if(nanosPerTick == 0) {
             return 0;
         }
@@ -118,11 +170,11 @@ public class Pattern {
         return checkpointNanos + fullLoops * getLoopLengthNanos();
     }
 
-    public synchronized long getScheduledEventTicks(ScheduledNoteEvent n) {
+    public long getScheduledEventTicks(ScheduledNoteEvent n) {
         return n.offsetTicks + this.nextScheduledLoopIndex * this.loopLengthTicks;
     }
 
-    public synchronized long getScheduledEventTime(ScheduledNoteEvent n) {
+    public long getScheduledEventTime(ScheduledNoteEvent n) {
         long fullOffsetTicks = getScheduledEventTicks(n);
         return getTimeAtTicks(fullOffsetTicks);
     }
@@ -148,6 +200,7 @@ public class Pattern {
         long firstEventTime = Long.MIN_VALUE;
         long waitNanos = Long.MAX_VALUE;
 
+        String log = String.format("Scheduled %d:%d to ", this.nextScheduledLoopIndex, this.nextScheduledEventIndex);
         for(int i = 0; i < noteEventsOut.length; i++) {
             ScheduledNoteEvent current = events.get(this.nextScheduledEventIndex);
             long eventTime = getScheduledEventTime(current);
@@ -155,13 +208,23 @@ public class Pattern {
             if(i == 0) {
                 waitNanos = eventTime - now;
                 firstEventTime = eventTime;
-                noteEventsOut[i] = current.event;
-                incrementEventIndex();
+                noteEventsOut[i] = current.getNoteEvent(nextScheduledLoopIndex);
+                if(eventsToRemoveAfterNextSchedule.remove(current)) {
+                    removeEventInPlace(this.nextScheduledEventIndex);
+                } else {
+                    incrementEventIndex();
+                }
             } else if(eventTime - firstEventTime < tolerance) {
-                // add multiple events within time frame
-                noteEventsOut[i] = current.event;
-                incrementEventIndex();
+                // setOnChangedListener multiple events within time frame
+                noteEventsOut[i] = current.getNoteEvent(nextScheduledLoopIndex);
+                if(eventsToRemoveAfterNextSchedule.remove(current)) {
+                    removeEventInPlace(this.nextScheduledEventIndex);
+                } else {
+                    incrementEventIndex();
+                }
             } else {
+                log += String.format("%d:%d", this.nextScheduledLoopIndex, this.nextScheduledEventIndex);
+                Log.d("Pattern", log);
                 return waitNanos;
             }
         }

@@ -1,6 +1,7 @@
 package libre.sampler.utils;
 
 import android.os.Parcelable;
+import android.util.Log;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -23,7 +24,7 @@ public class PatternThread extends Thread {
 
     private static final int EVENT_GROUP_SIZE = 4;
 
-    private Lock lock = new ReentrantLock();
+    public final Lock lock = new ReentrantLock();
     private Condition patternsChangedTrigger = lock.newCondition();
     private Condition suspendTrigger = lock.newCondition();
     private boolean done = false;
@@ -35,7 +36,6 @@ public class PatternThread extends Thread {
     }
     
     public void addPattern(String tag, Pattern p) {
-        runningPatternsModCount++;
         runningPatterns.put(tag, p);
         p.start();
         if(suspended) {
@@ -46,13 +46,13 @@ public class PatternThread extends Thread {
     }
 
     public void clearPatterns() {
-        runningPatternsModCount++;
         runningPatterns.clear();
 
         notifyPatternsChanged();
     }
 
     public void notifyPatternsChanged() {
+        runningPatternsModCount++;
         lock.lock();
         try {
             patternsChangedTrigger.signalAll();
@@ -105,23 +105,23 @@ public class PatternThread extends Thread {
             long minWaitTime = Long.MAX_VALUE;
             long lastModCount = runningPatternsModCount;
 
-            for(Pattern p : runningPatterns.values()) {
-                if(p.events.isEmpty() || p.isPaused) {
-                    continue;
+            lock.lock();
+            try {
+                for(Pattern p : runningPatterns.values()) {
+                    if(!p.isStarted || p.isPaused) {
+                        continue;
+                    }
+
+                    Arrays.fill(noteEvents, null);
+                    long waitTime = p.getNextEvents(noteEvents, 2 * NANOS_PER_MILLI);
+                    if(waitTime < minWaitTime) {
+                        nextPattern = p;
+                        minWaitTime = waitTime;
+                        System.arraycopy(noteEvents, 0, noteEventsMin, 0, EVENT_GROUP_SIZE);
+                    }
                 }
 
-                Arrays.fill(noteEvents, null);
-                long waitTime = p.getNextEvents(noteEvents, 2 * NANOS_PER_MILLI);
-                if(waitTime < minWaitTime) {
-                    nextPattern = p;
-                    minWaitTime = waitTime;
-                    System.arraycopy(noteEvents, 0, noteEventsMin, 0, EVENT_GROUP_SIZE);
-                }
-            }
-
-            if(minWaitTime > NANOS_FOR_WAIT) {
-                lock.lock();
-                try {
+                if(minWaitTime > NANOS_FOR_WAIT) {
                     // awaiting allows lock to be used by other thread
                     while(minWaitTime > NANOS_FOR_WAIT) {
                         long t0 = System.nanoTime();
@@ -133,11 +133,12 @@ public class PatternThread extends Thread {
                         }
                         minWaitTime -= System.nanoTime() - t0;
                     }
-                } catch(InterruptedException e) {
-                    e.printStackTrace();
-                } finally {
-                    lock.unlock();
+
                 }
+            } catch(InterruptedException e) {
+                e.printStackTrace();
+            } finally {
+                lock.unlock();
             }
 
             if(suspended) {
@@ -152,7 +153,7 @@ public class PatternThread extends Thread {
                 } finally {
                     lock.unlock();
                 }
-            } else if(!done && noteEventsMin != null) {
+            } else if(!done && runningPatternsModCount == lastModCount && noteEventsMin != null) {
                 for(NoteEvent e : noteEventsMin) {
                     if(e != null) {
                         noteEventSource.dispatch(e);
@@ -160,6 +161,8 @@ public class PatternThread extends Thread {
                         break;
                     }
                 }
+            } else {
+                Log.d("PatternThread","Skipped");
             }
         }
     }

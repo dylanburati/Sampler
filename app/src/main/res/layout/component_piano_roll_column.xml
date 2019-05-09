@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    android:layout_width="wrap_content"
+    android:layout_height="@dimen/piano_roll_colheight"
+    android:scrollbars="horizontal"
+    android:orientation="horizontal"
+    android:background="#27FFFFFF"
+    xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <RelativeLayout
+        android:id="@+id/piano_roll_column"
+        android:layout_width="@dimen/piano_roll_barwidth"
+        android:layout_height="@dimen/piano_roll_colheight"
+        android:scrollbars="horizontal"
+        xmlns:android="http://schemas.android.com/apk/res/android">
+
+    </RelativeLayout>
+
+</LinearLayout>

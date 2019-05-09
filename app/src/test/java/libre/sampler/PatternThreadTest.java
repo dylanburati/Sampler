@@ -50,7 +50,7 @@ public class PatternThreadTest {
 
         List<ScheduledNoteEvent> events = new ArrayList<>();
         for(int i = 0; i < LOOP_SIZE; i++) {
-            events.add(new ScheduledNoteEvent(offsetTicks[i], new NoteEvent(NoteEvent.NOTE_OFF, expectedResults[i], 0, null)));
+            events.add(new ScheduledNoteEvent(offsetTicks[i], NoteEvent.NOTE_OFF, expectedResults[i], 0, 0));
         }
 
         Pattern pattern = new Pattern(events);
@@ -107,7 +107,7 @@ public class PatternThreadTest {
 
         @Override
         public void accept(NoteEvent noteEvent) {
-            if(noteIdx < testResults.length) {
+            if(noteIdx < testResults.length && noteEvent.action != NoteEvent.NOTHING) {
                 testResults[noteIdx] = noteEvent.keyNum;
                 testTimings[noteIdx] = System.nanoTime();
                 noteIdx++;

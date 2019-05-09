@@ -7,4 +7,7 @@
     <color name="piano_white_down">#CFCFDC</color>
     <color name="piano_black_up">#000000</color>
     <color name="piano_black_down">#373747</color>
+
+    <color name="piano_roll_white">#5C5C66</color>
+    <color name="piano_roll_black">#373741</color>
 </resources>

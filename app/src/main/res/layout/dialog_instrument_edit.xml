@@ -73,7 +73,7 @@
         android:id="@+id/sample_data"
         android:layout_weight="1"
         android:scrollbars="vertical"
-        app:layoutManager="libre.sampler.views.ListLayoutManager">
+        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager">
 
     </androidx.recyclerview.widget.RecyclerView>
 </LinearLayout>

@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector android:width="@dimen/piano_roll_beatwidth"
+    android:height="@dimen/piano_roll_colheight"
+    android:viewportWidth="1"
+    android:viewportHeight="12"
+    xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- B=0 A=2 G=4 F=6 E=7 D=9 C=11 end=12 -->
+    <path
+        android:fillColor="@color/piano_roll_white"
+        android:pathData="M0,0
+                h1 v1 H0 v1
+                h1 v1 H0 v1
+                h1 v1 H0 v1
+                h1 v1 H0 v0
+                h1 v1 H0 v1
+                h1 v1 H0 v1
+                h1 v1 H0 z"
+        android:strokeWidth="0"
+        android:strokeColor="@android:color/transparent" />
+
+    <!-- A#=1 G#=3 F#=5 D#=8 C#=10 end=12 -->
+    <path
+        android:fillColor="@color/piano_roll_black"
+        android:pathData="M0,0 v1
+                h1 v1 H0 v1
+                h1 v1 H0 v1
+                h1 v1 H0 v2
+                h1 v1 H0 v1
+                h1 v1 H0 z"
+        android:strokeWidth="0"
+        android:strokeColor="@android:color/transparent" />
+
+    <path
+        android:pathData="M0,-2 v14"
+        android:strokeWidth="0.03"
+        android:strokeColor="#77000000" />
+
+    <path
+        android:pathData="M-1,0 h3 v1 h-3 v1 h3 v1 h-3 v1 h3 v1 h-3 v1 h3 v1 h-3 v1 h3 v1 h-3 v1 h3 v1 h-3 v1 h3"
+        android:strokeWidth="0.06"
+        android:strokeColor="#77000000" />
+</vector>

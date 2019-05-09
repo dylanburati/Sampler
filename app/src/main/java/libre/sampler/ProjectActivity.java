@@ -167,42 +167,17 @@ public class ProjectActivity extends AppCompatActivity implements
         final String name = getResources().getString(R.string.app_name);
         noteEventSource.add("KeyboardNoteEventConsumer", new KeyboardNoteEventConsumer(name));
 
-        // tmp
         patternEventSource.add("test", new Consumer<PatternEvent>() {
             @Override
             public void accept(PatternEvent patternEvent) {
                 if(patternEvent.action == PatternEvent.PATTERN_ON) {
-                    List<ScheduledNoteEvent> events = new ArrayList<>();
-                    long[] offsetsOn = new long[]{1, 1, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10,11,12,13,13,13,14,15,16,17,18,19,20,21,22,23,24};
-                    int[] keyNumsOn = new int[]  {49,37,56,61,64,56,61,64,56,61,64,56,61,64,47,35,56,61,64,56,61,64,56,61,64,56,61,64};
-
-                    long[] offsetsOff = new long[]{2, 3, 4, 5, 6, 7, 8, 9, 10,11,12,13,13,13,14,15,16,17,18,19,20,21,22,23,24,25,25,25};
-                    int[] keyNumsOff = new int[]  {56,61,64,56,61,64,56,61,64,56,61,64,49,37,56,61,64,56,61,64,56,61,64,56,61,64,47,35};
-                    for(int i = 0; i < offsetsOn.length; i++) {
-                        events.add(new ScheduledNoteEvent((offsetsOn[i] - 1) * AppConstants.TICKS_PER_BEAT,
-                                new NoteEvent(NoteEvent.NOTE_ON, keyNumsOn[i], 100, new Pair<>(-2L, keyNumsOn[i]))));
-                    }
-                    for(int i = 0; i < offsetsOff.length; i++) {
-                        events.add(new ScheduledNoteEvent((offsetsOff[i] - 1) * AppConstants.TICKS_PER_BEAT,
-                                new NoteEvent(NoteEvent.NOTE_OFF, keyNumsOff[i], 100, new Pair<>(-2L, keyNumsOff[i]))));
-                    }
-                    Collections.sort(events, new Comparator<ScheduledNoteEvent>() {
-                        @Override
-                        public int compare(ScheduledNoteEvent o1, ScheduledNoteEvent o2) {
-                            return o1.offsetTicks.compareTo(o2.offsetTicks);
-                        }
-                    });
-                    Pattern pattern = new Pattern(events);
-                    pattern.setLoopLengthTicks(24 * AppConstants.TICKS_PER_BEAT);
-                    pattern.setTempo(153);
-                    patternThread.addPattern("test", pattern);
+                    patternThread.addPattern("test", patternEvent.pattern);
                 } else {
                     closeNotes();
                     patternThread.clearPatterns();
                 }
             }
         });
-        // tmp>
 
         AudioParameters.init(this);
         PdPreferences.initPreferences(getApplicationContext());
@@ -360,7 +335,7 @@ public class ProjectActivity extends AppCompatActivity implements
     }
 
     private void closeNotes() {
-        if(!pdService.isRunning() || noteEventSource == null) {
+        if(pdService == null || !pdService.isRunning() || noteEventSource == null) {
             return;
         }
         List<NoteEvent> events = pdVoiceBindings.getCloseEvents();

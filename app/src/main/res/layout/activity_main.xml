@@ -49,7 +49,7 @@
                 android:layout_height="match_parent"
                 android:background="#27FFFFFF"
                 android:scrollbars="vertical"
-                app:layoutManager="libre.sampler.views.ListLayoutManager">
+                app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager">
 
             </androidx.recyclerview.widget.RecyclerView>
         </LinearLayout>

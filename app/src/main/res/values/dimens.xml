@@ -28,4 +28,7 @@
     <dimen name="activity_vertical_margin">16dp</dimen>
     <dimen name="margin3_dense">12dp</dimen>
     <dimen name="margin2_dense">6dp</dimen>
+    <dimen name="piano_roll_barwidth">384dp</dimen>
+    <dimen name="piano_roll_colheight">288dp</dimen>
+    <dimen name="piano_roll_beatwidth">96dp</dimen>
 </resources>

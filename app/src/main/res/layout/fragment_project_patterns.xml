@@ -1,26 +1,137 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:paddingTop="@dimen/margin3"
-    android:paddingLeft="@dimen/margin3"
-    android:paddingRight="@dimen/margin3">
+    android:orientation="vertical">
 
-    <Switch
-        android:id="@+id/pattern_enable"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:switchPadding="@dimen/margin2"
-        android:text="Pattern 1" />
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:scrollbars="none">
 
-    <Button
-        android:id="@+id/pattern_play_pause"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/pattern_enable"
-        android:text="@string/pause"
-        android:drawableRight="@drawable/ic_pause" />
-</RelativeLayout>
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:scrollbars="none">
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="#27FFFFFF"
+                android:orientation="vertical"
+                android:scrollbars="none">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="@dimen/piano_roll_colheight"
+                    android:layout_marginLeft="@dimen/margin1"
+                    android:layout_marginRight="@dimen/margin1"
+                    android:gravity="bottom"
+                    android:text="C8"
+                    android:fontFamily="sans-serif-medium" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="@dimen/piano_roll_colheight"
+                    android:layout_marginLeft="@dimen/margin1"
+                    android:layout_marginRight="@dimen/margin1"
+                    android:gravity="bottom"
+                    android:text="C7"
+                    android:fontFamily="sans-serif-medium" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="@dimen/piano_roll_colheight"
+                    android:layout_marginLeft="@dimen/margin1"
+                    android:layout_marginRight="@dimen/margin1"
+                    android:gravity="bottom"
+                    android:text="C6"
+                    android:fontFamily="sans-serif-medium" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="@dimen/piano_roll_colheight"
+                    android:layout_marginLeft="@dimen/margin1"
+                    android:layout_marginRight="@dimen/margin1"
+                    android:gravity="bottom"
+                    android:text="C5"
+                    android:fontFamily="sans-serif-medium" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="@dimen/piano_roll_colheight"
+                    android:layout_marginLeft="@dimen/margin1"
+                    android:layout_marginRight="@dimen/margin1"
+                    android:gravity="bottom"
+                    android:text="C4"
+                    android:fontFamily="sans-serif-medium" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="@dimen/piano_roll_colheight"
+                    android:layout_marginLeft="@dimen/margin1"
+                    android:layout_marginRight="@dimen/margin1"
+                    android:gravity="bottom"
+                    android:text="C3"
+                    android:fontFamily="sans-serif-medium" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="@dimen/piano_roll_colheight"
+                    android:layout_marginLeft="@dimen/margin1"
+                    android:layout_marginRight="@dimen/margin1"
+                    android:gravity="bottom"
+                    android:text="C2"
+                    android:fontFamily="sans-serif-medium" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="@dimen/piano_roll_colheight"
+                    android:layout_marginLeft="@dimen/margin1"
+                    android:layout_marginRight="@dimen/margin1"
+                    android:gravity="bottom"
+                    android:text="C1"
+                    android:fontFamily="sans-serif-medium" />
+            </LinearLayout>
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/piano_roll_container"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:scrollbars="horizontal">
+
+            </androidx.recyclerview.widget.RecyclerView>
+        </LinearLayout>
+    </ScrollView>
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:scrollbars="vertical"
+        android:paddingTop="@dimen/margin3"
+        android:paddingLeft="@dimen/margin3"
+        android:paddingRight="@dimen/margin3">
+
+        <Switch
+            android:id="@+id/pattern_enable"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:switchPadding="@dimen/margin2"
+            android:text="Pattern 1" />
+
+        <Button
+            android:id="@+id/pattern_play_pause"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/pattern_enable"
+            android:text="@string/pause"
+            android:drawableRight="@drawable/ic_pause" />
+    </RelativeLayout>
+</LinearLayout>

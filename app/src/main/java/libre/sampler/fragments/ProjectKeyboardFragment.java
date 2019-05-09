@@ -79,7 +79,7 @@ public class ProjectKeyboardFragment extends Fragment {
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_project_keyboard, container, false);
         pianoContainer = rootView.findViewById(R.id.piano_container);
-        noteEventSource = ((ProjectActivity) Objects.requireNonNull(getActivity())).noteEventSource;
+        noteEventSource = ((ProjectActivity) getActivity()).noteEventSource;
 
         noteEventSource.add("logger", new Consumer<NoteEvent>() {
             @Override

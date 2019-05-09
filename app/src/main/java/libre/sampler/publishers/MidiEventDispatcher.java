@@ -70,9 +70,9 @@ public class MidiEventDispatcher implements MidiManager.OnDeviceOpenedListener {
                     int controller = data[commandIdx + 1] & 0xFF;
                     if(controller == 0x30) {
                         if(data[commandIdx + 2] != 0) {
-                            patternEventSource.dispatch(new PatternEvent(PatternEvent.PATTERN_ON));
+                            // patternEventSource.dispatch(new PatternEvent(PatternEvent.PATTERN_ON, ));
                         } else {
-                            patternEventSource.dispatch(new PatternEvent(PatternEvent.PATTERN_OFF));
+                            // patternEventSource.dispatch(new PatternEvent(PatternEvent.PATTERN_OFF, ));
                         }
                     }
                 }
