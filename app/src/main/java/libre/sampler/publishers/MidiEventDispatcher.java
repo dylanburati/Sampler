@@ -57,13 +57,13 @@ public class MidiEventDispatcher implements MidiManager.OnDeviceOpenedListener {
                 if(command == MidiConstants.STATUS_NOTE_ON) {
                     int keyNum = data[commandIdx + 1] & 0xFF;
                     int velocity = data[commandIdx + 2] & 0xFF;
-                    Pair<Long, Integer> eventId = new Pair<>(-1L, keyNum);  // associate event with key
+                    Pair<Long, Integer> eventId = new Pair<>(-1L, keyNum);  // associate eventIndex with key
                     NoteEvent event = new NoteEvent(NoteEvent.NOTE_ON, keyNum, velocity, eventId);
                     noteEventSource.dispatch(event);
                 } else if(command == MidiConstants.STATUS_NOTE_OFF) {
                     int keyNum = data[commandIdx + 1] & 0xFF;
                     int velocity = data[commandIdx + 2] & 0xFF;
-                    Pair<Long, Integer> eventId = new Pair<>(-1L, keyNum);  // associate event with key
+                    Pair<Long, Integer> eventId = new Pair<>(-1L, keyNum);  // associate eventIndex with key
                     NoteEvent event = new NoteEvent(NoteEvent.NOTE_OFF, keyNum, velocity, eventId);
                     noteEventSource.dispatch(event);
                 } else if(command == MidiConstants.STATUS_CONTROL_CHANGE) {

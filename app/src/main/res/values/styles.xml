@@ -15,4 +15,7 @@
 
     <style name="AppTheme.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />
 
+    <style name="TextAppearanceMonospace" parent="TextAppearance.AppCompat.Body1">
+        <item name="android:fontFamily">monospace</item>
+    </style>
 </resources>

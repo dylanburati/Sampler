@@ -1,9 +1,7 @@
 package libre.sampler.utils;
 
-import android.os.Parcelable;
 import android.util.Log;
 
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.locks.Condition;
@@ -18,7 +16,7 @@ import static libre.sampler.utils.AppConstants.NANOS_PER_MILLI;
 
 public class PatternThread extends Thread {
     private static final long NANOS_FOR_WAIT = 2 * NANOS_PER_MILLI;
-    private NoteEventSource noteEventSource;
+    public NoteEventSource noteEventSource;
     public Map<String, Pattern> runningPatterns;
     private long runningPatternsModCount = 0;
 
@@ -28,7 +26,7 @@ public class PatternThread extends Thread {
     private Condition patternsChangedTrigger = lock.newCondition();
     private Condition suspendTrigger = lock.newCondition();
     private boolean done = false;
-    private boolean suspended = false;
+    public boolean isSuspended = false;
 
     public PatternThread(NoteEventSource noteEventSource) {
         this.noteEventSource = noteEventSource;
@@ -38,7 +36,7 @@ public class PatternThread extends Thread {
     public void addPattern(String tag, Pattern p) {
         runningPatterns.put(tag, p);
         p.start();
-        if(suspended) {
+        if(isSuspended) {
             p.pause();
         }
 
@@ -62,7 +60,7 @@ public class PatternThread extends Thread {
     }
 
     public void suspendLoop() {
-        suspended = true;
+        isSuspended = true;
         for(Pattern p : runningPatterns.values()) {
             p.pause();
         }
@@ -70,7 +68,7 @@ public class PatternThread extends Thread {
     }
 
     public void resumeLoop() {
-        suspended = false;
+        isSuspended = false;
         for(Pattern p : runningPatterns.values()) {
             p.resume();
         }
@@ -85,8 +83,8 @@ public class PatternThread extends Thread {
     public void finish() {
         done = true;
         clearPatterns();
-        if(suspended) {
-            suspended = false;
+        if(isSuspended) {
+            isSuspended = false;
             lock.lock();
             try {
                 suspendTrigger.signalAll();
@@ -100,8 +98,7 @@ public class PatternThread extends Thread {
     public void run() {
         while(!done) {
             Pattern nextPattern = null;
-            NoteEvent[] noteEvents = new NoteEvent[EVENT_GROUP_SIZE];
-            NoteEvent[] noteEventsMin = new NoteEvent[EVENT_GROUP_SIZE];
+            NoteEvent[] noteEventsOut = new NoteEvent[EVENT_GROUP_SIZE];
             long minWaitTime = Long.MAX_VALUE;
             long lastModCount = runningPatternsModCount;
 
@@ -112,13 +109,16 @@ public class PatternThread extends Thread {
                         continue;
                     }
 
-                    Arrays.fill(noteEvents, null);
-                    long waitTime = p.getNextEvents(noteEvents, 2 * NANOS_PER_MILLI);
+                    long waitTime = p.getTimeToNextEvent();
                     if(waitTime < minWaitTime) {
                         nextPattern = p;
                         minWaitTime = waitTime;
-                        System.arraycopy(noteEvents, 0, noteEventsMin, 0, EVENT_GROUP_SIZE);
                     }
+                }
+
+                if(nextPattern != null) {
+                    // pattern updates position and writes events to `noteEventsOut`
+                    nextPattern.getNextEvents(noteEventsOut, NANOS_FOR_WAIT);
                 }
 
                 if(minWaitTime > NANOS_FOR_WAIT) {
@@ -128,7 +128,7 @@ public class PatternThread extends Thread {
                         patternsChangedTrigger.awaitNanos(minWaitTime);
                         if(runningPatternsModCount > lastModCount) {
                             // stop waiting for `next` if patterns added or removed
-                            noteEventsMin = null;
+                            noteEventsOut = null;
                             break;
                         }
                         minWaitTime -= System.nanoTime() - t0;
@@ -141,11 +141,11 @@ public class PatternThread extends Thread {
                 lock.unlock();
             }
 
-            if(suspended) {
+            if(isSuspended) {
                 lock.lock();
                 try {
                     // awaiting allows lock to be used by other thread
-                    while(suspended) {
+                    while(isSuspended) {
                         suspendTrigger.awaitNanos(Long.MAX_VALUE);
                     }
                 } catch(InterruptedException e) {
@@ -153,8 +153,8 @@ public class PatternThread extends Thread {
                 } finally {
                     lock.unlock();
                 }
-            } else if(!done && runningPatternsModCount == lastModCount && noteEventsMin != null) {
-                for(NoteEvent e : noteEventsMin) {
+            } else if(!done && runningPatternsModCount == lastModCount && noteEventsOut != null) {
+                for(NoteEvent e : noteEventsOut) {
                     if(e != null) {
                         noteEventSource.dispatch(e);
                     } else {

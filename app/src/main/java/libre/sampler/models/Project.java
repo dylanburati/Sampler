@@ -45,7 +45,7 @@ public class Project implements Parcelable {
     @Ignore
     private int nextInstrumentId;
     @Ignore
-    private IdStatus idStatus = new IdStatus("Project");
+    private IdStatus idStatus = new IdStatus("Project,Instrument");
 
     @Ignore
     public Project(String name, long mtime) {
@@ -153,7 +153,7 @@ public class Project implements Parcelable {
         for(int i = 0; i < instrument.getSamples().size(); i++) {
             if(instrument.getSamples().get(i).contains(event)) {
                 retval.add(instrument.getSamples().get(i));
-                // return retval;  // omitted to allow multiple samples per event
+                // return retval;  // omitted to allow multiple samples per eventIndex
             }
         }
         return retval;

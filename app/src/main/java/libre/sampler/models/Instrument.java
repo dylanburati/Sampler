@@ -23,7 +23,7 @@ public class Instrument implements Parcelable {
     @Ignore
     private int nextSampleId;
     @Ignore
-    private IdStatus idStatus = new IdStatus("Instrument");
+    private IdStatus idStatus = new IdStatus("Instrument,Sample");
 
     @Ignore
     public Instrument(String name) {

@@ -31,4 +31,5 @@
     <dimen name="piano_roll_barwidth">384dp</dimen>
     <dimen name="piano_roll_colheight">288dp</dimen>
     <dimen name="piano_roll_beatwidth">96dp</dimen>
+    <dimen name="pattern_control_height">40dp</dimen>
 </resources>

@@ -38,4 +38,9 @@
     <string name="project_saved">Saved project</string>
     <string name="play">PLAY</string>
     <string name="pause">PAUSE</string>
+    <string name="note_length_label">Note length (bars, sixteenths, ticks)</string>
+    <string name="snap_length_label">Snap distance (bars, sixteenths, ticks)</string>
+    <string name="pattern_length_label">Pattern length (bars, sixteenths)</string>
+    <string name="change">Change</string>
+    <string name="tempo_label">TEMPO</string>
 </resources>

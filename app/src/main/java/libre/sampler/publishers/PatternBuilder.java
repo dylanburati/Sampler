@@ -6,6 +6,7 @@ import java.util.Comparator;
 import java.util.List;
 
 import androidx.core.util.Consumer;
+import libre.sampler.models.NoteEvent;
 import libre.sampler.models.Pattern;
 import libre.sampler.models.ScheduledNoteEvent;
 import libre.sampler.utils.PatternThread;
@@ -58,14 +59,14 @@ public class PatternBuilder {
     public void remove(ScheduledNoteEvent noteEventOn, ScheduledNoteEvent noteEventOff) {
         patternThread.lock.lock();
         try {
-            int removeIdx = pattern.events.indexOf(noteEventOn);
-            if(removeIdx != -1) {
-                pattern.removeEvent(removeIdx);
-                pattern.removeEventAfterNextSchedule(noteEventOff);
-                patternThread.notifyPatternsChanged();
-                if(listener != null) {
-                    listener.accept(pattern.events);
-                }
+            pattern.removeEvent(noteEventOn);
+            NoteEvent sendOff = pattern.removeAndGetEvent(noteEventOff);
+            if(sendOff != null) {
+                patternThread.noteEventSource.dispatch(sendOff);
+            }
+            patternThread.notifyPatternsChanged();
+            if(listener != null) {
+                listener.accept(pattern.events);
             }
         } finally {
             patternThread.lock.unlock();
