@@ -5,6 +5,12 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Parcelable;
+import android.view.Menu;
+import android.view.MenuItem;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -14,7 +20,6 @@ import androidx.core.util.Consumer;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import libre.sampler.adapters.ProjectListAdapter;
-import libre.sampler.databases.ProjectDao;
 import libre.sampler.dialogs.ProjectCreateDialog;
 import libre.sampler.listeners.MySwipeRefreshListener;
 import libre.sampler.models.Project;
@@ -24,14 +29,6 @@ import libre.sampler.tasks.GetProjectsTask;
 import libre.sampler.utils.AdapterLoader;
 import libre.sampler.utils.AppConstants;
 import libre.sampler.utils.DatabaseConnectionManager;
-import libre.sampler.utils.SingleStateHolder;
-
-import android.os.Parcelable;
-import android.view.Menu;
-import android.view.MenuItem;
-
-import java.util.ArrayList;
-import java.util.List;
 
 public class MainActivity extends AppCompatActivity implements ProjectCreateDialog.ProjectCreateDialogListener {
     private SwipeRefreshLayout refreshLayout;

@@ -1,6 +1,5 @@
 package libre.sampler.adapters;
 
-import android.graphics.Color;
 import android.graphics.Rect;
 import android.view.GestureDetector;
 import android.view.LayoutInflater;
@@ -17,10 +16,7 @@ import androidx.annotation.NonNull;
 import androidx.core.view.GestureDetectorCompat;
 import androidx.recyclerview.widget.RecyclerView;
 import libre.sampler.R;
-import libre.sampler.models.NoteEvent;
 import libre.sampler.utils.PianoRollController;
-import libre.sampler.models.ScheduledNoteEvent;
-import libre.sampler.publishers.PatternBuilder;
 import libre.sampler.utils.RepeatingDrawable;
 import libre.sampler.views.PianoRollNoteView;
 

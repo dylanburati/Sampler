@@ -4,7 +4,6 @@ import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
-import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Parcelable;
 import android.view.LayoutInflater;
@@ -12,7 +11,6 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
-import android.widget.TextView;
 
 import java.io.File;
 import java.util.List;
@@ -25,7 +23,6 @@ import libre.sampler.R;
 import libre.sampler.adapters.SampleListAdapter;
 import libre.sampler.models.Instrument;
 import libre.sampler.models.Sample;
-import libre.sampler.utils.AdapterLoader;
 import libre.sampler.utils.AppConstants;
 
 public class InstrumentEditDialog extends DialogFragment {

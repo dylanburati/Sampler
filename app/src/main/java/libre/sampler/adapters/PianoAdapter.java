@@ -6,10 +6,8 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
-import androidx.core.util.Consumer;
 import androidx.recyclerview.widget.RecyclerView;
 import libre.sampler.R;
-import libre.sampler.models.NoteEvent;
 
 public class PianoAdapter extends RecyclerView.Adapter<PianoAdapter.ViewHolder> {
     private static final int NUM_OCTAVES = 8;

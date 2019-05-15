@@ -25,7 +25,6 @@ import libre.sampler.adapters.PianoRollAdapter;
 import libre.sampler.models.Pattern;
 import libre.sampler.models.PatternEvent;
 import libre.sampler.utils.PianoRollController;
-import libre.sampler.publishers.PatternBuilder;
 import libre.sampler.publishers.PatternEventSource;
 import libre.sampler.utils.MusicTime;
 import libre.sampler.utils.PatternThread;
@@ -37,9 +36,6 @@ public class ProjectPatternsFragment extends Fragment {
     private RecyclerView pianoRollContainer;
     private PianoRollAdapter pianoRollAdapter;
     private PianoRollController pianoRollController;
-
-    private Pattern pattern1;
-    private PatternBuilder patternBuilder;
 
     private ImageView patternStop;
     private boolean isRunning;

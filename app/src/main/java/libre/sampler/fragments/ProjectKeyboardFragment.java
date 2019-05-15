@@ -11,7 +11,6 @@ import android.view.ViewGroup;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;

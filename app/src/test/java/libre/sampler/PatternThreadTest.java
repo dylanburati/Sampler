@@ -14,7 +14,8 @@ import libre.sampler.publishers.NoteEventSource;
 import libre.sampler.utils.PatternThread;
 
 import static libre.sampler.utils.AppConstants.NANOS_PER_MILLI;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertTrue;
 
 public class PatternThreadTest {
     public void printFormattedArray(String format, long[] arr) {

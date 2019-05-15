@@ -1,8 +1,6 @@
 package libre.sampler.listeners;
 
 import android.text.TextWatcher;
-import android.view.View;
-import android.widget.EditText;
 
 import libre.sampler.utils.SingleStateHolder;
 

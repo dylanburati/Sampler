@@ -7,7 +7,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
-import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -15,7 +14,6 @@ import androidx.fragment.app.Fragment;
 import libre.sampler.ProjectActivity;
 import libre.sampler.R;
 import libre.sampler.models.Project;
-import libre.sampler.utils.AppConstants;
 
 public class ProjectSettingsFragment extends Fragment {
     private Project project;

@@ -1,34 +1,34 @@
 package libre.sampler.publishers;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
 import androidx.core.util.Consumer;
 import libre.sampler.models.Instrument;
-import libre.sampler.models.NoteEvent;
 import libre.sampler.utils.EventSource;
 
 public class InstrumentEventSource implements EventSource<Instrument> {
-    private List<String> keys = new ArrayList<>();
-    private List<Consumer<Instrument>> listeners = new ArrayList<>();
+    private Map<String, Consumer<Instrument>> listeners = new HashMap<>();
 
     public InstrumentEventSource() {
     }
 
     @Override
     public void add(String tag, Consumer<Instrument> listener) {
-        int replaceIndex = (tag == null ? -1 : keys.indexOf(tag));
-        if(replaceIndex == -1) {
-            keys.add(tag);
-            listeners.add(listener);
-        } else {
-            listeners.set(replaceIndex, listener);
-        }
+        listeners.put(tag, listener);
     }
 
     @Override
     public void dispatch(Instrument instrument) {
-        for(Consumer<Instrument> fn : listeners) {
+        for(Consumer<Instrument> fn : listeners.values()) {
+            fn.accept(instrument);
+        }
+    }
+
+    @Override
+    public void dispatchTo(String tag, Instrument instrument) {
+        Consumer<Instrument> fn = listeners.get(tag);
+        if(fn != null) {
             fn.accept(instrument);
         }
     }

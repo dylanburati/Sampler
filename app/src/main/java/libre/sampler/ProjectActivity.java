@@ -1,33 +1,5 @@
 package libre.sampler;
 
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.ActionBar;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.util.Consumer;
-import androidx.viewpager.widget.ViewPager;
-import libre.sampler.adapters.InstrumentListAdapter;
-import libre.sampler.adapters.ProjectFragmentAdapter;
-import libre.sampler.dialogs.InstrumentCreateDialog;
-import libre.sampler.dialogs.InstrumentEditDialog;
-import libre.sampler.models.Instrument;
-import libre.sampler.models.NoteEvent;
-import libre.sampler.models.Pattern;
-import libre.sampler.models.PatternEvent;
-import libre.sampler.models.Project;
-import libre.sampler.models.Sample;
-import libre.sampler.models.ScheduledNoteEvent;
-import libre.sampler.publishers.MidiEventDispatcher;
-import libre.sampler.publishers.NoteEventSource;
-import libre.sampler.publishers.PatternEventSource;
-import libre.sampler.tasks.GetInstrumentsTask;
-import libre.sampler.tasks.UpdateProjectTask;
-import libre.sampler.utils.AdapterLoader;
-import libre.sampler.utils.AppConstants;
-import libre.sampler.utils.DatabaseConnectionManager;
-import libre.sampler.utils.PatternThread;
-import libre.sampler.utils.SampleBindingList;
-import libre.sampler.utils.VoiceBindingList;
-
 import android.annotation.SuppressLint;
 import android.content.ComponentName;
 import android.content.Intent;
@@ -41,7 +13,6 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.Parcelable;
 import android.util.Log;
-import android.util.Pair;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Toast;
@@ -56,10 +27,33 @@ import org.puredata.core.utils.IoUtils;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
+
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.ActionBar;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.util.Consumer;
+import androidx.viewpager.widget.ViewPager;
+import libre.sampler.adapters.InstrumentListAdapter;
+import libre.sampler.adapters.ProjectFragmentAdapter;
+import libre.sampler.dialogs.InstrumentCreateDialog;
+import libre.sampler.dialogs.InstrumentEditDialog;
+import libre.sampler.models.Instrument;
+import libre.sampler.models.NoteEvent;
+import libre.sampler.models.PatternEvent;
+import libre.sampler.models.Project;
+import libre.sampler.models.Sample;
+import libre.sampler.publishers.MidiEventDispatcher;
+import libre.sampler.publishers.NoteEventSource;
+import libre.sampler.publishers.PatternEventSource;
+import libre.sampler.tasks.GetInstrumentsTask;
+import libre.sampler.tasks.UpdateProjectTask;
+import libre.sampler.utils.AdapterLoader;
+import libre.sampler.utils.AppConstants;
+import libre.sampler.utils.DatabaseConnectionManager;
+import libre.sampler.utils.PatternThread;
+import libre.sampler.utils.SampleBindingList;
+import libre.sampler.utils.VoiceBindingList;
 
 public class ProjectActivity extends AppCompatActivity implements
         InstrumentCreateDialog.InstrumentCreateDialogListener, InstrumentEditDialog.InstrumentEditDialogListener {

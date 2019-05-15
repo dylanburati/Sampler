@@ -13,7 +13,6 @@ import java.util.Arrays;
 
 import androidx.annotation.RequiresApi;
 import libre.sampler.models.NoteEvent;
-import libre.sampler.models.PatternEvent;
 import libre.sampler.utils.MidiConstants;
 
 @RequiresApi(api = Build.VERSION_CODES.M)

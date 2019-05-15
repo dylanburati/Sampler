@@ -1,6 +1,5 @@
 package libre.sampler.models;
 
-import android.os.Environment;
 import android.os.Parcel;
 import android.os.Parcelable;
 
@@ -8,19 +7,15 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
-import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
-import androidx.room.ColumnInfo;
 import androidx.room.Entity;
 import androidx.room.Ignore;
 import androidx.room.PrimaryKey;
-import androidx.room.TypeConverter;
 import androidx.room.TypeConverters;
-import libre.sampler.R;
 import libre.sampler.databases.ProjectSettingsConverter;
 import libre.sampler.publishers.InstrumentEventSource;
 import libre.sampler.utils.AppConstants;
