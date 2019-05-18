@@ -19,11 +19,14 @@ import libre.sampler.adapters.InstrumentListAdapter;
 import libre.sampler.dialogs.InstrumentCreateDialog;
 import libre.sampler.dialogs.InstrumentEditDialog;
 import libre.sampler.models.Instrument;
+import libre.sampler.models.InstrumentEvent;
 import libre.sampler.models.Project;
+import libre.sampler.publishers.InstrumentEventSource;
 
 public class ProjectInstrumentsFragment extends Fragment {
     private RecyclerView data;
     private Project project;
+    private InstrumentEventSource instrumentEventSource;
     private InstrumentListAdapter adapter;
 
     @Nullable
@@ -33,6 +36,7 @@ public class ProjectInstrumentsFragment extends Fragment {
 
         this.data = (RecyclerView) rootView.findViewById(R.id.instruments_data);
         project = ((ProjectActivity) getActivity()).project;
+        instrumentEventSource = ((ProjectActivity) getActivity()).instrumentEventSource;
         adapter = new InstrumentListAdapter(new ArrayList<Instrument>(),
                 new InstrumentEditConsumer(), new InstrumentSelectConsumer(), new InstrumentCreateRunnable());
         data.setAdapter(adapter);
@@ -77,8 +81,8 @@ public class ProjectInstrumentsFragment extends Fragment {
     private class InstrumentSelectConsumer implements Consumer<Instrument> {
         @Override
         public void accept(Instrument instrument) {
-            int activeIdx = project.setActiveInstrument(instrument);
-            adapter.activateItem(activeIdx + 1);
+            instrumentEventSource.dispatch(new InstrumentEvent(InstrumentEvent.INSTRUMENT_SELECT, instrument));
+            adapter.activateInstrument(instrument);
         }
     }
 }

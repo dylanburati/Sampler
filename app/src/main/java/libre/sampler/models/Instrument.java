@@ -96,6 +96,16 @@ public class Instrument implements Parcelable {
         return samples;
     }
 
+    public List<Sample> getSamplesForEvent(NoteEvent event) {
+        List<Sample> retval = new ArrayList<>(10);
+        for(int i = 0; i < samples.size(); i++) {
+            if(samples.get(i).contains(event)) {
+                retval.add(samples.get(i));
+            }
+        }
+        return retval;
+    }
+
     protected Instrument(Parcel in) {
         projectId = in.readInt();
         name = in.readString();

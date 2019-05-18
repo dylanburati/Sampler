@@ -11,8 +11,11 @@ public class AppConstants {
     public static final String TAG_SAVED_STATE_INSTRUMENT_CREATE_NAME = "libre.sampler.tags.SAVED_STATE_INSTRUMENT_CREATE_NAME";
     public static final String TAG_SAVED_STATE_INSTRUMENT_CREATE_PATH = "libre.sampler.tags.SAVED_STATE_INSTRUMENT_CREATE_PATH";
     public static final String TAG_SAVED_STATE_MIDI_CONNECTED = "libre.sampler.tags.SAVED_STATE_MIDI_CONNECTED";
+    public static final String TAG_SAVED_STATE_KEYBOARD_INSTRUMENT = "libre.sampler.tags.SAVED_STATE_KEYBOARD_INSTRUMENT";
+    public static final String TAG_SAVED_STATE_PIANO_ROLL_PATTERN = "libre.sampler.tags.SAVED_STATE_PIANO_ROLL_PATTERN";
 
     public static final int MAX_INSTRUMENTS_PER_PROJECT = 65536;
+    public static final int MAX_PATTERNS_PER_PROJECT = 65536;
 
     public static final int PERM_REQUEST_READ_EXTERNAL_STORAGE = 0;
 

@@ -13,7 +13,7 @@ public class Pattern {
     
     private int nextEventId;
 
-    private long nanosPerTick;
+    private double nanosPerTick;
     private long loopLengthTicks;
 
     private long checkpointTicks;
@@ -56,7 +56,7 @@ public class Pattern {
     }
 
     public void setTempo(double bpm) {
-        long updatedNanosPerTick = (long) (60 * 1e9 / (1.0 * MusicTime.TICKS_PER_BEAT * bpm));
+        double updatedNanosPerTick = (60 * 1e9 / (1.0 * MusicTime.TICKS_PER_BEAT * bpm));
         setNanosPerTick(updatedNanosPerTick);
     }
 
@@ -67,7 +67,7 @@ public class Pattern {
         return (60 * 1e9 / (1.0 * MusicTime.TICKS_PER_BEAT * nanosPerTick));
     }
 
-    public void setNanosPerTick(long updatedNanosPerTick) {
+    public void setNanosPerTick(double updatedNanosPerTick) {
         if(isStarted && !isPaused) {
             long now = System.nanoTime();
             checkpointTicks = getTicksAtTime(now);
@@ -113,11 +113,10 @@ public class Pattern {
             } else {
                 backtrack(ticksNow);
             }
-            int loopNum = schedulerLoopIndex;
             if(getScheduledEventTicks(event) >= ticksNow) {
-                return event.getNoteEvent(loopNum);
+                return event.getNoteEvent(schedulerLoopIndex);
             } else {
-                return event.getNoteEvent(loopNum + 1);
+                return event.getNoteEvent(schedulerLoopIndex + 1);
             }
         }
         return null;
@@ -125,6 +124,7 @@ public class Pattern {
 
     public void start() {
         isStarted = true;
+        isPaused = false;
         schedulerLoopIndex = 0;
         schedulerEventIndex = 0;
         checkpointNanos = System.nanoTime();
@@ -132,10 +132,12 @@ public class Pattern {
     }
 
     public void pause() {
-        isPaused = true;
-        checkpointTicks = getTicksAtTime(System.nanoTime());
+        long now = System.nanoTime();
+        checkpointTicks = getTicksAtTime(now);
+        checkpointNanos = now;
 
         backtrack(checkpointTicks);
+        isPaused = true;
     }
 
     public void resume() {
@@ -167,16 +169,16 @@ public class Pattern {
         if(isPaused) {
             return checkpointTicks;
         }
-        long afterCheckpointTicks = (time - checkpointNanos) / nanosPerTick;
+        long afterCheckpointTicks = (long) ((time - checkpointNanos) / nanosPerTick);
         return checkpointTicks + afterCheckpointTicks;
     }
 
     private long getTimeAtTicks(long ticks) {
-        return (ticks - checkpointTicks) * this.nanosPerTick + checkpointNanos;
+        return (long) ((ticks - checkpointTicks) * this.nanosPerTick + checkpointNanos);
     }
 
     private long getLoopLengthNanos() {
-        return loopLengthTicks * nanosPerTick;
+        return (long) (loopLengthTicks * nanosPerTick);
     }
 
     public long getScheduledEventTicks(ScheduledNoteEvent n) {

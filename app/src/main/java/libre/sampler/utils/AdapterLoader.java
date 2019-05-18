@@ -3,7 +3,6 @@ package libre.sampler.utils;
 import java.util.List;
 
 import androidx.recyclerview.widget.RecyclerView;
-import libre.sampler.models.Project;
 
 public class AdapterLoader {
     public interface Loadable<T> {
@@ -33,6 +32,14 @@ public class AdapterLoader {
     public static <T> void removeItem(Loadable<T> adapter, int removeIdx) {
         adapter.items().remove(removeIdx);
         ((RecyclerView.Adapter) adapter).notifyItemRemoved(removeIdx);
+    }
+
+    public static <T> void removeItem(Loadable<T> adapter, T e) {
+        int removeIdx = adapter.items().indexOf(e);
+        if(removeIdx != -1) {
+            adapter.items().remove(removeIdx);
+            ((RecyclerView.Adapter) adapter).notifyItemRemoved(removeIdx);
+        }
     }
 
     public static <T> void clear(Loadable<T> adapter) {

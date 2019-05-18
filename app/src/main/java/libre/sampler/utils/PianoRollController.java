@@ -1,51 +1,44 @@
 package libre.sampler.utils;
 
-import android.database.DataSetObserver;
 import android.graphics.Color;
-import android.graphics.Typeface;
 import android.text.Editable;
-import android.text.Spannable;
 import android.text.SpannableString;
 import android.text.Spanned;
 import android.text.TextWatcher;
 import android.text.style.TextAppearanceSpan;
-import android.text.style.TypefaceSpan;
-import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
-import android.view.ViewGroup;
 import android.view.inputmethod.EditorInfo;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.ListAdapter;
 import android.widget.NumberPicker;
 import android.widget.RelativeLayout;
 import android.widget.Spinner;
-import android.widget.SpinnerAdapter;
 import android.widget.TextView;
 
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.List;
 
+import androidx.core.util.Consumer;
 import libre.sampler.R;
 import libre.sampler.adapters.PianoRollAdapter;
 import libre.sampler.listeners.StatefulScrollListener;
 import libre.sampler.models.NoteEvent;
 import libre.sampler.models.Pattern;
+import libre.sampler.models.PatternEvent;
 import libre.sampler.models.ScheduledNoteEvent;
+import libre.sampler.publishers.PatternEventSource;
 import libre.sampler.views.PianoRollNoteView;
 
 public class PianoRollController {
     private PatternThread patternThread;
-    public List<Pattern> patterns;
-    public PianoRollAdapter adapter;
-
     private Pattern activePattern;
+    private PatternEventSource patternEventSource;
+    public PianoRollAdapter adapter;
 
     public int baseBarWidth;
     public float keyHeight;
@@ -83,15 +76,41 @@ public class PianoRollController {
 
     public int velocity;
 
-    public PianoRollController(PatternThread patternThread, List<Pattern> patterns) {
+    private NumberPicker loopLengthPickerBars;
+    private NumberPicker loopLengthPickerSixteenths;
+    private EditText tempoEditText;
+
+    public PianoRollController(PatternThread patternThread, Pattern activePattern, PatternEventSource patternEventSource) {
         this.patternThread = patternThread;
-        this.patterns = patterns;
-        if(patterns.size() == 0) {
+        this.activePattern = activePattern;
+
+        this.noteLength = new MusicTime(0, 4, 0);
+        this.snap = new MusicTime(0, 1, 0);
+        this.velocity = 100;
+        this.inputLoopLength = new MusicTime(1, 0, 0);
+        this.inputTempo = 140;
+
+        patternEventSource.add("PianoRollController", new Consumer<PatternEvent>() {
+            @Override
+            public void accept(PatternEvent patternEvent) {
+                if(patternEvent.action == PatternEvent.PATTERN_SELECT) {
+                    PianoRollController.this.activePattern = patternEvent.pattern;
+                    updatePatternLengthInputs();
+                    updateTempoInput();
+                }
+            }
+        });
+
+        if(activePattern == null) {
             activePattern = new Pattern(new ArrayList<ScheduledNoteEvent>());
-            patterns.add(activePattern);
+            activePattern.setLoopLengthTicks(inputLoopLength.getTicks());
+            activePattern.setTempo(inputTempo);
+            patternEventSource.dispatch(new PatternEvent(PatternEvent.PATTERN_SELECT, activePattern));
         } else {
-            activePattern = patterns.get(0);
+            this.inputLoopLength.setTicks(activePattern.getLoopLengthTicks());
+            this.inputTempo = activePattern.getTempo();
         }
+
         adapter = new PianoRollAdapter(this);
     }
 
@@ -196,7 +215,7 @@ public class PianoRollController {
         }
     }
 
-    public void setNoteLengthInputs(final NumberPicker pickerBars, final NumberPicker pickerSixteenths, NumberPicker pickerUserTicks) {
+    public void registerNoteLengthInputs(final NumberPicker pickerBars, final NumberPicker pickerSixteenths, NumberPicker pickerUserTicks) {
         final StatefulScrollListener pickerUserTicksScrolling = new StatefulScrollListener();
         pickerUserTicks.setOnScrollListener(pickerUserTicksScrolling);
         pickerUserTicks.setMinValue(0);
@@ -270,7 +289,7 @@ public class PianoRollController {
         pickerBars.setWrapSelectorWheel(false);
     }
 
-    public void setSnapInput(Spinner spinner) {
+    public void registerSnapInput(Spinner spinner) {
         int currentSelection = 0;
         if(snap == null) {
             currentSelection = SNAP_OPTIONS.length - 1;
@@ -307,12 +326,14 @@ public class PianoRollController {
         });
     }
 
-    public void setPatternLengthInputs(final NumberPicker pickerBars, NumberPicker pickerSixteenths, Button confirmButton) {
+    public void registerPatternLengthInputs(final NumberPicker pickerBars, NumberPicker pickerSixteenths, Button confirmButton) {
+        this.loopLengthPickerBars = pickerBars;
+        this.loopLengthPickerSixteenths = pickerSixteenths;
+
         final StatefulScrollListener pickerSixteenthsScrolling = new StatefulScrollListener();
         pickerSixteenths.setOnScrollListener(pickerSixteenthsScrolling);
         pickerSixteenths.setMinValue(0);
         pickerSixteenths.setMaxValue(MusicTime.SIXTEENTHS_PER_BAR - 1);
-        pickerSixteenths.setValue(inputLoopLength.sixteenths);
         pickerSixteenths.setOnValueChangedListener(new NumberPicker.OnValueChangeListener() {
             @Override
             public void onValueChange(NumberPicker picker, int oldVal, int newVal) {
@@ -336,7 +357,6 @@ public class PianoRollController {
 
         pickerBars.setMinValue(0);
         pickerBars.setMaxValue(MAX_INPUT_BARS);
-        pickerBars.setValue(inputLoopLength.bars);
         pickerBars.setOnValueChangedListener(new NumberPicker.OnValueChangeListener() {
             @Override
             public void onValueChange(NumberPicker picker, int oldVal, int newVal) {
@@ -353,11 +373,23 @@ public class PianoRollController {
                 setLoopLength(inputLoopLength);
             }
         });
+
+        updatePatternLengthInputs();
+    }
+    
+    private void updatePatternLengthInputs() {
+        if(loopLengthPickerBars != null && loopLengthPickerSixteenths != null) {
+            if(activePattern != null) {
+                inputLoopLength.setTicks(activePattern.getLoopLengthTicks());
+            }
+            loopLengthPickerBars.setValue(inputLoopLength.bars);
+            loopLengthPickerSixteenths.setValue(inputLoopLength.sixteenths);
+        }
     }
 
-    public void setTempoInput(EditText tempoEditText) {
-        DecimalFormat fmt = new DecimalFormat("0.###");
-        tempoEditText.setText(fmt.format(inputTempo));
+    public void registerTempoInput(EditText tempoEditText) {
+        this.tempoEditText = tempoEditText;
+
         tempoEditText.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
@@ -384,5 +416,17 @@ public class PianoRollController {
                 return false;
             }
         });
+
+        updateTempoInput();
+    }
+
+    private void updateTempoInput() {
+        if(tempoEditText != null) {
+            if(activePattern != null) {
+                inputTempo = activePattern.getTempo();
+            }
+            DecimalFormat fmt = new DecimalFormat("0.###");
+            tempoEditText.setText(fmt.format(inputTempo));
+        }
     }
 }

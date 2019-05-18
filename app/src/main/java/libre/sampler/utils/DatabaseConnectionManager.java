@@ -18,7 +18,9 @@ public class DatabaseConnectionManager {
             if(ctx == null) {
                 throw new NullPointerException("A valid context must be provided to initialize the database");
             }
-            instance = Room.databaseBuilder(ctx, AppDatabase.class, "sampler").addMigrations(AppDatabase.MIGRATION_1_2).build();
+            instance = Room.databaseBuilder(ctx, AppDatabase.class, "sampler")
+                    .addMigrations(AppDatabase.MIGRATION_1_2, AppDatabase.MIGRATION_2_3)
+                    .build();
         }
     }
 

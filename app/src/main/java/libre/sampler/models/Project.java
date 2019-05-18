@@ -5,7 +5,6 @@ import android.os.Parcelable;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -17,7 +16,6 @@ import androidx.room.Ignore;
 import androidx.room.PrimaryKey;
 import androidx.room.TypeConverters;
 import libre.sampler.databases.ProjectSettingsConverter;
-import libre.sampler.publishers.InstrumentEventSource;
 import libre.sampler.utils.AppConstants;
 import libre.sampler.utils.IdStatus;
 
@@ -28,7 +26,6 @@ public class Project implements Parcelable {
 
     public String name;
     public long mtime;
-    private int activeIdx;
 
     @TypeConverters(ProjectSettingsConverter.class)
     public Map<String, Object> settings;
@@ -36,11 +33,16 @@ public class Project implements Parcelable {
     @Ignore
     private List<Instrument> instruments;
     @Ignore
-    public InstrumentEventSource instrumentEventSource;
-    @Ignore
     private int nextInstrumentId;
     @Ignore
-    private IdStatus idStatus = new IdStatus("Project,Instrument");
+    private IdStatus instrumentIdStatus = new IdStatus("Project,Instrument");
+
+    @Ignore
+    private List<Pattern> patterns;
+    @Ignore
+    private int nextPatternId;
+    @Ignore
+    private IdStatus patternIdStatus = new IdStatus("Project,Pattern");
 
     @Ignore
     public Project(String name, long mtime) {
@@ -50,30 +52,27 @@ public class Project implements Parcelable {
 
         this.settings = new HashMap<>();
         this.instruments = new ArrayList<>();
-        this.instrumentEventSource = new InstrumentEventSource();
+        this.patterns = new ArrayList<>();
     }
 
     // should be called with the `id` obtained from the database
     public Project(int id, String name, long mtime) {
+        this(name, mtime);
         this.id = id;
-        this.name = name;
-        this.mtime = mtime;
-        this.nextInstrumentId = this.id * AppConstants.MAX_INSTRUMENTS_PER_PROJECT;
-
-        this.settings = new HashMap<>();
-        this.instruments = new ArrayList<>();
-        this.instrumentEventSource = new InstrumentEventSource();
 
         if(id >= 0) {
-            idStatus.set(IdStatus.SELF);
+            instrumentIdStatus.set(IdStatus.SELF);
+            patternIdStatus.set(IdStatus.SELF);
         }
     }
 
     public void setProjectId(int id) {
         this.id = id;
         this.nextInstrumentId = id * AppConstants.MAX_INSTRUMENTS_PER_PROJECT;
+        this.nextPatternId = id * AppConstants.MAX_PATTERNS_PER_PROJECT;
 
-        idStatus.set(IdStatus.SELF);
+        instrumentIdStatus.set(IdStatus.SELF);
+        patternIdStatus.set(IdStatus.SELF);
     }
 
     // should be called with a list obtained from the database
@@ -84,20 +83,19 @@ public class Project implements Parcelable {
                 nextInstrumentId = t.id + 1;
             }
         }
-        updateActiveInstrument();
 
-        idStatus.set(IdStatus.CHILDREN_DB);
+        instrumentIdStatus.set(IdStatus.CHILDREN_DB);
     }
 
     public void registerInstrument(Instrument e) {
         e.setInstrumentId(nextInstrumentId);
         nextInstrumentId++;
 
-        idStatus.require(IdStatus.SELF);
-        idStatus.set(IdStatus.CHILDREN_ADDED);
+        instrumentIdStatus.require(IdStatus.SELF);
+        instrumentIdStatus.set(IdStatus.CHILDREN_ADDED);
     }
 
-    public int addInstrument(Instrument e) {
+    public void addInstrument(Instrument e) {
         e.projectId = this.id;
 
         boolean uniqueName = checkName(e);
@@ -108,99 +106,46 @@ public class Project implements Parcelable {
             uniqueName = checkName(e);
         }
 
-        int insertIdx = instruments.size();
         instruments.add(e);
-        return insertIdx;
     }
 
-    public int removeInstrument(Instrument e) {
-        int removeIdx = instruments.indexOf(e);
-        if(removeIdx == -1) {
-            return -1;
-        }
-        if(removeIdx == activeIdx) {
-            activeIdx = -1;
-        }
-        instruments.remove(removeIdx);
-        return removeIdx;
-    }
-
-    public String getRelativeTime() {
-        StringBuilder relativeTime = new StringBuilder();
-        Date then = new Date(mtime);
-        Date now = new Date();
-        if(then.getYear() == now.getYear()) {
-            return (new SimpleDateFormat("MMM d h:mm a", Locale.US)).format(then);
-        } else {
-            return (new SimpleDateFormat("MMM d, yyyy", Locale.US)).format(then);
-        }
-    }
-
-    public List<Sample> getSamples(NoteEvent event) {
-        return getSamples(getActiveInstrument(), event);
-    }
-
-    public List<Sample> getSamples(Instrument instrument, NoteEvent event) {
-        if(instrument == null) {
-            return Collections.emptyList();
-        }
-        List<Sample> retval = new ArrayList<>(10);
-        for(int i = 0; i < instrument.getSamples().size(); i++) {
-            if(instrument.getSamples().get(i).contains(event)) {
-                retval.add(instrument.getSamples().get(i));
-                // return retval;  // omitted to allow multiple samples per eventIndex
-            }
-        }
-        return retval;
-    }
-
-    public boolean checkName(Instrument e) {
-        if(e.name == null || e.name.isEmpty()) {
-            e.name = "New instrument";
-        }
-        for(Instrument t : instruments) {
-            if(e.name.equals(t.name)) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    public int getActiveIdx() {
-        if(activeIdx >= this.instruments.size()) {
-            return -1;
-        }
-        return activeIdx;
-    }
-
-    public Instrument getActiveInstrument() {
-        if(activeIdx < 0 || activeIdx >= this.instruments.size()) {
-            return null;
-        }
-        return this.instruments.get(activeIdx);
-    }
-
-    public int setActiveInstrument(Instrument t) {
-        activeIdx = this.instruments.indexOf(t);
-
-        instrumentEventSource.dispatch(t);
-        return activeIdx;
-    }
-
-    public void updateActiveInstrument() {
-        Instrument instrument = getActiveInstrument();
-        if(instrument != null) {
-            instrumentEventSource.dispatch(instrument);
-        }
-    }
-
-    public void setActiveIdx(int activeIdx) {
-        this.activeIdx = activeIdx;
-        instrumentEventSource.dispatch(getActiveInstrument());
+    public void removeInstrument(Instrument e) {
+        instruments.remove(e);
     }
 
     public List<Instrument> getInstruments() {
         return instruments;
+    }
+
+    // should be called with a list obtained from the database
+    public void setPatterns(List<Pattern> patterns) {
+        this.patterns = patterns;
+        for(Pattern p : patterns) {
+            if(p.id >= nextPatternId) {
+                nextPatternId = p.id + 1;
+            }
+        }
+
+        patternIdStatus.set(IdStatus.CHILDREN_DB);
+    }
+
+    public void addPattern(Pattern e) {
+        e.projectId = this.id;
+        e.id = nextPatternId;
+        nextPatternId++;
+
+        patterns.add(e);
+
+        patternIdStatus.require(IdStatus.SELF);
+        patternIdStatus.set(IdStatus.CHILDREN_ADDED);
+    }
+
+    public void removePattern(Pattern e) {
+        patterns.remove(e);
+    }
+
+    public List<Pattern> getPatterns() {
+        return patterns;
     }
 
     public String getDefaultSamplePath() {
@@ -215,17 +160,40 @@ public class Project implements Parcelable {
         settings.put(AppConstants.PREF_DEFAULT_SAMPLE_PATH, s);
     }
 
+    public String getRelativeTime() {
+        StringBuilder relativeTime = new StringBuilder();
+        Date then = new Date(mtime);
+        Date now = new Date();
+        if(then.getYear() == now.getYear()) {
+            return (new SimpleDateFormat("MMM d h:mm a", Locale.US)).format(then);
+        } else {
+            return (new SimpleDateFormat("MMM d, yyyy", Locale.US)).format(then);
+        }
+    }
+
+    private boolean checkName(Instrument e) {
+        if(e.name == null || e.name.isEmpty()) {
+            e.name = "New instrument";
+        }
+        for(Instrument t : instruments) {
+            if(e.name.equals(t.name)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     protected Project(Parcel in) {
         id = in.readInt();
         name = in.readString();
         mtime = in.readLong();
-        instruments = in.createTypedArrayList(Instrument.CREATOR);
-        activeIdx = in.readInt();
         settings = ProjectSettingsConverter.deserializeSettings(in.readString());
+        instruments = in.createTypedArrayList(Instrument.CREATOR);
         nextInstrumentId = in.readInt();
-        idStatus = in.readParcelable(IdStatus.class.getClassLoader());
-
-        this.instrumentEventSource = new InstrumentEventSource();
+        instrumentIdStatus = in.readParcelable(IdStatus.class.getClassLoader());
+        patterns = new ArrayList<>();  // patterns = in.createTypedArrayList(Pattern.CREATOR);
+        nextPatternId = in.readInt();
+        patternIdStatus = in.readParcelable(IdStatus.class.getClassLoader());
     }
 
     @Override
@@ -233,11 +201,13 @@ public class Project implements Parcelable {
         dest.writeInt(id);
         dest.writeString(name);
         dest.writeLong(mtime);
-        dest.writeTypedList(instruments);
-        dest.writeInt(activeIdx);
         dest.writeString(ProjectSettingsConverter.serializeSettings(settings));
+        dest.writeTypedList(instruments);
         dest.writeInt(nextInstrumentId);
-        dest.writeParcelable(idStatus, flags);
+        dest.writeParcelable(instrumentIdStatus, flags);
+        // dest.writeTypedList(patterns);
+        dest.writeInt(nextPatternId);
+        dest.writeParcelable(patternIdStatus, flags);
     }
 
     @Override

@@ -24,12 +24,12 @@ public class InstrumentListAdapter extends RecyclerView.Adapter<InstrumentListAd
     public List<Instrument> items;
     private final Set<ViewHolder> viewHolderSet;
 
-    private int activateOnBind = -1;
-
     private Consumer<Instrument> editPostHook;
     private Consumer<Instrument> selectPostHook;
     private Runnable createPostHook;
     public boolean autoScrollOnInsert = false;  // todo
+
+    private Instrument activateOnBind;
 
     @Override
     public List<Instrument> items() {
@@ -40,6 +40,7 @@ public class InstrumentListAdapter extends RecyclerView.Adapter<InstrumentListAd
         private LinearLayout rootView;
         private View iconAddView;
         private TextView nameTextView;
+        private Instrument instrument;
 
         public ViewHolder(LinearLayout v) {
             super(v);
@@ -84,27 +85,27 @@ public class InstrumentListAdapter extends RecyclerView.Adapter<InstrumentListAd
                 }
             });
         } else {
-            if(position == activateOnBind) {
-                holder.nameTextView.setActivated(true);
-            }
-            Instrument item = items.get(position);
+            holder.instrument = items.get(position);
             holder.iconAddView.setVisibility(View.GONE);
             holder.rootView.setPadding((int) res.getDimension(R.dimen.margin4), holder.rootView.getPaddingTop(),
                     (int) res.getDimension(R.dimen.margin4), holder.rootView.getPaddingBottom());
-            holder.rootView.setOnClickListener(new StatefulClickListener<Instrument>(item) {
+            holder.rootView.setOnClickListener(new StatefulClickListener<Instrument>(holder.instrument) {
                 @Override
                 public void onClick(View v) {
                     selectPostHook.accept(this.data);
                 }
             });
-            holder.rootView.setOnLongClickListener(new StatefulLongClickListener<Instrument>(item) {
+            holder.rootView.setOnLongClickListener(new StatefulLongClickListener<Instrument>(holder.instrument) {
                 @Override
                 public boolean onLongClick(View v) {
                     editPostHook.accept(this.data);
                     return true;
                 }
             });
-            holder.nameTextView.setText(item.name);
+            holder.nameTextView.setText(holder.instrument.name);
+            if(holder.instrument == this.activateOnBind) {
+                activateInstrument(holder.instrument);
+            }
         }
     }
 
@@ -113,22 +114,20 @@ public class InstrumentListAdapter extends RecyclerView.Adapter<InstrumentListAd
         return this.items.size();
     }
 
-    public void activateItem(int position) {
-        boolean done = false;
+    public void activateInstrument(Instrument instrument) {
+        this.activateOnBind = instrument;
+        if(instrument == null) {
+            return;
+        }
         for(ViewHolder vh : viewHolderSet) {
             if(vh != null) {
-                if(vh.getAdapterPosition() == position) {
+                if(instrument == vh.instrument) {
                     vh.nameTextView.setActivated(true);
-                    done = true;
+                    this.activateOnBind = null;
                 } else {
                     vh.nameTextView.setActivated(false);
                 }
             }
-        }
-        if(!done) {
-            activateOnBind = position;
-        } else {
-            activateOnBind = -1;
         }
     }
 }

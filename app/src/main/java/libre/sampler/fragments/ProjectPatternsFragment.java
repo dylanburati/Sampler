@@ -11,9 +11,6 @@ import android.widget.ImageView;
 import android.widget.NumberPicker;
 import android.widget.Spinner;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
@@ -24,12 +21,12 @@ import libre.sampler.R;
 import libre.sampler.adapters.PianoRollAdapter;
 import libre.sampler.models.Pattern;
 import libre.sampler.models.PatternEvent;
-import libre.sampler.utils.PianoRollController;
 import libre.sampler.publishers.PatternEventSource;
-import libre.sampler.utils.MusicTime;
 import libre.sampler.utils.PatternThread;
+import libre.sampler.utils.PianoRollController;
 
 public class ProjectPatternsFragment extends Fragment {
+    private Pattern pianoRollPattern;
     private PatternEventSource patternEventSource;
     private PatternThread patternThread;
 
@@ -46,6 +43,7 @@ public class ProjectPatternsFragment extends Fragment {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_project_patterns, container, false);
+        pianoRollPattern = ((ProjectActivity) getActivity()).pianoRollPattern;
         patternEventSource = ((ProjectActivity) getActivity()).patternEventSource;
         patternThread = ((ProjectActivity) getActivity()).patternThread;
 
@@ -53,26 +51,18 @@ public class ProjectPatternsFragment extends Fragment {
         RecyclerView.LayoutManager layoutManager = new GridLayoutManager(rootView.getContext(), PianoRollAdapter.SPAN_COUNT, RecyclerView.HORIZONTAL, false);
         pianoRollContainer.setLayoutManager(layoutManager);
 
-        List<Pattern> patterns = new ArrayList<>(patternThread.runningPatterns.values());
-        pianoRollController = new PianoRollController(patternThread, patterns);
+        pianoRollController = new PianoRollController(patternThread, pianoRollPattern, patternEventSource);
         pianoRollController.keyHeight = getResources().getDimensionPixelOffset(R.dimen.piano_roll_colheight) / 12.0f;
         pianoRollController.baseBarWidth = getResources().getDimensionPixelOffset(R.dimen.piano_roll_barwidth);
 
-        // todo move defaults
-        pianoRollController.noteLength = new MusicTime(0, 4, 0);
-        pianoRollController.snap = new MusicTime(0, 1, 0);
-        pianoRollController.velocity = 100;
-        pianoRollController.setLoopLength(new MusicTime(1, 0, 0));
-        pianoRollController.setTempo(140);
-
-        pianoRollController.setNoteLengthInputs((NumberPicker) rootView.findViewById(R.id.piano_roll_settings_length0),
+        pianoRollController.registerNoteLengthInputs((NumberPicker) rootView.findViewById(R.id.piano_roll_settings_length0),
                 (NumberPicker) rootView.findViewById(R.id.piano_roll_settings_length1),
                 (NumberPicker) rootView.findViewById(R.id.piano_roll_settings_length2));
-        pianoRollController.setSnapInput((Spinner) rootView.findViewById(R.id.piano_roll_settings_snaplength0));
-        pianoRollController.setPatternLengthInputs((NumberPicker) rootView.findViewById(R.id.piano_roll_settings_patternlength0),
+        pianoRollController.registerSnapInput((Spinner) rootView.findViewById(R.id.piano_roll_settings_snaplength0));
+        pianoRollController.registerPatternLengthInputs((NumberPicker) rootView.findViewById(R.id.piano_roll_settings_patternlength0),
                 (NumberPicker) rootView.findViewById(R.id.piano_roll_settings_patternlength1),
                 (Button) rootView.findViewById(R.id.submit_patternlength));
-        pianoRollController.setTempoInput((EditText) rootView.findViewById(R.id.pattern_tempo));
+        pianoRollController.registerTempoInput((EditText) rootView.findViewById(R.id.pattern_tempo));
 
         pianoRollContainer.setAdapter(pianoRollController.adapter);
 
@@ -85,6 +75,8 @@ public class ProjectPatternsFragment extends Fragment {
                     patternEventSource.dispatch(new PatternEvent(PatternEvent.PATTERN_OFF, null));
                     if(isPlaying) {
                         isPlaying = false;
+                    } else {
+                        patternThread.resumeLoop();
                     }
                 }
                 updatePlayPauseControls(v.getContext());

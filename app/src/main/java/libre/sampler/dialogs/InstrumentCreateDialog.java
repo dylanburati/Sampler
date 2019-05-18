@@ -19,10 +19,13 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.DialogFragment;
 import androidx.recyclerview.widget.RecyclerView;
+import libre.sampler.ProjectActivity;
 import libre.sampler.R;
 import libre.sampler.adapters.SampleListAdapter;
 import libre.sampler.models.Instrument;
+import libre.sampler.models.InstrumentEvent;
 import libre.sampler.models.Sample;
+import libre.sampler.publishers.InstrumentEventSource;
 import libre.sampler.utils.AppConstants;
 
 public class InstrumentCreateDialog extends DialogFragment {
@@ -32,15 +35,16 @@ public class InstrumentCreateDialog extends DialogFragment {
     private RecyclerView sampleData;
     private SampleListAdapter sampleDataAdapter;
 
+    private InstrumentEventSource instrumentEventSource;
+
     public Instrument toCreate;
-    private InstrumentCreateDialogListener listener;
     public String defaultSamplePath;
     private List<Sample> sampleList;
 
     @Override
     public void onAttach(@NonNull Context context) {
         super.onAttach(context);
-        listener = (InstrumentCreateDialogListener) context;
+        instrumentEventSource = ((ProjectActivity) context).instrumentEventSource;
     }
 
     @NonNull
@@ -88,7 +92,7 @@ public class InstrumentCreateDialog extends DialogFragment {
                         toCreate.name = name;
 
                         toCreate.setSamples(sampleList);
-                        if(listener != null) listener.onInstrumentCreate(toCreate);
+                        instrumentEventSource.dispatch(new InstrumentEvent(InstrumentEvent.INSTRUMENT_CREATE, toCreate));
                         dialog.dismiss();
                     }
                 })
@@ -107,9 +111,5 @@ public class InstrumentCreateDialog extends DialogFragment {
         outState.putParcelable(AppConstants.TAG_SAVED_STATE_INSTRUMENT, (Parcelable) toCreate);
         outState.putString(AppConstants.TAG_SAVED_STATE_INSTRUMENT_CREATE_NAME, nameInputView.getText().toString());
         outState.putString(AppConstants.TAG_SAVED_STATE_INSTRUMENT_CREATE_PATH, sampleInputView.getText().toString());
-    }
-
-    public interface InstrumentCreateDialogListener {
-        public void onInstrumentCreate(Instrument instrument);
     }
 }

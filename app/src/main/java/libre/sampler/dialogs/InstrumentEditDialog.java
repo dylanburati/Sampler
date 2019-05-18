@@ -19,10 +19,13 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.DialogFragment;
 import androidx.recyclerview.widget.RecyclerView;
+import libre.sampler.ProjectActivity;
 import libre.sampler.R;
 import libre.sampler.adapters.SampleListAdapter;
 import libre.sampler.models.Instrument;
+import libre.sampler.models.InstrumentEvent;
 import libre.sampler.models.Sample;
+import libre.sampler.publishers.InstrumentEventSource;
 import libre.sampler.utils.AppConstants;
 
 public class InstrumentEditDialog extends DialogFragment {
@@ -32,8 +35,9 @@ public class InstrumentEditDialog extends DialogFragment {
     private Button sampleAddButton;
     private RecyclerView sampleData;
     private SampleListAdapter sampleDataAdapter;
-    private InstrumentEditDialogListener listener;
     private Button instrumentDeleteButton;
+
+    private InstrumentEventSource instrumentEventSource;
 
     public Instrument previousInstrument;
     public String defaultSamplePath;
@@ -42,7 +46,7 @@ public class InstrumentEditDialog extends DialogFragment {
     @Override
     public void onAttach(@NonNull Context context) {
         super.onAttach(context);
-        listener = (InstrumentEditDialogListener) context;
+        instrumentEventSource = ((ProjectActivity) context).instrumentEventSource;
     }
 
     @NonNull
@@ -91,7 +95,7 @@ public class InstrumentEditDialog extends DialogFragment {
             @Override
             public void onClick(View v) {
                 getDialog().cancel();
-                listener.onInstrumentDelete(previousInstrument);
+                instrumentEventSource.dispatch(new InstrumentEvent(InstrumentEvent.INSTRUMENT_DELETE, previousInstrument));
             }
         });
 
@@ -103,7 +107,7 @@ public class InstrumentEditDialog extends DialogFragment {
                         previousInstrument.name = name;
 
                         previousInstrument.setSamples(sampleList);
-                        listener.onInstrumentEdit(previousInstrument);
+                        instrumentEventSource.dispatch(new InstrumentEvent(InstrumentEvent.INSTRUMENT_EDIT, previousInstrument));
                         dialog.dismiss();
                     }
                 });
@@ -116,10 +120,5 @@ public class InstrumentEditDialog extends DialogFragment {
         outState.putParcelable(AppConstants.TAG_SAVED_STATE_INSTRUMENT, (Parcelable) previousInstrument);
         outState.putString(AppConstants.TAG_SAVED_STATE_INSTRUMENT_CREATE_NAME, nameInputView.getText().toString());
         outState.putString(AppConstants.TAG_SAVED_STATE_INSTRUMENT_CREATE_PATH, sampleInputView.getText().toString());
-    }
-
-    public interface InstrumentEditDialogListener {
-        public void onInstrumentEdit(Instrument instrument);
-        public void onInstrumentDelete(Instrument instrument);
     }
 }

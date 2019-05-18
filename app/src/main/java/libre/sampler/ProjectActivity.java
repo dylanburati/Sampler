@@ -36,13 +36,14 @@ import androidx.core.util.Consumer;
 import androidx.viewpager.widget.ViewPager;
 import libre.sampler.adapters.InstrumentListAdapter;
 import libre.sampler.adapters.ProjectFragmentAdapter;
-import libre.sampler.dialogs.InstrumentCreateDialog;
-import libre.sampler.dialogs.InstrumentEditDialog;
 import libre.sampler.models.Instrument;
+import libre.sampler.models.InstrumentEvent;
 import libre.sampler.models.NoteEvent;
+import libre.sampler.models.Pattern;
 import libre.sampler.models.PatternEvent;
 import libre.sampler.models.Project;
 import libre.sampler.models.Sample;
+import libre.sampler.publishers.InstrumentEventSource;
 import libre.sampler.publishers.MidiEventDispatcher;
 import libre.sampler.publishers.NoteEventSource;
 import libre.sampler.publishers.PatternEventSource;
@@ -55,12 +56,12 @@ import libre.sampler.utils.PatternThread;
 import libre.sampler.utils.SampleBindingList;
 import libre.sampler.utils.VoiceBindingList;
 
-public class ProjectActivity extends AppCompatActivity implements
-        InstrumentCreateDialog.InstrumentCreateDialogListener, InstrumentEditDialog.InstrumentEditDialogListener {
+public class ProjectActivity extends AppCompatActivity {
     private ViewPager pager;
     private ProjectFragmentAdapter adapter;
 
     public NoteEventSource noteEventSource;
+    public InstrumentEventSource instrumentEventSource;
     public PatternEventSource patternEventSource;
     public PatternThread patternThread;
 
@@ -81,6 +82,9 @@ public class ProjectActivity extends AppCompatActivity implements
 
     public Project project;
     private boolean projectLoaded;
+
+    public Instrument keyboardInstrument;
+    public Pattern pianoRollPattern;
 
     private VoiceBindingList pdVoiceBindings;
     private SampleBindingList pdSampleBindings;
@@ -106,18 +110,32 @@ public class ProjectActivity extends AppCompatActivity implements
         if(savedInstanceState != null) {
             project = savedInstanceState.getParcelable(AppConstants.TAG_SAVED_STATE_PROJECT);
             projectLoaded = (project != null);
+            if(projectLoaded) {
+                int keyboardInstrumentIdx = savedInstanceState.getInt(AppConstants.TAG_SAVED_STATE_KEYBOARD_INSTRUMENT);
+                if(keyboardInstrumentIdx != -1) {
+                    keyboardInstrument = project.getInstruments().get(keyboardInstrumentIdx);
+                }
+                int pianoRollPatternIdx = savedInstanceState.getInt(AppConstants.TAG_SAVED_STATE_PIANO_ROLL_PATTERN);
+                if(pianoRollPatternIdx != -1) {
+                    pianoRollPattern = project.getPatterns().get(pianoRollPatternIdx);
+                }
+                updateInstrumentListAdapter();
+            }
             if(savedInstanceState.getByte(AppConstants.TAG_SAVED_STATE_MIDI_CONNECTED) != 0) {
                 refreshMidiConnection();
             }
         }
         if(!projectLoaded) {
-            Log.d("ProjectActivity","Project load");
+            Log.d("ProjectActivity", "Project load");
             project = getIntent().getParcelableExtra(AppConstants.TAG_EXTRA_PROJECT);
             DatabaseConnectionManager.initialize(this);
             DatabaseConnectionManager.runTask(new GetInstrumentsTask(project.id, new Consumer<List<Instrument>>() {
                 @Override
                 public void accept(List<Instrument> instruments) {
                     project.setInstruments(instruments);
+                    if(instruments.size() > 0) {
+                        keyboardInstrument = instruments.get(0);
+                    }
                     projectLoaded = true;
                     updateInstrumentListAdapter();
                 }
@@ -137,15 +155,14 @@ public class ProjectActivity extends AppCompatActivity implements
     public void updateInstrumentListAdapter() {
         if(project != null && instrumentListAdapter != null) {
             AdapterLoader.insertAll(instrumentListAdapter, project.getInstruments());
-            int activeIdx = project.getActiveIdx();
-            if(activeIdx >= 0) {
-                instrumentListAdapter.activateItem(activeIdx + 1);
-            }
+            instrumentListAdapter.activateInstrument(keyboardInstrument);
         }
     }
 
     private void initEventSources() {
         noteEventSource = new NoteEventSource();
+        instrumentEventSource = new InstrumentEventSource();
+        instrumentEventSource.add("keyboard", new InstrumentEventConsumer());
         patternEventSource = new PatternEventSource();
         patternThread = new PatternThread(noteEventSource);
         patternThread.start();
@@ -163,10 +180,10 @@ public class ProjectActivity extends AppCompatActivity implements
 
         patternEventSource.add("test", new Consumer<PatternEvent>() {
             @Override
-            public void accept(PatternEvent patternEvent) {
-                if(patternEvent.action == PatternEvent.PATTERN_ON) {
-                    patternThread.addPattern("test", patternEvent.pattern);
-                } else {
+            public void accept(PatternEvent event) {
+                if(event.action == PatternEvent.PATTERN_ON) {
+                    patternThread.addPattern("test", event.pattern);
+                } else if(event.action == PatternEvent.PATTERN_OFF) {
                     closeNotes();
                     patternThread.clearPatterns();
                 }
@@ -214,19 +231,8 @@ public class ProjectActivity extends AppCompatActivity implements
             }
             pdService.initAudio(AudioParameters.suggestSampleRate(), 0, 2, 8);
             pdService.startAudio();
-            project.instrumentEventSource.add("keyboard", new Consumer<Instrument>() {
-                @Override
-                public void accept(Instrument instrument) {
-                    for(Sample s : instrument.getSamples()) {
-                        if(pdSampleBindings.getBinding(s)) {
-                            PdBase.sendList("sample_file", s.sampleIndex, s.filename);
-                        }
-                    }
-                }
-            });
-            int activeIdx = project.getActiveIdx();
-            if(activeIdx >= 0) {
-                project.updateActiveInstrument();
+            if(keyboardInstrument != null) {
+                instrumentEventSource.dispatch(new InstrumentEvent(InstrumentEvent.INSTRUMENT_SELECT, keyboardInstrument));
             }
         } catch (IOException e) {
             finish();
@@ -258,6 +264,8 @@ public class ProjectActivity extends AppCompatActivity implements
     protected void onSaveInstanceState(@NonNull Bundle outState) {
         super.onSaveInstanceState(outState);
         outState.putParcelable(AppConstants.TAG_SAVED_STATE_PROJECT, (Parcelable) project);
+        outState.putInt(AppConstants.TAG_SAVED_STATE_KEYBOARD_INSTRUMENT, project.getInstruments().indexOf(keyboardInstrument));
+        outState.putInt(AppConstants.TAG_SAVED_STATE_PIANO_ROLL_PATTERN, project.getPatterns().indexOf(pianoRollPattern));
         outState.putByte(AppConstants.TAG_SAVED_STATE_MIDI_CONNECTED, (byte) (midiEventDispatcher != null ? 1 : 0));
     }
 
@@ -304,32 +312,6 @@ public class ProjectActivity extends AppCompatActivity implements
         }
     }
 
-    @Override
-    public void onInstrumentCreate(Instrument instrument) {
-        project.addInstrument(instrument);
-        if(instrumentListAdapter != null) {
-            AdapterLoader.insertItem(instrumentListAdapter, instrument);
-        }
-    }
-
-    @Override
-    public void onInstrumentEdit(Instrument instrument) {
-        int changeIdx = instrumentListAdapter.items.indexOf(instrument);
-        if(changeIdx != -1) {
-            instrumentListAdapter.notifyItemChanged(changeIdx);
-        }
-        if(instrument == project.getActiveInstrument()) {
-            project.updateActiveInstrument();
-            instrumentListAdapter.activateItem(changeIdx);
-        }
-    }
-
-    @Override
-    public void onInstrumentDelete(Instrument instrument) {
-        int removeIdx = project.removeInstrument(instrument);
-        AdapterLoader.removeItem(instrumentListAdapter, removeIdx + 1);
-    }
-
     private void closeNotes() {
         if(pdService == null || !pdService.isRunning() || noteEventSource == null) {
             return;
@@ -337,6 +319,36 @@ public class ProjectActivity extends AppCompatActivity implements
         List<NoteEvent> events = pdVoiceBindings.getCloseEvents();
         for(NoteEvent e : events) {
             noteEventSource.dispatch(e);
+        }
+    }
+
+    private class InstrumentEventConsumer implements Consumer<InstrumentEvent> {
+        @Override
+        public void accept(InstrumentEvent event) {
+            if(event.action == InstrumentEvent.INSTRUMENT_CREATE) {
+                project.addInstrument(event.instrument);
+                if(instrumentListAdapter != null) {
+                    AdapterLoader.insertItem(instrumentListAdapter, event.instrument);
+                }
+            } else if(event.action == InstrumentEvent.INSTRUMENT_EDIT) {
+                int changeIdx = instrumentListAdapter.items.indexOf(event.instrument);
+                if(changeIdx != -1) {
+                    instrumentListAdapter.notifyItemChanged(changeIdx);
+                }
+                if(event.instrument == keyboardInstrument) {
+                    instrumentListAdapter.activateInstrument(keyboardInstrument);
+                }
+            } else if(event.action == InstrumentEvent.INSTRUMENT_DELETE) {
+                project.removeInstrument(event.instrument);
+                AdapterLoader.removeItem(instrumentListAdapter, event.instrument);
+            } else if(event.action == InstrumentEvent.INSTRUMENT_SELECT) {
+                keyboardInstrument = event.instrument;
+                for(Sample s : keyboardInstrument.getSamples()) {
+                    if(pdSampleBindings.getBinding(s)) {
+                        PdBase.sendList("sample_file", s.sampleIndex, s.filename);
+                    }
+                }
+            }
         }
     }
 
@@ -349,8 +361,8 @@ public class ProjectActivity extends AppCompatActivity implements
 
         @Override
         public void accept(NoteEvent noteEvent) {
-            if(pdService != null) {
-                List<Sample> samples = project.getSamples(noteEvent);
+            if(pdService != null && keyboardInstrument != null) {
+                List<Sample> samples = keyboardInstrument.getSamplesForEvent(noteEvent);
                 if(samples.size() == 0) {
                     return;
                 }
@@ -433,7 +445,7 @@ public class ProjectActivity extends AppCompatActivity implements
                 if(args.length >= 3) {
                     try {
                         int sampleIndex = (int)((float) args[0]);
-                        for(Sample s : project.getActiveInstrument().getSamples()) {
+                        for(Sample s : keyboardInstrument.getSamples()) {
                             if(s.sampleIndex == sampleIndex) {
                                 s.setSampleInfo((int)((float) args[args.length - 1]), (int)((float) args[2]));
                                 s.isInfoLoaded = true;
