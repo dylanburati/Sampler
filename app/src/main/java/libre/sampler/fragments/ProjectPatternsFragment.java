@@ -19,16 +19,21 @@ import androidx.recyclerview.widget.RecyclerView;
 import libre.sampler.ProjectActivity;
 import libre.sampler.R;
 import libre.sampler.adapters.PianoRollAdapter;
+import libre.sampler.models.Instrument;
 import libre.sampler.models.Pattern;
 import libre.sampler.models.PatternEvent;
+import libre.sampler.models.Project;
+import libre.sampler.publishers.InstrumentEventSource;
 import libre.sampler.publishers.PatternEventSource;
 import libre.sampler.utils.PatternThread;
 import libre.sampler.utils.PianoRollController;
 
 public class ProjectPatternsFragment extends Fragment {
+    private Project project;
+    private PatternThread patternThread;
     private Pattern pianoRollPattern;
     private PatternEventSource patternEventSource;
-    private PatternThread patternThread;
+    private Instrument pianoRollInstrument;
 
     private RecyclerView pianoRollContainer;
     private PianoRollAdapter pianoRollAdapter;
@@ -43,18 +48,22 @@ public class ProjectPatternsFragment extends Fragment {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_project_patterns, container, false);
+        project = ((ProjectActivity) getActivity()).project;
+        patternThread = ((ProjectActivity) getActivity()).patternThread;
         pianoRollPattern = ((ProjectActivity) getActivity()).pianoRollPattern;
         patternEventSource = ((ProjectActivity) getActivity()).patternEventSource;
-        patternThread = ((ProjectActivity) getActivity()).patternThread;
+        pianoRollInstrument = ((ProjectActivity) getActivity()).keyboardInstrument;
+        InstrumentEventSource instrumentEventSource = ((ProjectActivity) getActivity()).instrumentEventSource;
 
         pianoRollContainer = (RecyclerView) rootView.findViewById(R.id.piano_roll_container);
         RecyclerView.LayoutManager layoutManager = new GridLayoutManager(rootView.getContext(), PianoRollAdapter.SPAN_COUNT, RecyclerView.HORIZONTAL, false);
         pianoRollContainer.setLayoutManager(layoutManager);
 
-        pianoRollController = new PianoRollController(patternThread, pianoRollPattern, patternEventSource);
+        pianoRollController = new PianoRollController(project, patternThread, pianoRollPattern, patternEventSource, pianoRollInstrument, instrumentEventSource);
         pianoRollController.keyHeight = getResources().getDimensionPixelOffset(R.dimen.piano_roll_colheight) / 12.0f;
         pianoRollController.baseBarWidth = getResources().getDimensionPixelOffset(R.dimen.piano_roll_barwidth);
 
+        pianoRollController.registerInstrumentInput((Spinner) rootView.findViewById(R.id.piano_roll_settings_instrument));
         pianoRollController.registerNoteLengthInputs((NumberPicker) rootView.findViewById(R.id.piano_roll_settings_length0),
                 (NumberPicker) rootView.findViewById(R.id.piano_roll_settings_length1),
                 (NumberPicker) rootView.findViewById(R.id.piano_roll_settings_length2));
@@ -65,6 +74,7 @@ public class ProjectPatternsFragment extends Fragment {
         pianoRollController.registerTempoInput((EditText) rootView.findViewById(R.id.pattern_tempo));
 
         pianoRollContainer.setAdapter(pianoRollController.adapter);
+        pianoRollController.setPianoRollNotes(pianoRollContainer.getContext());
 
         patternStop = (ImageView) rootView.findViewById(R.id.pattern_stop);
         patternStop.setOnClickListener(new View.OnClickListener() {

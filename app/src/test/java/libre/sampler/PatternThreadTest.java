@@ -51,7 +51,7 @@ public class PatternThreadTest {
 
         List<ScheduledNoteEvent> events = new ArrayList<>();
         for(int i = 0; i < LOOP_SIZE; i++) {
-            events.add(new ScheduledNoteEvent(offsetTicks[i], NoteEvent.NOTE_OFF, expectedResults[i], 0, 0));
+            events.add(new ScheduledNoteEvent(offsetTicks[i], NoteEvent.NOTE_OFF, null, expectedResults[i], 0, 0));
         }
 
         Pattern pattern = new Pattern(events);

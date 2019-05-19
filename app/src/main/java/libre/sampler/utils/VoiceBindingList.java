@@ -63,7 +63,7 @@ public class VoiceBindingList {
         for(VoiceBindingData b : bindings) {
             if(b != null) {
                 b.closed = false;  // re-close all with zero release time
-                events.add(new NoteEvent(NoteEvent.CLOSE, b.event.keyNum, 0, b.event.eventId));
+                events.add(new NoteEvent(NoteEvent.CLOSE, b.event.instrument, b.event.keyNum, 0, b.event.eventId));
             }
         }
         return events;

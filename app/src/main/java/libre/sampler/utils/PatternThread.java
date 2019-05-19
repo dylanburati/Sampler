@@ -162,7 +162,7 @@ public class PatternThread extends Thread {
                     }
                 }
             } else {
-                Log.d("PatternThread","Skipped");
+                Log.d("PatternThread", "Skipped");
             }
         }
     }

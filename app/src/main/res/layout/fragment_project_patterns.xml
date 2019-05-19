@@ -136,6 +136,25 @@
                     android:layout_marginBottom="@dimen/margin2">
 
                     <TextView
+                        android:id="@+id/piano_roll_settings_instrumentlabel"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/select_instrument" />
+
+                    <Spinner
+                        android:id="@+id/piano_roll_settings_instrument"
+                        android:layout_width="wrap_content"
+                        android:layout_height="60sp"
+                        android:layout_below="@id/piano_roll_settings_instrumentlabel"
+                        android:dividerPadding="0dp" />
+                </RelativeLayout>
+
+                <RelativeLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="@dimen/margin2">
+
+                    <TextView
                         android:id="@+id/piano_roll_settings_lengthlabel"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"

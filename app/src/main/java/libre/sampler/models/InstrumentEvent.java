@@ -5,6 +5,7 @@ public class InstrumentEvent {
     public static final int INSTRUMENT_EDIT = 1;
     public static final int INSTRUMENT_DELETE = 2;
     public static final int INSTRUMENT_SELECT = 3;
+    public static final int INSTRUMENT_LOAD = 4;
 
     public int action;
     public Instrument instrument;

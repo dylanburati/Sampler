@@ -10,7 +10,9 @@ import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import androidx.annotation.NonNull;
 import androidx.core.view.GestureDetectorCompat;
@@ -23,8 +25,10 @@ import libre.sampler.views.PianoRollNoteView;
 public class PianoRollAdapter extends RecyclerView.Adapter<PianoRollAdapter.ViewHolder> {
     public static final int SPAN_COUNT = 8;
 
-    private List<PianoRollNoteView> pianoRollNotes;
+    public List<PianoRollNoteView> pianoRollNotes;
     private PianoRollController pianoRollController;
+    private Set<ViewHolder> viewHolderSet;
+    private int rollWidth;
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
         private LinearLayout rootView;
@@ -40,6 +44,7 @@ public class PianoRollAdapter extends RecyclerView.Adapter<PianoRollAdapter.View
     public PianoRollAdapter(PianoRollController pianoRollController) {
         this.pianoRollController = pianoRollController;
         this.pianoRollNotes = new ArrayList<>();
+        this.viewHolderSet = new HashSet<>();
     }
 
     @NonNull
@@ -55,6 +60,11 @@ public class PianoRollAdapter extends RecyclerView.Adapter<PianoRollAdapter.View
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
+        viewHolderSet.add(holder);
+        ViewGroup.LayoutParams params = holder.notePane.getLayoutParams();
+        params.width = rollWidth;
+        holder.notePane.setLayoutParams(params);
+
         holder.notePane.removeAllViews();
         for(PianoRollNoteView n : pianoRollNotes) {
             if(n.containerIndex == position) {
@@ -75,6 +85,20 @@ public class PianoRollAdapter extends RecyclerView.Adapter<PianoRollAdapter.View
     @Override
     public int getItemCount() {
         return SPAN_COUNT;
+    }
+
+    public void setPianoRollNotes(List<PianoRollNoteView> notes) {
+        pianoRollNotes = notes;
+        notifyItemRangeChanged(0, getItemCount());
+    }
+
+    public void updateRollLength(int width) {
+        this.rollWidth = width;
+        for(ViewHolder holder : viewHolderSet) {
+            ViewGroup.LayoutParams params = holder.notePane.getLayoutParams();
+            params.width = width;
+            holder.notePane.setLayoutParams(params);
+        }
     }
 
     private class MyGestureListener extends GestureDetector.SimpleOnGestureListener {

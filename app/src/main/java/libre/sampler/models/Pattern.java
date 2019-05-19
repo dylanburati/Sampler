@@ -2,11 +2,15 @@ package libre.sampler.models;
 
 import android.util.Log;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import libre.sampler.utils.MusicTime;
 
 public class Pattern {
+    public static final double DEFAULT_TEMPO = 140;
+    public static final MusicTime DEFAULT_LOOP_LENGTH = new MusicTime(1, 0, 0);
+
     public int projectId;
     public int id;
     public List<ScheduledNoteEvent> events;
@@ -27,8 +31,8 @@ public class Pattern {
 
     public Pattern(List<ScheduledNoteEvent> events) {
         this.events = events;
-        // Placeholder eventIndex so scheduler loopIndex is not ignored
-        events.add(0, new ScheduledNoteEvent(0L, NoteEvent.NOTHING, 0, 0, 0));
+        // Placeholder event so scheduler loopIndex is always incremented
+        events.add(0, new ScheduledNoteEvent(0L, NoteEvent.NOTHING, null, 0, 0, 0));
     }
 
     public void setPatternId(int id) {
@@ -236,5 +240,12 @@ public class Pattern {
                 return;
             }
         }
+    }
+
+    public static Pattern getEmptyPattern() {
+        Pattern retval = new Pattern(new ArrayList<ScheduledNoteEvent>());
+        retval.setLoopLengthTicks(new MusicTime(1, 0, 0).getTicks());
+        retval.setTempo(140);
+        return retval;
     }
 }

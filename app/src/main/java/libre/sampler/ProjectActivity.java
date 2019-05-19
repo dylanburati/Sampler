@@ -60,6 +60,7 @@ public class ProjectActivity extends AppCompatActivity {
     private ViewPager pager;
     private ProjectFragmentAdapter adapter;
 
+    public NoteEventSource keyboardNoteSource;
     public NoteEventSource noteEventSource;
     public InstrumentEventSource instrumentEventSource;
     public PatternEventSource patternEventSource;
@@ -88,6 +89,7 @@ public class ProjectActivity extends AppCompatActivity {
 
     private VoiceBindingList pdVoiceBindings;
     private SampleBindingList pdSampleBindings;
+    private Instrument pdLoadingInstrument;
     private int pdPatchHandle;
 
     public InstrumentListAdapter instrumentListAdapter;
@@ -160,7 +162,23 @@ public class ProjectActivity extends AppCompatActivity {
     }
 
     private void initEventSources() {
+        keyboardNoteSource = new NoteEventSource();
+        keyboardNoteSource.add("Evolve", new Consumer<NoteEvent>() {
+            @Override
+            public void accept(NoteEvent event) {
+                event.instrument = keyboardInstrument;
+                noteEventSource.dispatch(event);
+            }
+        });
+
         noteEventSource = new NoteEventSource();
+        noteEventSource.add("logger", new Consumer<NoteEvent>() {
+            @Override
+            public void accept(NoteEvent noteEvent) {
+                Log.d("ProjectActivity", String.format("noteEvent: action=%d keynum=%d velocity=%d", noteEvent.action, noteEvent.keyNum, noteEvent.velocity));
+            }
+        });
+
         instrumentEventSource = new InstrumentEventSource();
         instrumentEventSource.add("keyboard", new InstrumentEventConsumer());
         patternEventSource = new PatternEventSource();
@@ -176,7 +194,7 @@ public class ProjectActivity extends AppCompatActivity {
 
     private void initPdService() {
         final String name = getResources().getString(R.string.app_name);
-        noteEventSource.add("KeyboardNoteEventConsumer", new KeyboardNoteEventConsumer(name));
+        noteEventSource.add("NoteEventConsumer", new NoteEventConsumer());
 
         patternEventSource.add("test", new Consumer<PatternEvent>() {
             @Override
@@ -186,6 +204,11 @@ public class ProjectActivity extends AppCompatActivity {
                 } else if(event.action == PatternEvent.PATTERN_OFF) {
                     closeNotes();
                     patternThread.clearPatterns();
+                } else if(event.action == PatternEvent.PATTERN_SELECT) {
+                    pianoRollPattern = event.pattern;
+                } else if(event.action == PatternEvent.PATTERN_CREATE_SELECT) {
+                    project.addPattern(event.pattern);
+                    pianoRollPattern = event.pattern;
                 }
             }
         });
@@ -232,7 +255,7 @@ public class ProjectActivity extends AppCompatActivity {
             pdService.initAudio(AudioParameters.suggestSampleRate(), 0, 2, 8);
             pdService.startAudio();
             if(keyboardInstrument != null) {
-                instrumentEventSource.dispatch(new InstrumentEvent(InstrumentEvent.INSTRUMENT_SELECT, keyboardInstrument));
+                instrumentEventSource.dispatch(new InstrumentEvent(InstrumentEvent.INSTRUMENT_LOAD, keyboardInstrument));
             }
         } catch (IOException e) {
             finish();
@@ -343,7 +366,15 @@ public class ProjectActivity extends AppCompatActivity {
                 AdapterLoader.removeItem(instrumentListAdapter, event.instrument);
             } else if(event.action == InstrumentEvent.INSTRUMENT_SELECT) {
                 keyboardInstrument = event.instrument;
-                for(Sample s : keyboardInstrument.getSamples()) {
+                pdLoadingInstrument = event.instrument;
+                for(Sample s : pdLoadingInstrument.getSamples()) {
+                    if(pdSampleBindings.getBinding(s)) {
+                        PdBase.sendList("sample_file", s.sampleIndex, s.filename);
+                    }
+                }
+            } else if(event.action == InstrumentEvent.INSTRUMENT_LOAD) {
+                pdLoadingInstrument = event.instrument;
+                for(Sample s : pdLoadingInstrument.getSamples()) {
                     if(pdSampleBindings.getBinding(s)) {
                         PdBase.sendList("sample_file", s.sampleIndex, s.filename);
                     }
@@ -352,17 +383,11 @@ public class ProjectActivity extends AppCompatActivity {
         }
     }
 
-    private class KeyboardNoteEventConsumer implements Consumer<NoteEvent> {
-        private final String name;
-
-        public KeyboardNoteEventConsumer(String name) {
-            this.name = name;
-        }
-
+    private class NoteEventConsumer implements Consumer<NoteEvent> {
         @Override
         public void accept(NoteEvent noteEvent) {
-            if(pdService != null && keyboardInstrument != null) {
-                List<Sample> samples = keyboardInstrument.getSamplesForEvent(noteEvent);
+            if(pdService != null && noteEvent.instrument != null) {
+                List<Sample> samples = noteEvent.instrument.getSamplesForEvent(noteEvent);
                 if(samples.size() == 0) {
                     return;
                 }
@@ -408,8 +433,8 @@ public class ProjectActivity extends AppCompatActivity {
                 } catch(IOException e) {
                     e.printStackTrace();
                 }
-            } else {
-                Log.d(name,"Audio service not running");
+            } else if(noteEvent.action != NoteEvent.NOTHING) {
+                Log.d("NoteEventConsumer", "Null instrument");
             }
         }
     }
@@ -445,7 +470,7 @@ public class ProjectActivity extends AppCompatActivity {
                 if(args.length >= 3) {
                     try {
                         int sampleIndex = (int)((float) args[0]);
-                        for(Sample s : keyboardInstrument.getSamples()) {
+                        for(Sample s : pdLoadingInstrument.getSamples()) {
                             if(s.sampleIndex == sampleIndex) {
                                 s.setSampleInfo((int)((float) args[args.length - 1]), (int)((float) args[2]));
                                 s.isInfoLoaded = true;

@@ -4,6 +4,7 @@ public class PatternEvent {
     public static final int PATTERN_ON = 1;
     public static final int PATTERN_OFF = 0;
     public static final int PATTERN_SELECT = 2;
+    public static final int PATTERN_CREATE_SELECT = 6;
 
     public int action;
     public Pattern pattern;

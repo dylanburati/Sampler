@@ -43,4 +43,5 @@
     <string name="pattern_length_label">Pattern length (bars, sixteenths)</string>
     <string name="change">Change</string>
     <string name="tempo_label">TEMPO</string>
+    <string name="select_instrument">Select instrument</string>
 </resources>

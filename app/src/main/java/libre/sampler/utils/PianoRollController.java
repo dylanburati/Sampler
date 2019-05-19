@@ -1,5 +1,6 @@
 package libre.sampler.utils;
 
+import android.content.Context;
 import android.graphics.Color;
 import android.text.Editable;
 import android.text.SpannableString;
@@ -22,22 +23,31 @@ import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
+import java.util.Map;
 
 import androidx.core.util.Consumer;
 import libre.sampler.R;
 import libre.sampler.adapters.PianoRollAdapter;
 import libre.sampler.listeners.StatefulScrollListener;
+import libre.sampler.models.Instrument;
+import libre.sampler.models.InstrumentEvent;
 import libre.sampler.models.NoteEvent;
 import libre.sampler.models.Pattern;
 import libre.sampler.models.PatternEvent;
+import libre.sampler.models.Project;
 import libre.sampler.models.ScheduledNoteEvent;
+import libre.sampler.publishers.InstrumentEventSource;
 import libre.sampler.publishers.PatternEventSource;
 import libre.sampler.views.PianoRollNoteView;
 
 public class PianoRollController {
-    private PatternThread patternThread;
+    private Project project;
+    private final PatternThread patternThread;
     private Pattern activePattern;
-    private PatternEventSource patternEventSource;
+    private Instrument pianoRollInstrument;
+    private final InstrumentEventSource instrumentEventSource;
+
     public PianoRollAdapter adapter;
 
     public int baseBarWidth;
@@ -76,42 +86,87 @@ public class PianoRollController {
 
     public int velocity;
 
+    private Spinner instrumentSpinner;
+    private ArrayAdapter<String> instrumentSpinnerAdapter;
     private NumberPicker loopLengthPickerBars;
     private NumberPicker loopLengthPickerSixteenths;
     private EditText tempoEditText;
 
-    public PianoRollController(PatternThread patternThread, Pattern activePattern, PatternEventSource patternEventSource) {
+    public PianoRollController(Project project,
+                               PatternThread patternThread, Pattern activePattern, PatternEventSource patternEventSource,
+                               Instrument pianoRollInstrument, InstrumentEventSource instrumentEventSource) {
+        this.project = project;
         this.patternThread = patternThread;
         this.activePattern = activePattern;
+        this.pianoRollInstrument = pianoRollInstrument;
+        this.instrumentEventSource = instrumentEventSource;
 
         this.noteLength = new MusicTime(0, 4, 0);
         this.snap = new MusicTime(0, 1, 0);
         this.velocity = 100;
-        this.inputLoopLength = new MusicTime(1, 0, 0);
-        this.inputTempo = 140;
+        this.inputLoopLength = Pattern.DEFAULT_LOOP_LENGTH;
+        this.inputTempo = Pattern.DEFAULT_TEMPO;
 
         patternEventSource.add("PianoRollController", new Consumer<PatternEvent>() {
             @Override
-            public void accept(PatternEvent patternEvent) {
-                if(patternEvent.action == PatternEvent.PATTERN_SELECT) {
-                    PianoRollController.this.activePattern = patternEvent.pattern;
+            public void accept(PatternEvent event) {
+                if(event.action == PatternEvent.PATTERN_SELECT || event.action == PatternEvent.PATTERN_CREATE_SELECT) {
+                    PianoRollController.this.activePattern = event.pattern;
                     updatePatternLengthInputs();
                     updateTempoInput();
                 }
             }
         });
 
+        this.instrumentEventSource.add("PianoRollController", new Consumer<InstrumentEvent>() {
+            @Override
+            public void accept(InstrumentEvent event) {
+                if(event.action == InstrumentEvent.INSTRUMENT_DELETE ||
+                        event.action == InstrumentEvent.INSTRUMENT_CREATE ||
+                        event.action == InstrumentEvent.INSTRUMENT_EDIT) {
+                    updateInstrumentInput();
+                }
+            }
+        });
+
         if(activePattern == null) {
-            activePattern = new Pattern(new ArrayList<ScheduledNoteEvent>());
-            activePattern.setLoopLengthTicks(inputLoopLength.getTicks());
-            activePattern.setTempo(inputTempo);
-            patternEventSource.dispatch(new PatternEvent(PatternEvent.PATTERN_SELECT, activePattern));
+            activePattern = Pattern.getEmptyPattern();
+            patternEventSource.dispatch(new PatternEvent(PatternEvent.PATTERN_CREATE_SELECT, activePattern));
         } else {
             this.inputLoopLength.setTicks(activePattern.getLoopLengthTicks());
             this.inputTempo = activePattern.getTempo();
         }
 
         adapter = new PianoRollAdapter(this);
+    }
+
+    // Called from PatternsFragment once layout dimensions are set
+    public void setPianoRollNotes(Context ctx) {
+        double tickWidth = getTickWidth();
+
+        Map<Long, PianoRollNoteView> noteViews = new HashMap<>();
+        for(ScheduledNoteEvent event : activePattern.events) {
+            if(event.action == NoteEvent.NOTE_ON) {
+                PianoRollNoteView v = new PianoRollNoteView(ctx);
+                noteViews.put(event.baseId, v);
+                v.eventOn = event;
+            } else if(event.action == NoteEvent.NOTE_OFF) {
+                PianoRollNoteView v = noteViews.get(event.baseId);
+                if(v != null) {
+                    v.eventOff = event;
+                    v.containerIndex = 9 - (event.keyNum / 12);
+                    int keyIndex = 11 - (event.keyNum % 12);
+                    long noteLengthTicks = event.offsetTicks - v.eventOn.offsetTicks;
+                    v.layoutParams = new RelativeLayout.LayoutParams((int) (noteLengthTicks * tickWidth), (int) keyHeight);
+                    v.layoutParams.leftMargin = (int) (v.eventOn.offsetTicks * tickWidth);
+                    v.layoutParams.topMargin = (int) (keyIndex * keyHeight);
+                    v.setBackgroundColor(Color.WHITE);
+                }
+            }
+        }
+
+        adapter.setPianoRollNotes(new ArrayList<>(noteViews.values()));
+        adapter.updateRollLength((int) (inputLoopLength.getTicks() * getTickWidth()));
     }
 
     public void onCreatePianoRollNote(PianoRollNoteView outView, int containerIndex, float x, float y) {
@@ -137,10 +192,10 @@ public class PianoRollController {
 
         int keyNum = (9 - containerIndex) * 12 + (11 - keyIndex);
         long baseId = AppConstants.PATTERN_EVENT_ID_OFFSET + System.currentTimeMillis();
-        outView.eventOn = new ScheduledNoteEvent(startTicks,
-                NoteEvent.NOTE_ON, keyNum, velocity, baseId);
-        outView.eventOff = new ScheduledNoteEvent(startTicks + noteLengthTicks,
-                NoteEvent.NOTE_OFF, keyNum, velocity, baseId);
+        outView.eventOn = new ScheduledNoteEvent(startTicks, NoteEvent.NOTE_ON,
+                pianoRollInstrument, keyNum, velocity, baseId);
+        outView.eventOff = new ScheduledNoteEvent(startTicks + noteLengthTicks, NoteEvent.NOTE_OFF,
+                pianoRollInstrument, keyNum, velocity, baseId);
         addToActivePattern(outView.eventOn, outView.eventOff);
     }
 
@@ -202,6 +257,7 @@ public class PianoRollController {
         } finally {
             patternThread.lock.unlock();
         }
+        adapter.updateRollLength((int) (loopLength.getTicks() * getTickWidth()));
     }
 
     public void setTempo(double bpm) {
@@ -212,6 +268,42 @@ public class PianoRollController {
             patternThread.notifyPatternsChanged();
         } finally {
             patternThread.lock.unlock();
+        }
+    }
+
+    public void registerInstrumentInput(Spinner spinner) {
+        this.instrumentSpinner = spinner;
+        this.instrumentSpinnerAdapter = new ArrayAdapter<>(
+                instrumentSpinner.getContext(), android.R.layout.simple_spinner_item);
+
+        instrumentSpinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        instrumentSpinner.setAdapter(instrumentSpinnerAdapter);
+
+        instrumentSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                pianoRollInstrument = project.getInstruments().get(position);
+                instrumentEventSource.dispatch(new InstrumentEvent(InstrumentEvent.INSTRUMENT_LOAD, pianoRollInstrument));
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+            }
+        });
+
+        updateInstrumentInput();
+    }
+
+    private void updateInstrumentInput() {
+        if(instrumentSpinner != null && instrumentSpinnerAdapter != null) {
+            String[] options = new String[project.getInstruments().size()];
+            for(int i = 0; i < options.length; i++) {
+                options[i] = project.getInstruments().get(i).name;
+            }
+
+            instrumentSpinnerAdapter.clear();
+            instrumentSpinnerAdapter.addAll(options);
+            instrumentSpinner.setSelection(project.getInstruments().indexOf(pianoRollInstrument));
         }
     }
 
@@ -371,6 +463,7 @@ public class PianoRollController {
             @Override
             public void onClick(View v) {
                 setLoopLength(inputLoopLength);
+                adapter.updateRollLength((int) (inputLoopLength.getTicks() * getTickWidth()));
             }
         });
 

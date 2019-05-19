@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.util.Arrays;
 
 import androidx.annotation.RequiresApi;
+import libre.sampler.models.Instrument;
 import libre.sampler.models.NoteEvent;
 import libre.sampler.utils.MidiConstants;
 
@@ -19,6 +20,7 @@ import libre.sampler.utils.MidiConstants;
 public class MidiEventDispatcher implements MidiManager.OnDeviceOpenedListener {
     public NoteEventSource noteEventSource;
     public PatternEventSource patternEventSource;
+    public Instrument keyboardInstrument;
 
     private MidiReceiver receiver;
     private MidiOutputPort receivePort;
@@ -57,13 +59,13 @@ public class MidiEventDispatcher implements MidiManager.OnDeviceOpenedListener {
                     int keyNum = data[commandIdx + 1] & 0xFF;
                     int velocity = data[commandIdx + 2] & 0xFF;
                     Pair<Long, Integer> eventId = new Pair<>(-1L, keyNum);  // associate eventIndex with key
-                    NoteEvent event = new NoteEvent(NoteEvent.NOTE_ON, keyNum, velocity, eventId);
+                    NoteEvent event = new NoteEvent(NoteEvent.NOTE_ON, keyboardInstrument, keyNum, velocity, eventId);
                     noteEventSource.dispatch(event);
                 } else if(command == MidiConstants.STATUS_NOTE_OFF) {
                     int keyNum = data[commandIdx + 1] & 0xFF;
                     int velocity = data[commandIdx + 2] & 0xFF;
                     Pair<Long, Integer> eventId = new Pair<>(-1L, keyNum);  // associate eventIndex with key
-                    NoteEvent event = new NoteEvent(NoteEvent.NOTE_OFF, keyNum, velocity, eventId);
+                    NoteEvent event = new NoteEvent(NoteEvent.NOTE_OFF, keyboardInstrument, keyNum, velocity, eventId);
                     noteEventSource.dispatch(event);
                 } else if(command == MidiConstants.STATUS_CONTROL_CHANGE) {
                     int controller = data[commandIdx + 1] & 0xFF;
