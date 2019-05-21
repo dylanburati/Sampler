@@ -11,7 +11,7 @@ import androidx.room.Relation;
 import androidx.room.Transaction;
 import androidx.room.Update;
 import libre.sampler.models.Instrument;
-import libre.sampler.models.Project;
+import libre.sampler.models.Sample;
 
 @Dao
 public interface InstrumentDao {
@@ -28,19 +28,18 @@ public interface InstrumentDao {
     void deleteAll(List<Integer> projectIds);
 
     @Transaction
-    @Query("SELECT * FROM project WHERE id = :projectId")
-    List<ProjectInstrumentRelation> getAll(int projectId);
+    @Query("SELECT * FROM instrument WHERE id = :instrumentId")
+    List<InstrumentWithRelations> getWithRelations(int instrumentId);
 
     @Transaction
-    @Query("SELECT * FROM project WHERE id IN (:projectIds)")
-    List<ProjectInstrumentRelation> getAll(List<Integer> projectIds);
+    @Query("SELECT * FROM instrument WHERE id IN (:instrumentIds)")
+    List<InstrumentWithRelations> getWithRelations(List<Integer> instrumentIds);
 
-    static class ProjectInstrumentRelation {
+    static class InstrumentWithRelations {
         @Embedded
-        public Project project;
+        public Instrument instrument;
 
-        @Relation(parentColumn = "id", entityColumn = "projectId")
-        public List<Instrument> instruments;
+        @Relation(entity = Sample.class, parentColumn = "id", entityColumn = "instrumentId")
+        public List<Sample> samples;
     }
-
 }

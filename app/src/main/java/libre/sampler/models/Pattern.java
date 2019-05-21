@@ -5,38 +5,77 @@ import android.util.Log;
 import java.util.ArrayList;
 import java.util.List;
 
+import androidx.room.Entity;
+import androidx.room.Ignore;
+import libre.sampler.utils.IdStatus;
 import libre.sampler.utils.MusicTime;
 
+@Entity(tableName = "pattern", primaryKeys = {"projectId", "id"})
 public class Pattern {
     public static final double DEFAULT_TEMPO = 140;
     public static final MusicTime DEFAULT_LOOP_LENGTH = new MusicTime(1, 0, 0);
 
     public int projectId;
     public int id;
-    public List<ScheduledNoteEvent> events;
-    
+    public String name;
+
+    @Ignore
     private int nextEventId;
+    @Ignore
+    public List<ScheduledNoteEvent> events;
+    @Ignore
+    private IdStatus idStatus = new IdStatus("Pattern,ScheduledNoteEvent");
 
     private double nanosPerTick;
     private long loopLengthTicks;
 
+    @Ignore
     private long checkpointTicks;
+    @Ignore
     private long checkpointNanos;
 
+    @Ignore
     private int schedulerEventIndex;
+    @Ignore
     private int schedulerLoopIndex;
 
+    @Ignore
     public boolean isStarted;
+    @Ignore
     public boolean isPaused;
 
-    public Pattern(List<ScheduledNoteEvent> events) {
-        this.events = events;
+    @Ignore
+    private Pattern(String name) {
+        this.name = name;
+        this.events = new ArrayList<>();
         // Placeholder event so scheduler loopIndex is always incremented
-        events.add(0, new ScheduledNoteEvent(0L, NoteEvent.NOTHING, null, 0, 0, 0));
+        this.events.add(new ScheduledNoteEvent(0L, NoteEvent.NOTHING, null, 0, 0, 0));
+        this.nextEventId = 1;
+    }
+
+    // should be called with the `id` obtained from the database
+    public Pattern(int id, String name) {
+        this.name = name;
+        this.id = id;
+
+        idStatus.set(IdStatus.CHILDREN_DB);
     }
 
     public void setPatternId(int id) {
         this.id = id;
+        for(ScheduledNoteEvent e : events) {
+            e.patternId = id;
+        }
+
+        idStatus.set(IdStatus.SELF);
+    }
+
+    // should be called with the `events` obtained from the database
+    public void setEvents(List<ScheduledNoteEvent> events) {
+        this.events = events;
+
+        idStatus.require(IdStatus.SELF);
+        idStatus.set(IdStatus.CHILDREN_ADDED);
     }
 
     public long getLoopLengthTicks() {
@@ -71,6 +110,10 @@ public class Pattern {
         return (60 * 1e9 / (1.0 * MusicTime.TICKS_PER_BEAT * nanosPerTick));
     }
 
+    public double getNanosPerTick() {
+        return nanosPerTick;
+    }
+
     public void setNanosPerTick(double updatedNanosPerTick) {
         if(isStarted && !isPaused) {
             long now = System.nanoTime();
@@ -82,9 +125,16 @@ public class Pattern {
     }
 
     public void addEvent(int insertIdx, ScheduledNoteEvent event) {
+        event.patternId = this.id;
+        event.id = nextEventId;
+        nextEventId++;
+
         events.add(insertIdx, event);
         incrementEventIndex();
         backtrack(getTicksAtTime(System.nanoTime()));
+
+        idStatus.require(IdStatus.SELF);
+        idStatus.set(IdStatus.CHILDREN_ADDED);
     }
 
     public void removeEvent(ScheduledNoteEvent event) {
@@ -243,7 +293,7 @@ public class Pattern {
     }
 
     public static Pattern getEmptyPattern() {
-        Pattern retval = new Pattern(new ArrayList<ScheduledNoteEvent>());
+        Pattern retval = new Pattern("");
         retval.setLoopLengthTicks(new MusicTime(1, 0, 0).getTicks());
         retval.setTempo(140);
         return retval;

@@ -141,6 +141,18 @@ public class ProjectActivity extends AppCompatActivity {
                     projectLoaded = true;
                     updateInstrumentListAdapter();
                 }
+            }, new Consumer<List<Pattern>>() {
+                @Override
+                public void accept(List<Pattern> patterns) {
+                    project.setPatterns(patterns);
+                    if(patterns.size() > 0) {
+                        pianoRollPattern = patterns.get(0);
+                    } else {
+                        pianoRollPattern = Pattern.getEmptyPattern();
+                        project.registerPattern(pianoRollPattern);
+                        project.addPattern(pianoRollPattern);
+                    }
+                }
             }));
         }
     }

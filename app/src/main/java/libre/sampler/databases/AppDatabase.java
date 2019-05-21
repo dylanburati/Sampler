@@ -6,14 +6,18 @@ import androidx.room.RoomDatabase;
 import androidx.room.migration.Migration;
 import androidx.sqlite.db.SupportSQLiteDatabase;
 import libre.sampler.models.Instrument;
+import libre.sampler.models.Pattern;
 import libre.sampler.models.Project;
 import libre.sampler.models.Sample;
+import libre.sampler.models.ScheduledNoteEvent;
 
-@Database(entities = {Project.class, Instrument.class, Sample.class}, version = 3)
+@Database(entities = {Project.class, Instrument.class, Sample.class, Pattern.class, ScheduledNoteEvent.class}, version = 4)
 public abstract class AppDatabase extends RoomDatabase {
     public abstract ProjectDao projectDao();
     public abstract InstrumentDao instrumentDao();
     public abstract SampleDao sampleDao();
+    public abstract PatternDao patternDao();
+    public abstract ScheduledNoteEventDao scheduledNoteEventDao();
 
     public static final Migration MIGRATION_1_2 = new Migration(1, 2) {
         @Override
@@ -34,6 +38,29 @@ public abstract class AppDatabase extends RoomDatabase {
                     "`settings` TEXT)");
             database.execSQL("INSERT INTO `project` SELECT `id`, `name`, `mtime`, `settings` FROM `tmp_project`");
             database.execSQL("DROP TABLE `tmp_project`");
+        }
+    };
+
+    public static final Migration MIGRATION_3_4 = new Migration(3, 4) {
+        @Override
+        public void migrate(@NonNull SupportSQLiteDatabase database) {
+            database.execSQL("CREATE TABLE IF NOT EXISTS `pattern` (" +
+                    "`projectId` INTEGER NOT NULL," +
+                    "`id` INTEGER NOT NULL," +
+                    "`name` TEXT," +
+                    "`nanosPerTick` REAL NOT NULL," +
+                    "`loopLengthTicks` INTEGER NOT NULL," +
+                    "PRIMARY KEY(`projectId`, `id`))");
+            database.execSQL("CREATE TABLE IF NOT EXISTS `scheduledNoteEvent` (" +
+                    "`id` INTEGER NOT NULL," +
+                    "`patternId` INTEGER NOT NULL," +
+                    "`offsetTicks` INTEGER," +
+                    "`action` INTEGER NOT NULL," +
+                    "`instrumentId` INTEGER NOT NULL," +
+                    "`keyNum` INTEGER NOT NULL," +
+                    "`velocity` INTEGER NOT NULL," +
+                    "`noteId` INTEGER NOT NULL," +
+                    "PRIMARY KEY(`patternId`, `id`))");
         }
     };
 }

@@ -1,6 +1,7 @@
 package libre.sampler.fragments;
 
 import android.content.Context;
+import android.content.res.Configuration;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -8,6 +9,7 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.NumberPicker;
 import android.widget.Spinner;
 
@@ -19,21 +21,15 @@ import androidx.recyclerview.widget.RecyclerView;
 import libre.sampler.ProjectActivity;
 import libre.sampler.R;
 import libre.sampler.adapters.PianoRollAdapter;
-import libre.sampler.models.Instrument;
-import libre.sampler.models.Pattern;
 import libre.sampler.models.PatternEvent;
-import libre.sampler.models.Project;
-import libre.sampler.publishers.InstrumentEventSource;
 import libre.sampler.publishers.PatternEventSource;
 import libre.sampler.utils.PatternThread;
 import libre.sampler.utils.PianoRollController;
 
 public class ProjectPatternsFragment extends Fragment {
-    private Project project;
+    private ProjectActivity projectActivity;
     private PatternThread patternThread;
-    private Pattern pianoRollPattern;
     private PatternEventSource patternEventSource;
-    private Instrument pianoRollInstrument;
 
     private RecyclerView pianoRollContainer;
     private PianoRollAdapter pianoRollAdapter;
@@ -48,18 +44,29 @@ public class ProjectPatternsFragment extends Fragment {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_project_patterns, container, false);
-        project = ((ProjectActivity) getActivity()).project;
-        patternThread = ((ProjectActivity) getActivity()).patternThread;
-        pianoRollPattern = ((ProjectActivity) getActivity()).pianoRollPattern;
-        patternEventSource = ((ProjectActivity) getActivity()).patternEventSource;
-        pianoRollInstrument = ((ProjectActivity) getActivity()).keyboardInstrument;
-        InstrumentEventSource instrumentEventSource = ((ProjectActivity) getActivity()).instrumentEventSource;
+        projectActivity = (ProjectActivity) getActivity();
+        patternThread = projectActivity.patternThread;
+        patternEventSource = projectActivity.patternEventSource;
+
+        // if landscape and not tablet, put piano roll on left instead of top
+        if(getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE &&
+                getResources().getDisplayMetrics().widthPixels < getResources().getDimensionPixelOffset(R.dimen.piano_roll_direction_threshold)) {
+            LinearLayout patternsBody = rootView.findViewById(R.id.patterns_body);
+            patternsBody.setOrientation(LinearLayout.HORIZONTAL);
+            int nChildren = patternsBody.getChildCount();
+            for(int i = 0; i < nChildren; i++) {
+                ViewGroup.LayoutParams params = patternsBody.getChildAt(i).getLayoutParams();
+                params.height = ViewGroup.LayoutParams.MATCH_PARENT;
+                params.width = 0;
+                patternsBody.getChildAt(i).setLayoutParams(params);
+            }
+        }
 
         pianoRollContainer = (RecyclerView) rootView.findViewById(R.id.piano_roll_container);
         RecyclerView.LayoutManager layoutManager = new GridLayoutManager(rootView.getContext(), PianoRollAdapter.SPAN_COUNT, RecyclerView.HORIZONTAL, false);
         pianoRollContainer.setLayoutManager(layoutManager);
 
-        pianoRollController = new PianoRollController(project, patternThread, pianoRollPattern, patternEventSource, pianoRollInstrument, instrumentEventSource);
+        pianoRollController = new PianoRollController(projectActivity);
         pianoRollController.keyHeight = getResources().getDimensionPixelOffset(R.dimen.piano_roll_colheight) / 12.0f;
         pianoRollController.baseBarWidth = getResources().getDimensionPixelOffset(R.dimen.piano_roll_barwidth);
 

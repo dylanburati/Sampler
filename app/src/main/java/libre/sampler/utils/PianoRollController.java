@@ -27,6 +27,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import androidx.core.util.Consumer;
+import libre.sampler.ProjectActivity;
 import libre.sampler.R;
 import libre.sampler.adapters.PianoRollAdapter;
 import libre.sampler.listeners.StatefulScrollListener;
@@ -47,6 +48,7 @@ public class PianoRollController {
     private Pattern activePattern;
     private Instrument pianoRollInstrument;
     private final InstrumentEventSource instrumentEventSource;
+    private final PatternEventSource patternEventSource;
 
     public PianoRollAdapter adapter;
 
@@ -92,14 +94,13 @@ public class PianoRollController {
     private NumberPicker loopLengthPickerSixteenths;
     private EditText tempoEditText;
 
-    public PianoRollController(Project project,
-                               PatternThread patternThread, Pattern activePattern, PatternEventSource patternEventSource,
-                               Instrument pianoRollInstrument, InstrumentEventSource instrumentEventSource) {
-        this.project = project;
-        this.patternThread = patternThread;
-        this.activePattern = activePattern;
-        this.pianoRollInstrument = pianoRollInstrument;
-        this.instrumentEventSource = instrumentEventSource;
+    public PianoRollController(ProjectActivity activity) {
+        this.project = activity.project;
+        this.patternThread = activity.patternThread;
+        this.activePattern = activity.pianoRollPattern;
+        this.pianoRollInstrument = activity.keyboardInstrument;
+        this.instrumentEventSource = activity.instrumentEventSource;
+        this.patternEventSource = activity.patternEventSource;
 
         this.noteLength = new MusicTime(0, 4, 0);
         this.snap = new MusicTime(0, 1, 0);
@@ -107,7 +108,7 @@ public class PianoRollController {
         this.inputLoopLength = Pattern.DEFAULT_LOOP_LENGTH;
         this.inputTempo = Pattern.DEFAULT_TEMPO;
 
-        patternEventSource.add("PianoRollController", new Consumer<PatternEvent>() {
+        this.patternEventSource.add("PianoRollController", new Consumer<PatternEvent>() {
             @Override
             public void accept(PatternEvent event) {
                 if(event.action == PatternEvent.PATTERN_SELECT || event.action == PatternEvent.PATTERN_CREATE_SELECT) {
@@ -129,15 +130,10 @@ public class PianoRollController {
             }
         });
 
-        if(activePattern == null) {
-            activePattern = Pattern.getEmptyPattern();
-            patternEventSource.dispatch(new PatternEvent(PatternEvent.PATTERN_CREATE_SELECT, activePattern));
-        } else {
-            this.inputLoopLength.setTicks(activePattern.getLoopLengthTicks());
-            this.inputTempo = activePattern.getTempo();
-        }
+        this.inputLoopLength.setTicks(activePattern.getLoopLengthTicks());
+        this.inputTempo = activePattern.getTempo();
 
-        adapter = new PianoRollAdapter(this);
+        this.adapter = new PianoRollAdapter(this);
     }
 
     // Called from PatternsFragment once layout dimensions are set
@@ -148,10 +144,10 @@ public class PianoRollController {
         for(ScheduledNoteEvent event : activePattern.events) {
             if(event.action == NoteEvent.NOTE_ON) {
                 PianoRollNoteView v = new PianoRollNoteView(ctx);
-                noteViews.put(event.baseId, v);
+                noteViews.put(event.noteId, v);
                 v.eventOn = event;
             } else if(event.action == NoteEvent.NOTE_OFF) {
-                PianoRollNoteView v = noteViews.get(event.baseId);
+                PianoRollNoteView v = noteViews.get(event.noteId);
                 if(v != null) {
                     v.eventOff = event;
                     v.containerIndex = 9 - (event.keyNum / 12);
@@ -274,9 +270,9 @@ public class PianoRollController {
     public void registerInstrumentInput(Spinner spinner) {
         this.instrumentSpinner = spinner;
         this.instrumentSpinnerAdapter = new ArrayAdapter<>(
-                instrumentSpinner.getContext(), android.R.layout.simple_spinner_item);
+                instrumentSpinner.getContext(), R.layout.component_spinner_item);
 
-        instrumentSpinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        instrumentSpinnerAdapter.setDropDownViewResource(R.layout.component_spinner_dropdown_item);
         instrumentSpinner.setAdapter(instrumentSpinnerAdapter);
 
         instrumentSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
@@ -401,8 +397,8 @@ public class PianoRollController {
         }
 
         ArrayAdapter<SpannableString> spinnerAdapter = new ArrayAdapter<>(
-                spinner.getContext(), android.R.layout.simple_spinner_item, options);
-        spinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+                spinner.getContext(), R.layout.component_spinner_item, options);
+        spinnerAdapter.setDropDownViewResource(R.layout.component_spinner_dropdown_item);
         spinner.setAdapter(spinnerAdapter);
         spinner.setSelection(currentSelection);
 

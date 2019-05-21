@@ -18,4 +18,10 @@
     <style name="TextAppearanceMonospace" parent="TextAppearance.AppCompat.Body1">
         <item name="android:fontFamily">monospace</item>
     </style>
+
+    <style name="SimpleSpinnerItem" parent="TextAppearance.AppCompat.Menu" />
+
+    <style name="SimpleSpinnerDropdownItem" parent="TextAppearance.AppCompat.Menu">
+        <item name="android:textColor">?android:attr/textColorPrimaryDisableOnly</item>
+    </style>
 </resources>

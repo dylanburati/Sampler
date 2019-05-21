@@ -54,7 +54,9 @@ public class PatternThreadTest {
             events.add(new ScheduledNoteEvent(offsetTicks[i], NoteEvent.NOTE_OFF, null, expectedResults[i], 0, 0));
         }
 
-        Pattern pattern = new Pattern(events);
+        Pattern pattern = Pattern.getEmptyPattern();
+        pattern.setPatternId(0);
+        pattern.setEvents(events);
         pattern.setLoopLengthTicks(4);
         pattern.setNanosPerTick(400 * NANOS_PER_MILLI);
         patternThread.addPattern("test", pattern);

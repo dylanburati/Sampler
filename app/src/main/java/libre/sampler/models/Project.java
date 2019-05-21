@@ -59,6 +59,8 @@ public class Project implements Parcelable {
     public Project(int id, String name, long mtime) {
         this(name, mtime);
         this.id = id;
+        this.nextInstrumentId = id * AppConstants.MAX_INSTRUMENTS_PER_PROJECT;
+        this.nextPatternId = id * AppConstants.MAX_PATTERNS_PER_PROJECT;
 
         if(id >= 0) {
             instrumentIdStatus.set(IdStatus.SELF);
@@ -98,12 +100,14 @@ public class Project implements Parcelable {
     public void addInstrument(Instrument e) {
         e.projectId = this.id;
 
-        boolean uniqueName = checkName(e);
+        if(e.name == null || e.name.isEmpty()) {
+            e.name = "New instrument";
+        }
         int suffix = 1;
         String origName = e.name;
-        while(!uniqueName) {
+        while(!checkInstrumentName(e)) {
             e.name = String.format("%s (%d)", origName, suffix);
-            uniqueName = checkName(e);
+            suffix++;
         }
 
         instruments.add(e);
@@ -129,15 +133,27 @@ public class Project implements Parcelable {
         patternIdStatus.set(IdStatus.CHILDREN_DB);
     }
 
-    public void addPattern(Pattern e) {
-        e.projectId = this.id;
-        e.id = nextPatternId;
+    public void registerPattern(Pattern e) {
+        e.setPatternId(nextPatternId);
         nextPatternId++;
-
-        patterns.add(e);
 
         patternIdStatus.require(IdStatus.SELF);
         patternIdStatus.set(IdStatus.CHILDREN_ADDED);
+    }
+
+    public void addPattern(Pattern e) {
+        e.projectId = this.id;
+
+        int suffix = patterns.size() + 1;
+        if(e.name == null || e.name.isEmpty()) {
+            e.name = String.format("Pattern %d", suffix);
+        }
+        while(!checkPatternName(e)) {
+            e.name = String.format("Pattern %d", suffix);
+            suffix++;
+        }
+
+        patterns.add(e);
     }
 
     public void removePattern(Pattern e) {
@@ -171,12 +187,20 @@ public class Project implements Parcelable {
         }
     }
 
-    private boolean checkName(Instrument e) {
-        if(e.name == null || e.name.isEmpty()) {
-            e.name = "New instrument";
-        }
+    private boolean checkInstrumentName(Instrument e) {
+        // Run before adding to instruments
         for(Instrument t : instruments) {
             if(e.name.equals(t.name)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private boolean checkPatternName(Pattern e) {
+        // Run before adding to patterns
+        for(Pattern p : patterns) {
+            if(e.name.equals(p.name)) {
                 return false;
             }
         }
