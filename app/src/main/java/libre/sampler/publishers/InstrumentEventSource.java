@@ -10,9 +10,6 @@ import libre.sampler.utils.EventSource;
 public class InstrumentEventSource implements EventSource<InstrumentEvent> {
     private Map<String, Consumer<InstrumentEvent>> listeners = new HashMap<>();
 
-    public InstrumentEventSource() {
-    }
-
     @Override
     public void add(String tag, Consumer<InstrumentEvent> listener) {
         listeners.put(tag, listener);

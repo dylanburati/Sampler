@@ -16,23 +16,22 @@ import android.widget.Spinner;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProviders;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import libre.sampler.ProjectActivity;
 import libre.sampler.R;
 import libre.sampler.adapters.PianoRollAdapter;
 import libre.sampler.models.PatternEvent;
-import libre.sampler.publishers.PatternEventSource;
+import libre.sampler.models.ProjectViewModel;
 import libre.sampler.utils.PatternThread;
 import libre.sampler.utils.PianoRollController;
 
 public class ProjectPatternsFragment extends Fragment {
-    private ProjectActivity projectActivity;
+    private ProjectViewModel viewModel;
     private PatternThread patternThread;
-    private PatternEventSource patternEventSource;
 
     private RecyclerView pianoRollContainer;
-    private PianoRollAdapter pianoRollAdapter;
     private PianoRollController pianoRollController;
 
     private ImageView patternStop;
@@ -44,9 +43,8 @@ public class ProjectPatternsFragment extends Fragment {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_project_patterns, container, false);
-        projectActivity = (ProjectActivity) getActivity();
-        patternThread = projectActivity.patternThread;
-        patternEventSource = projectActivity.patternEventSource;
+        viewModel = ViewModelProviders.of(getActivity()).get(ProjectViewModel.class);
+        patternThread = ((ProjectActivity) getActivity()).patternThread;
 
         // if landscape and not tablet, put piano roll on left instead of top
         if(getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE &&
@@ -66,7 +64,7 @@ public class ProjectPatternsFragment extends Fragment {
         RecyclerView.LayoutManager layoutManager = new GridLayoutManager(rootView.getContext(), PianoRollAdapter.SPAN_COUNT, RecyclerView.HORIZONTAL, false);
         pianoRollContainer.setLayoutManager(layoutManager);
 
-        pianoRollController = new PianoRollController(projectActivity);
+        pianoRollController = new PianoRollController(viewModel, patternThread);
         pianoRollController.keyHeight = getResources().getDimensionPixelOffset(R.dimen.piano_roll_colheight) / 12.0f;
         pianoRollController.baseBarWidth = getResources().getDimensionPixelOffset(R.dimen.piano_roll_barwidth);
 
@@ -89,7 +87,7 @@ public class ProjectPatternsFragment extends Fragment {
             public void onClick(View v) {
                 if(isRunning) {
                     isRunning = false;
-                    patternEventSource.dispatch(new PatternEvent(PatternEvent.PATTERN_OFF, null));
+                    viewModel.patternEventSource.dispatch(new PatternEvent(PatternEvent.PATTERN_OFF, null));
                     if(isPlaying) {
                         isPlaying = false;
                     } else {
@@ -108,7 +106,7 @@ public class ProjectPatternsFragment extends Fragment {
                 if(isPlaying) {
                     if(!isRunning) {
                         isRunning = true;
-                        patternEventSource.dispatch(new PatternEvent(PatternEvent.PATTERN_ON, pianoRollController.getActivePattern()));
+                        viewModel.patternEventSource.dispatch(new PatternEvent(PatternEvent.PATTERN_ON, pianoRollController.getActivePattern()));
                     } else {
                         patternThread.resumeLoop();
                     }

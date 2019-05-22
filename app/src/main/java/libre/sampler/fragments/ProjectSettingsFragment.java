@@ -11,22 +11,22 @@ import android.widget.EditText;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
-import libre.sampler.ProjectActivity;
+import androidx.lifecycle.ViewModelProviders;
 import libre.sampler.R;
-import libre.sampler.models.Project;
+import libre.sampler.models.ProjectViewModel;
 
 public class ProjectSettingsFragment extends Fragment {
-    private Project project;
+    private ProjectViewModel viewModel;
     private EditText defaultSamplePathInputView;
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_project_settings, container, false);
-        project = ((ProjectActivity) getActivity()).project;
+        viewModel = ViewModelProviders.of(getActivity()).get(ProjectViewModel.class);
 
         defaultSamplePathInputView = (EditText) rootView.findViewById(R.id.pref_default_sample_path);
-        defaultSamplePathInputView.setText(project.getDefaultSamplePath());
+        defaultSamplePathInputView.setText(viewModel.getProject().getDefaultSamplePath());
         defaultSamplePathInputView.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
@@ -34,7 +34,7 @@ public class ProjectSettingsFragment extends Fragment {
 
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
-                project.setDefaultSamplePath(s.toString());
+                viewModel.getProject().setDefaultSamplePath(s.toString());
             }
 
             @Override

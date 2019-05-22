@@ -5,7 +5,6 @@ import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.os.Bundle;
-import android.os.Parcelable;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
@@ -18,35 +17,31 @@ import java.util.List;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.DialogFragment;
+import androidx.lifecycle.ViewModelProviders;
 import androidx.recyclerview.widget.RecyclerView;
-import libre.sampler.ProjectActivity;
 import libre.sampler.R;
 import libre.sampler.adapters.SampleListAdapter;
 import libre.sampler.models.Instrument;
 import libre.sampler.models.InstrumentEvent;
+import libre.sampler.models.ProjectViewModel;
 import libre.sampler.models.Sample;
-import libre.sampler.publishers.InstrumentEventSource;
 import libre.sampler.utils.AppConstants;
 
 public class InstrumentEditDialog extends DialogFragment {
     private EditText nameInputView;
-
     private EditText sampleInputView;
     private Button sampleAddButton;
     private RecyclerView sampleData;
     private SampleListAdapter sampleDataAdapter;
     private Button instrumentDeleteButton;
 
-    private InstrumentEventSource instrumentEventSource;
-
-    public Instrument previousInstrument;
+    private ProjectViewModel viewModel;
     public String defaultSamplePath;
     private List<Sample> sampleList;
 
     @Override
     public void onAttach(@NonNull Context context) {
         super.onAttach(context);
-        instrumentEventSource = ((ProjectActivity) context).instrumentEventSource;
     }
 
     @NonNull
@@ -61,13 +56,14 @@ public class InstrumentEditDialog extends DialogFragment {
         sampleAddButton = (Button) rootView.findViewById(R.id.submit_sample_paths);
         sampleData = (RecyclerView) rootView.findViewById(R.id.sample_data);
 
+        viewModel = ViewModelProviders.of(getActivity()).get(ProjectViewModel.class);
+
         if(savedInstanceState != null) {
-            previousInstrument = savedInstanceState.getParcelable(AppConstants.TAG_SAVED_STATE_INSTRUMENT);
             nameInputView.setText(savedInstanceState.getString(AppConstants.TAG_SAVED_STATE_INSTRUMENT_CREATE_NAME));
             sampleInputView.setText(savedInstanceState.getString(AppConstants.TAG_SAVED_STATE_INSTRUMENT_CREATE_PATH));
         } else {
-            nameInputView.setText(previousInstrument.name);
-            String prevFilename = previousInstrument.firstFilename();
+            nameInputView.setText(viewModel.getEditDialogInstrument().name);
+            String prevFilename = viewModel.getEditDialogInstrument().firstFilename();
             if(prevFilename != null) {
                 sampleInputView.setText(prevFilename);
             } else if(defaultSamplePath != null) {
@@ -75,7 +71,7 @@ public class InstrumentEditDialog extends DialogFragment {
             }
         }
 
-        sampleList = previousInstrument.getSamples();
+        sampleList = viewModel.getEditDialogInstrument().getSamples();
         sampleDataAdapter = new SampleListAdapter(sampleList);
         sampleData.setAdapter(sampleDataAdapter);
         sampleAddButton.setOnClickListener(new View.OnClickListener() {
@@ -85,7 +81,7 @@ public class InstrumentEditDialog extends DialogFragment {
                 // todo support wildcard search: File.listFiles
                 if(sampleFile.isFile() && sampleFile.canRead()) {
                     int insertIdx = sampleList.size();
-                    previousInstrument.addSample(sampleFile.getAbsolutePath());
+                    viewModel.getEditDialogInstrument().addSample(sampleFile.getAbsolutePath());
                     sampleDataAdapter.notifyItemInserted(insertIdx);
                 }
             }
@@ -95,7 +91,8 @@ public class InstrumentEditDialog extends DialogFragment {
             @Override
             public void onClick(View v) {
                 getDialog().cancel();
-                instrumentEventSource.dispatch(new InstrumentEvent(InstrumentEvent.INSTRUMENT_DELETE, previousInstrument));
+                viewModel.instrumentEventSource.dispatch(new InstrumentEvent(InstrumentEvent.INSTRUMENT_DELETE, viewModel.getEditDialogInstrument()));
+                viewModel.setEditDialogInstrument(null);
             }
         });
 
@@ -104,10 +101,12 @@ public class InstrumentEditDialog extends DialogFragment {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         String name = nameInputView.getText().toString();
-                        previousInstrument.name = name;
+                        viewModel.getEditDialogInstrument().name = name;
 
-                        previousInstrument.setSamples(sampleList);
-                        instrumentEventSource.dispatch(new InstrumentEvent(InstrumentEvent.INSTRUMENT_EDIT, previousInstrument));
+                        viewModel.getEditDialogInstrument().setSamples(sampleList);
+                        Instrument toEdit = viewModel.getEditDialogInstrument();
+                        viewModel.instrumentEventSource.dispatch(new InstrumentEvent(InstrumentEvent.INSTRUMENT_EDIT, toEdit));
+                        viewModel.setEditDialogInstrument(null);
                         dialog.dismiss();
                     }
                 });
@@ -117,7 +116,6 @@ public class InstrumentEditDialog extends DialogFragment {
 
     @Override
     public void onSaveInstanceState(@NonNull Bundle outState) {
-        outState.putParcelable(AppConstants.TAG_SAVED_STATE_INSTRUMENT, (Parcelable) previousInstrument);
         outState.putString(AppConstants.TAG_SAVED_STATE_INSTRUMENT_CREATE_NAME, nameInputView.getText().toString());
         outState.putString(AppConstants.TAG_SAVED_STATE_INSTRUMENT_CREATE_PATH, sampleInputView.getText().toString());
     }

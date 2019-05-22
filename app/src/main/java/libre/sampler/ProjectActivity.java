@@ -11,7 +11,6 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
-import android.os.Parcelable;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -29,27 +28,20 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.util.Consumer;
+import androidx.lifecycle.ViewModelProviders;
 import androidx.viewpager.widget.ViewPager;
-import libre.sampler.adapters.InstrumentListAdapter;
 import libre.sampler.adapters.ProjectFragmentAdapter;
 import libre.sampler.models.Instrument;
 import libre.sampler.models.InstrumentEvent;
 import libre.sampler.models.NoteEvent;
-import libre.sampler.models.Pattern;
 import libre.sampler.models.PatternEvent;
-import libre.sampler.models.Project;
+import libre.sampler.models.ProjectViewModel;
 import libre.sampler.models.Sample;
-import libre.sampler.publishers.InstrumentEventSource;
 import libre.sampler.publishers.MidiEventDispatcher;
-import libre.sampler.publishers.NoteEventSource;
-import libre.sampler.publishers.PatternEventSource;
-import libre.sampler.tasks.GetInstrumentsTask;
 import libre.sampler.tasks.UpdateProjectTask;
-import libre.sampler.utils.AdapterLoader;
 import libre.sampler.utils.AppConstants;
 import libre.sampler.utils.DatabaseConnectionManager;
 import libre.sampler.utils.PatternThread;
@@ -60,10 +52,6 @@ public class ProjectActivity extends AppCompatActivity {
     private ViewPager pager;
     private ProjectFragmentAdapter adapter;
 
-    public NoteEventSource keyboardNoteSource;
-    public NoteEventSource noteEventSource;
-    public InstrumentEventSource instrumentEventSource;
-    public PatternEventSource patternEventSource;
     public PatternThread patternThread;
 
     private PdService pdService = null;
@@ -81,18 +69,13 @@ public class ProjectActivity extends AppCompatActivity {
         }
     };
 
-    public Project project;
-    private boolean projectLoaded;
-
-    public Instrument keyboardInstrument;
-    public Pattern pianoRollPattern;
+    public ProjectViewModel viewModel;
 
     private VoiceBindingList pdVoiceBindings;
     private SampleBindingList pdSampleBindings;
     private Instrument pdLoadingInstrument;
     private int pdPatchHandle;
 
-    public InstrumentListAdapter instrumentListAdapter;
     private MidiEventDispatcher midiEventDispatcher;
 
     @Override
@@ -104,97 +87,59 @@ public class ProjectActivity extends AppCompatActivity {
             toolbar.setTitle(getIntent().getStringExtra(Intent.EXTRA_TITLE));
         }
 
-        initEventSources();
+        this.viewModel = ViewModelProviders.of(this).get(ProjectViewModel.class);
+        viewModel.setProjectId(getIntent().getIntExtra(AppConstants.TAG_EXTRA_PROJECT_ID, -1));
+
+        attachEventListeners();
+        initPatternThread();
         initUI();
         initPdService();
 
-        projectLoaded = false;
-        if(savedInstanceState != null) {
-            project = savedInstanceState.getParcelable(AppConstants.TAG_SAVED_STATE_PROJECT);
-            projectLoaded = (project != null);
-            if(projectLoaded) {
-                int keyboardInstrumentIdx = savedInstanceState.getInt(AppConstants.TAG_SAVED_STATE_KEYBOARD_INSTRUMENT);
-                if(keyboardInstrumentIdx != -1) {
-                    keyboardInstrument = project.getInstruments().get(keyboardInstrumentIdx);
-                }
-                int pianoRollPatternIdx = savedInstanceState.getInt(AppConstants.TAG_SAVED_STATE_PIANO_ROLL_PATTERN);
-                if(pianoRollPatternIdx != -1) {
-                    pianoRollPattern = project.getPatterns().get(pianoRollPatternIdx);
-                }
-                updateInstrumentListAdapter();
-            }
-            if(savedInstanceState.getByte(AppConstants.TAG_SAVED_STATE_MIDI_CONNECTED) != 0) {
-                refreshMidiConnection();
-            }
-        }
-        if(!projectLoaded) {
-            Log.d("ProjectActivity", "Project load");
-            project = getIntent().getParcelableExtra(AppConstants.TAG_EXTRA_PROJECT);
-            DatabaseConnectionManager.initialize(this);
-            DatabaseConnectionManager.runTask(new GetInstrumentsTask(project.id, new Consumer<List<Instrument>>() {
-                @Override
-                public void accept(List<Instrument> instruments) {
-                    project.setInstruments(instruments);
-                    if(instruments.size() > 0) {
-                        keyboardInstrument = instruments.get(0);
-                    }
-                    projectLoaded = true;
-                    updateInstrumentListAdapter();
-                }
-            }, new Consumer<List<Pattern>>() {
-                @Override
-                public void accept(List<Pattern> patterns) {
-                    project.setPatterns(patterns);
-                    if(patterns.size() > 0) {
-                        pianoRollPattern = patterns.get(0);
-                    } else {
-                        pianoRollPattern = Pattern.getEmptyPattern();
-                        project.registerPattern(pianoRollPattern);
-                        project.addPattern(pianoRollPattern);
-                    }
-                }
-            }));
-        }
+        viewModel.getProject();
+
+        refreshMidiConnection();
     }
 
-    public void setInstrumentListAdapter(InstrumentListAdapter adapter) {
-        this.instrumentListAdapter = adapter;
-        if(projectLoaded) {
-            // project was loaded before adapter
-            updateInstrumentListAdapter();
-        }
-        // else update from GetInstrumentsTask callback
-    }
-
-    public void updateInstrumentListAdapter() {
-        if(project != null && instrumentListAdapter != null) {
-            AdapterLoader.insertAll(instrumentListAdapter, project.getInstruments());
-            instrumentListAdapter.activateInstrument(keyboardInstrument);
-        }
-    }
-
-    private void initEventSources() {
-        keyboardNoteSource = new NoteEventSource();
-        keyboardNoteSource.add("Evolve", new Consumer<NoteEvent>() {
+    private void attachEventListeners() {
+        viewModel.keyboardNoteSource.add("Evolve", new Consumer<NoteEvent>() {
             @Override
             public void accept(NoteEvent event) {
-                event.instrument = keyboardInstrument;
-                noteEventSource.dispatch(event);
+                event.instrument = viewModel.getKeyboardInstrument();
+                viewModel.noteEventSource.dispatch(event);
             }
         });
 
-        noteEventSource = new NoteEventSource();
-        noteEventSource.add("logger", new Consumer<NoteEvent>() {
+        viewModel.noteEventSource.add("logger", new Consumer<NoteEvent>() {
             @Override
             public void accept(NoteEvent noteEvent) {
                 Log.d("ProjectActivity", String.format("noteEvent: action=%d keynum=%d velocity=%d", noteEvent.action, noteEvent.keyNum, noteEvent.velocity));
             }
         });
 
-        instrumentEventSource = new InstrumentEventSource();
-        instrumentEventSource.add("keyboard", new InstrumentEventConsumer());
-        patternEventSource = new PatternEventSource();
-        patternThread = new PatternThread(noteEventSource);
+        viewModel.instrumentEventSource.add("keyboard", new InstrumentEventConsumer());
+
+        viewModel.noteEventSource.add("NoteEventConsumer", new NoteEventConsumer());
+
+        viewModel.patternEventSource.add("test", new Consumer<PatternEvent>() {
+            @Override
+            public void accept(PatternEvent event) {
+                if(event.action == PatternEvent.PATTERN_ON) {
+                    patternThread.addPattern("test", event.pattern);
+                } else if(event.action == PatternEvent.PATTERN_OFF) {
+                    closeNotes();
+                    patternThread.clearPatterns();
+                } else if(event.action == PatternEvent.PATTERN_SELECT) {
+                    viewModel.setPianoRollPattern(event.pattern);
+                } else if(event.action == PatternEvent.PATTERN_CREATE_SELECT) {
+                    viewModel.getProject().addPattern(event.pattern);
+                    viewModel.setPianoRollPattern(event.pattern);
+                }
+            }
+        });
+    }
+
+    private void initPatternThread() {
+        patternThread = new PatternThread(viewModel.noteEventSource);
         patternThread.start();
     }
 
@@ -205,26 +150,6 @@ public class ProjectActivity extends AppCompatActivity {
     }
 
     private void initPdService() {
-        final String name = getResources().getString(R.string.app_name);
-        noteEventSource.add("NoteEventConsumer", new NoteEventConsumer());
-
-        patternEventSource.add("test", new Consumer<PatternEvent>() {
-            @Override
-            public void accept(PatternEvent event) {
-                if(event.action == PatternEvent.PATTERN_ON) {
-                    patternThread.addPattern("test", event.pattern);
-                } else if(event.action == PatternEvent.PATTERN_OFF) {
-                    closeNotes();
-                    patternThread.clearPatterns();
-                } else if(event.action == PatternEvent.PATTERN_SELECT) {
-                    pianoRollPattern = event.pattern;
-                } else if(event.action == PatternEvent.PATTERN_CREATE_SELECT) {
-                    project.addPattern(event.pattern);
-                    pianoRollPattern = event.pattern;
-                }
-            }
-        });
-
         AudioParameters.init(this);
         PdPreferences.initPreferences(getApplicationContext());
         Intent serviceIntent = new Intent(this, PdService.class);
@@ -235,11 +160,7 @@ public class ProjectActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        if(noteEventSource == null) {
-            initEventSources();
-        } else {
-            patternThread.resumeLoop();
-        }
+        attachEventListeners();
 
         if(adapter == null) {
             initUI();
@@ -266,8 +187,8 @@ public class ProjectActivity extends AppCompatActivity {
             }
             pdService.initAudio(AudioParameters.suggestSampleRate(), 0, 2, 8);
             pdService.startAudio();
-            if(keyboardInstrument != null) {
-                instrumentEventSource.dispatch(new InstrumentEvent(InstrumentEvent.INSTRUMENT_LOAD, keyboardInstrument));
+            if(viewModel.getKeyboardInstrument() != null) {
+                viewModel.instrumentEventSource.dispatch(new InstrumentEvent(InstrumentEvent.INSTRUMENT_LOAD, viewModel.getKeyboardInstrument()));
             }
         } catch (IOException e) {
             finish();
@@ -296,15 +217,6 @@ public class ProjectActivity extends AppCompatActivity {
     }
 
     @Override
-    protected void onSaveInstanceState(@NonNull Bundle outState) {
-        super.onSaveInstanceState(outState);
-        outState.putParcelable(AppConstants.TAG_SAVED_STATE_PROJECT, (Parcelable) project);
-        outState.putInt(AppConstants.TAG_SAVED_STATE_KEYBOARD_INSTRUMENT, project.getInstruments().indexOf(keyboardInstrument));
-        outState.putInt(AppConstants.TAG_SAVED_STATE_PIANO_ROLL_PATTERN, project.getPatterns().indexOf(pianoRollPattern));
-        outState.putByte(AppConstants.TAG_SAVED_STATE_MIDI_CONNECTED, (byte) (midiEventDispatcher != null ? 1 : 0));
-    }
-
-    @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.menu_project, menu);
@@ -314,9 +226,8 @@ public class ProjectActivity extends AppCompatActivity {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         if(item.getItemId() == R.id.appbar_save) {
-            project.mtime = System.currentTimeMillis();
-            DatabaseConnectionManager.initialize(this);
-            DatabaseConnectionManager.runTask(new UpdateProjectTask(project, new Runnable() {
+            viewModel.getProject().mtime = System.currentTimeMillis();
+            DatabaseConnectionManager.runTask(new UpdateProjectTask(viewModel.getProject(), new Runnable() {
                 @Override
                 public void run() {
                     Toast.makeText(ProjectActivity.this, R.string.project_saved, Toast.LENGTH_SHORT).show();
@@ -337,23 +248,21 @@ public class ProjectActivity extends AppCompatActivity {
             MidiDeviceInfo[] midiDeviceInfos = midiManager.getDevices();
             if(midiDeviceInfos.length > 0) {
                 if(midiEventDispatcher == null) {
-                    midiEventDispatcher = new MidiEventDispatcher();  // ((View) item).getHandler()
+                    midiEventDispatcher = new MidiEventDispatcher(viewModel);
                 }
                 midiManager.openDevice(midiDeviceInfos[0], midiEventDispatcher, new Handler());
                 Log.d("midiManager", "openDevice called");
-                midiEventDispatcher.noteEventSource = noteEventSource;
-                midiEventDispatcher.patternEventSource = patternEventSource;
             }
         }
     }
 
     private void closeNotes() {
-        if(pdService == null || !pdService.isRunning() || noteEventSource == null) {
+        if(pdService == null || !pdService.isRunning()) {
             return;
         }
         List<NoteEvent> events = pdVoiceBindings.getCloseEvents();
         for(NoteEvent e : events) {
-            noteEventSource.dispatch(e);
+            viewModel.noteEventSource.dispatch(e);
         }
     }
 
@@ -361,23 +270,13 @@ public class ProjectActivity extends AppCompatActivity {
         @Override
         public void accept(InstrumentEvent event) {
             if(event.action == InstrumentEvent.INSTRUMENT_CREATE) {
-                project.addInstrument(event.instrument);
-                if(instrumentListAdapter != null) {
-                    AdapterLoader.insertItem(instrumentListAdapter, event.instrument);
-                }
+                viewModel.getProject().addInstrument(event.instrument);
             } else if(event.action == InstrumentEvent.INSTRUMENT_EDIT) {
-                int changeIdx = instrumentListAdapter.items.indexOf(event.instrument);
-                if(changeIdx != -1) {
-                    instrumentListAdapter.notifyItemChanged(changeIdx);
-                }
-                if(event.instrument == keyboardInstrument) {
-                    instrumentListAdapter.activateInstrument(keyboardInstrument);
-                }
+                // handled in ProjectInstrumentsFragment
             } else if(event.action == InstrumentEvent.INSTRUMENT_DELETE) {
-                project.removeInstrument(event.instrument);
-                AdapterLoader.removeItem(instrumentListAdapter, event.instrument);
+                viewModel.getProject().removeInstrument(event.instrument);
             } else if(event.action == InstrumentEvent.INSTRUMENT_SELECT) {
-                keyboardInstrument = event.instrument;
+                viewModel.setKeyboardInstrument(event.instrument);
                 pdLoadingInstrument = event.instrument;
                 for(Sample s : pdLoadingInstrument.getSamples()) {
                     if(pdSampleBindings.getBinding(s)) {

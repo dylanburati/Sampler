@@ -11,7 +11,7 @@ import libre.sampler.models.Project;
 import libre.sampler.models.Sample;
 import libre.sampler.models.ScheduledNoteEvent;
 
-@Database(entities = {Project.class, Instrument.class, Sample.class, Pattern.class, ScheduledNoteEvent.class}, version = 4)
+@Database(entities = {Project.class, Instrument.class, Sample.class, Pattern.class, ScheduledNoteEvent.class}, version = 5)
 public abstract class AppDatabase extends RoomDatabase {
     public abstract ProjectDao projectDao();
     public abstract InstrumentDao instrumentDao();
@@ -61,6 +61,25 @@ public abstract class AppDatabase extends RoomDatabase {
                     "`velocity` INTEGER NOT NULL," +
                     "`noteId` INTEGER NOT NULL," +
                     "PRIMARY KEY(`patternId`, `id`))");
+        }
+    };
+
+    public static final Migration MIGRATION_4_5 = new Migration(4, 5) {
+        @Override
+        public void migrate(@NonNull SupportSQLiteDatabase database) {
+            database.execSQL("ALTER TABLE `scheduledNoteEvent` RENAME TO `tmp_scheduledNoteEvent`");
+            database.execSQL("CREATE TABLE IF NOT EXISTS `scheduledNoteEvent` (" +
+                    "`id` INTEGER NOT NULL," +
+                    "`patternId` INTEGER NOT NULL," +
+                    "`offsetTicks` INTEGER NOT NULL," +
+                    "`action` INTEGER NOT NULL," +
+                    "`instrumentId` INTEGER NOT NULL," +
+                    "`keyNum` INTEGER NOT NULL," +
+                    "`velocity` INTEGER NOT NULL," +
+                    "`noteId` INTEGER NOT NULL," +
+                    "PRIMARY KEY(`patternId`, `id`))");
+            database.execSQL("INSERT INTO `scheduledNoteEvent` SELECT * FROM `tmp_scheduledNoteEvent`");
+            database.execSQL("DROP TABLE `tmp_scheduledNoteEvent`");
         }
     };
 }

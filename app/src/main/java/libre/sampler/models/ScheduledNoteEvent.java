@@ -10,7 +10,7 @@ public class ScheduledNoteEvent {
     public int id;
     public int patternId;
 
-    public Long offsetTicks;
+    public long offsetTicks;
 
     public int action;
     @Ignore
@@ -27,7 +27,7 @@ public class ScheduledNoteEvent {
     }
 
     @Ignore
-    public ScheduledNoteEvent(Long offsetTicks, int action, Instrument instrument, int keyNum, int velocity, long noteId) {
+    public ScheduledNoteEvent(long offsetTicks, int action, Instrument instrument, int keyNum, int velocity, long noteId) {
         this.id = 0;
 
         this.offsetTicks = offsetTicks;

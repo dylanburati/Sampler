@@ -5,7 +5,6 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Parcelable;
 import android.view.Menu;
 import android.view.MenuItem;
 
@@ -17,15 +16,16 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.content.ContextCompat;
 import androidx.core.util.Consumer;
+import androidx.lifecycle.ViewModelProviders;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import libre.sampler.adapters.ProjectListAdapter;
 import libre.sampler.dialogs.ProjectCreateDialog;
 import libre.sampler.listeners.MySwipeRefreshListener;
+import libre.sampler.models.MainViewModel;
 import libre.sampler.models.Project;
 import libre.sampler.tasks.CreateProjectTask;
 import libre.sampler.tasks.DeleteProjectsTask;
-import libre.sampler.tasks.GetProjectsTask;
 import libre.sampler.utils.AdapterLoader;
 import libre.sampler.utils.AppConstants;
 import libre.sampler.utils.DatabaseConnectionManager;
@@ -35,8 +35,8 @@ public class MainActivity extends AppCompatActivity implements ProjectCreateDial
     private RecyclerView data;
     private ProjectListAdapter dataAdapter;
     private ProjectCreateDialog projectCreateDialog;
-    private boolean projectsLoaded;
-    private ArrayList<Project> projects;
+    private boolean isAdapterLoaded;
+    private MainViewModel viewModel;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -45,6 +45,22 @@ public class MainActivity extends AppCompatActivity implements ProjectCreateDial
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
+        viewModel = ViewModelProviders.of(this).get(MainViewModel.class);
+
+        initUI();
+
+        viewModel.loadEventSource.add("MainActivity", new Consumer<String>() {
+            @Override
+            public void accept(String eventName) {
+                if(eventName.equals(AppConstants.PROJECTS_LOADED)) {
+                    updateAdapter(viewModel.getProjects());
+                }
+            }
+        });
+        updateAdapter(viewModel.getProjects());
+    }
+
+    private void initUI() {
         refreshLayout = (SwipeRefreshLayout) findViewById(R.id.main_refresh);
         refreshLayout.setOnRefreshListener(new MySwipeRefreshListener() {
             @Override
@@ -52,84 +68,37 @@ public class MainActivity extends AppCompatActivity implements ProjectCreateDial
                 refreshLayout.setRefreshing(false);
             }
         });
-
-        projectsLoaded = false;
-        if(savedInstanceState != null) {
-            projects = savedInstanceState.getParcelableArrayList(AppConstants.TAG_SAVED_STATE_PROJECT_LIST);
-            projectsLoaded = (projects != null);
-        }
-        if(!projectsLoaded) {
-            projects = new ArrayList<>();
-        }
-
         this.data = (RecyclerView) findViewById(R.id.main_data);
-        this.dataAdapter = new ProjectListAdapter(projects, new Consumer<Project>() {
+        this.dataAdapter = new ProjectListAdapter(new ArrayList<Project>(), new Consumer<Project>() {
             @Override
             public void accept(Project project) {
                 Intent intent = new Intent(MainActivity.this, ProjectActivity.class);
                 intent.setAction(Intent.ACTION_VIEW);
                 intent.putExtra(Intent.EXTRA_TITLE, project.name);
-                intent.putExtra(AppConstants.TAG_EXTRA_PROJECT, (Parcelable) project);
+                intent.putExtra(AppConstants.TAG_EXTRA_PROJECT_ID, project.id);
                 if(intent.resolveActivity(getPackageManager()) != null) {
                     startActivity(intent);
                 }
             }
         });
         data.setAdapter(this.dataAdapter);
+    }
 
-        if(!projectsLoaded) {
-            DatabaseConnectionManager.initialize(this);
-            DatabaseConnectionManager.runTask(new GetProjectsTask(new Consumer<List<Project>>() {
-                @Override
-                public void accept(List<Project> prjs) {
-                    dataAdapter.autoScrollOnInsert = true;
-                    AdapterLoader.insertAll(dataAdapter, prjs);
-                }
-            }));
-        } else {
+    private void updateAdapter(List<Project> projects) {
+        if(!isAdapterLoaded && projects != null) {
             dataAdapter.autoScrollOnInsert = true;
+            AdapterLoader.insertAll(dataAdapter, viewModel.getProjects());
+            isAdapterLoaded = true;
         }
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        projectsLoaded = (projects != null);
-        if(!projectsLoaded) {
-            projects = new ArrayList<>();
-        }
-        if(data == null) {
-            this.data = (RecyclerView) findViewById(R.id.main_data);
-            this.dataAdapter = new ProjectListAdapter(projects, new Consumer<Project>() {
-                @Override
-                public void accept(Project project) {
-                    Intent intent = new Intent(MainActivity.this, ProjectActivity.class);
-                    intent.setAction(Intent.ACTION_VIEW);
-                    intent.putExtra(Intent.EXTRA_TITLE, project.name);
-                    intent.putExtra(AppConstants.TAG_EXTRA_PROJECT, (Parcelable) project);
-                    if(intent.resolveActivity(getPackageManager()) != null) {
-                        startActivity(intent);
-                    }
-                }
-            });
-            data.setAdapter(this.dataAdapter);
-        }
-        if(!projectsLoaded) {
-            DatabaseConnectionManager.initialize(this);
-            DatabaseConnectionManager.runTask(new GetProjectsTask(new Consumer<List<Project>>() {
-                @Override
-                public void accept(List<Project> prjs) {
-                    dataAdapter.autoScrollOnInsert = true;
-                    AdapterLoader.insertAll(dataAdapter, prjs);
-                }
-            }));
-        }
-    }
 
-    @Override
-    public void onSaveInstanceState(Bundle outState) {
-        super.onSaveInstanceState(outState);
-        outState.putParcelableArrayList(AppConstants.TAG_SAVED_STATE_PROJECT_LIST, projects);
+        if(data == null) {
+            initUI();
+        }
     }
 
     @Override

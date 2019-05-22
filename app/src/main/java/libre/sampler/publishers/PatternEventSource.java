@@ -12,9 +12,6 @@ public class PatternEventSource implements EventSource<PatternEvent> {
 
     private Map<String, Consumer<PatternEvent>> listeners = new HashMap<>();
 
-    public PatternEventSource() {
-    }
-
     @Override
     public void add(String tag, Consumer<PatternEvent> listener) {
         synchronized(lock) {

@@ -1,5 +1,6 @@
 package libre.sampler.utils;
 
+import java.util.Collection;
 import java.util.List;
 
 import androidx.recyclerview.widget.RecyclerView;
@@ -19,12 +20,12 @@ public class AdapterLoader {
         ((RecyclerView.Adapter) adapter).notifyItemInserted(insertIdx);
     }
 
-    public static <T> void insertAll(Loadable<T> adapter, List<T> e) {
+    public static <T> void insertAll(Loadable<T> adapter, Collection<T> e) {
         int insertIdx = adapter.items().size();
         AdapterLoader.insertAll(adapter, insertIdx, e);
     }
 
-    public static <T> void insertAll(Loadable<T> adapter, int insertIdx, List<T> e) {
+    public static <T> void insertAll(Loadable<T> adapter, int insertIdx, Collection<T> e) {
         adapter.items().addAll(insertIdx, e);
         ((RecyclerView.Adapter) adapter).notifyItemRangeInserted(insertIdx, e.size());
     }

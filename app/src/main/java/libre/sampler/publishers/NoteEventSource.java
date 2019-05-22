@@ -12,9 +12,6 @@ public class NoteEventSource implements EventSource<NoteEvent> {
 
     private Map<String, Consumer<NoteEvent>> listeners = new HashMap<>();
 
-    public NoteEventSource() {
-    }
-
     @Override
     public void add(String tag, Consumer<NoteEvent> listener) {
         synchronized(lock) {

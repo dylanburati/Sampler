@@ -1,8 +1,5 @@
 package libre.sampler.models;
 
-import android.os.Parcel;
-import android.os.Parcelable;
-
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -20,7 +17,7 @@ import libre.sampler.utils.AppConstants;
 import libre.sampler.utils.IdStatus;
 
 @Entity(tableName = "project")
-public class Project implements Parcelable {
+public class Project {
     @PrimaryKey(autoGenerate = true)
     public int id;
 
@@ -177,7 +174,6 @@ public class Project implements Parcelable {
     }
 
     public String getRelativeTime() {
-        StringBuilder relativeTime = new StringBuilder();
         Date then = new Date(mtime);
         Date now = new Date();
         if(then.getYear() == now.getYear()) {
@@ -207,47 +203,4 @@ public class Project implements Parcelable {
         return true;
     }
 
-    protected Project(Parcel in) {
-        id = in.readInt();
-        name = in.readString();
-        mtime = in.readLong();
-        settings = ProjectSettingsConverter.deserializeSettings(in.readString());
-        instruments = in.createTypedArrayList(Instrument.CREATOR);
-        nextInstrumentId = in.readInt();
-        instrumentIdStatus = in.readParcelable(IdStatus.class.getClassLoader());
-        patterns = new ArrayList<>();  // patterns = in.createTypedArrayList(Pattern.CREATOR);
-        nextPatternId = in.readInt();
-        patternIdStatus = in.readParcelable(IdStatus.class.getClassLoader());
-    }
-
-    @Override
-    public void writeToParcel(Parcel dest, int flags) {
-        dest.writeInt(id);
-        dest.writeString(name);
-        dest.writeLong(mtime);
-        dest.writeString(ProjectSettingsConverter.serializeSettings(settings));
-        dest.writeTypedList(instruments);
-        dest.writeInt(nextInstrumentId);
-        dest.writeParcelable(instrumentIdStatus, flags);
-        // dest.writeTypedList(patterns);
-        dest.writeInt(nextPatternId);
-        dest.writeParcelable(patternIdStatus, flags);
-    }
-
-    @Override
-    public int describeContents() {
-        return 0;
-    }
-
-    public static final Creator<Project> CREATOR = new Creator<Project>() {
-        @Override
-        public Project createFromParcel(Parcel in) {
-            return new Project(in);
-        }
-
-        @Override
-        public Project[] newArray(int size) {
-            return new Project[size];
-        }
-    };
 }

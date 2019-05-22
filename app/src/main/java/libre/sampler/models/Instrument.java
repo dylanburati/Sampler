@@ -1,8 +1,5 @@
 package libre.sampler.models;
 
-import android.os.Parcel;
-import android.os.Parcelable;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -11,7 +8,7 @@ import androidx.room.Ignore;
 import libre.sampler.utils.IdStatus;
 
 @Entity(tableName = "instrument", primaryKeys = {"projectId", "id"})
-public class Instrument implements Parcelable {
+public class Instrument {
     public int projectId;
     public int id;
     public String name;
@@ -106,45 +103,8 @@ public class Instrument implements Parcelable {
         return retval;
     }
 
-    protected Instrument(Parcel in) {
-        projectId = in.readInt();
-        name = in.readString();
-        id = in.readInt();
-        firstFilename = in.readString();
-        samples = in.createTypedArrayList(Sample.CREATOR);
-        nextSampleId = in.readInt();
-        idStatus = in.readParcelable(IdStatus.class.getClassLoader());
-    }
-
     public String firstFilename() {
         return firstFilename;
     }
 
-    @Override
-    public void writeToParcel(Parcel dest, int flags) {
-        dest.writeInt(projectId);
-        dest.writeString(name);
-        dest.writeInt(id);
-        dest.writeString(firstFilename);
-        dest.writeTypedList(samples);
-        dest.writeInt(nextSampleId);
-        dest.writeParcelable(idStatus, flags);
-    }
-
-    @Override
-    public int describeContents() {
-        return 0;
-    }
-
-    public static final Creator<Instrument> CREATOR = new Creator<Instrument>() {
-        @Override
-        public Instrument createFromParcel(Parcel in) {
-            return new Instrument(in);
-        }
-
-        @Override
-        public Instrument[] newArray(int size) {
-            return new Instrument[size];
-        }
-    };
 }

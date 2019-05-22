@@ -1,13 +1,10 @@
 package libre.sampler.models;
 
-import android.os.Parcel;
-import android.os.Parcelable;
-
 import androidx.room.Entity;
 import androidx.room.Ignore;
 
 @Entity(tableName = "sample", primaryKeys = {"instrumentId", "id"})
-public class Sample implements Parcelable {
+public class Sample {
     public int instrumentId;
 
     public int id;
@@ -191,73 +188,5 @@ public class Sample implements Parcelable {
     public boolean shouldDisplay(int field) {
         return (displayFlags & field) != 0;
     }
-
-    protected Sample(Parcel in) {
-        instrumentId = in.readInt();
-        id = in.readInt();
-        filename = in.readString();
-        sampleIndex = in.readInt();
-        minPitch = in.readInt();
-        maxPitch = in.readInt();
-        minVelocity = in.readInt();
-        maxVelocity = in.readInt();
-        sampleLength = in.readInt();
-        sampleRate = in.readInt();
-        attack = in.readFloat();
-        decay = in.readFloat();
-        sustain = in.readFloat();
-        release = in.readFloat();
-        basePitch = in.readInt();
-        startTime = in.readFloat();
-        resumeTime = in.readFloat();
-        endTime = in.readFloat();
-        isInfoLoaded = in.readByte() != 0;
-        shouldUseDefaultLoopStart = in.readByte() != 0;
-        shouldUseDefaultLoopResume = in.readByte() != 0;
-        shouldUseDefaultLoopEnd = in.readByte() != 0;
-    }
-
-    @Override
-    public void writeToParcel(Parcel dest, int flags) {
-        dest.writeInt(instrumentId);
-        dest.writeInt(id);
-        dest.writeString(filename);
-        dest.writeInt(sampleIndex);
-        dest.writeInt(minPitch);
-        dest.writeInt(maxPitch);
-        dest.writeInt(minVelocity);
-        dest.writeInt(maxVelocity);
-        dest.writeInt(sampleLength);
-        dest.writeInt(sampleRate);
-        dest.writeFloat(attack);
-        dest.writeFloat(decay);
-        dest.writeFloat(sustain);
-        dest.writeFloat(release);
-        dest.writeInt(basePitch);
-        dest.writeFloat(startTime);
-        dest.writeFloat(resumeTime);
-        dest.writeFloat(endTime);
-        dest.writeByte((byte) (isInfoLoaded ? 1 : 0));
-        dest.writeByte((byte) (shouldUseDefaultLoopStart ? 1 : 0));
-        dest.writeByte((byte) (shouldUseDefaultLoopResume ? 1 : 0));
-        dest.writeByte((byte) (shouldUseDefaultLoopEnd ? 1 : 0));
-    }
-
-    @Override
-    public int describeContents() {
-        return 0;
-    }
-
-    public static final Creator<Sample> CREATOR = new Creator<Sample>() {
-        @Override
-        public Sample createFromParcel(Parcel in) {
-            return new Sample(in);
-        }
-
-        @Override
-        public Sample[] newArray(int size) {
-            return new Sample[size];
-        }
-    };
 
 }

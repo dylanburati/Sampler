@@ -24,10 +24,10 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import androidx.core.util.Consumer;
-import libre.sampler.ProjectActivity;
 import libre.sampler.R;
 import libre.sampler.adapters.PianoRollAdapter;
 import libre.sampler.listeners.StatefulScrollListener;
@@ -36,19 +36,15 @@ import libre.sampler.models.InstrumentEvent;
 import libre.sampler.models.NoteEvent;
 import libre.sampler.models.Pattern;
 import libre.sampler.models.PatternEvent;
-import libre.sampler.models.Project;
+import libre.sampler.models.ProjectViewModel;
 import libre.sampler.models.ScheduledNoteEvent;
-import libre.sampler.publishers.InstrumentEventSource;
-import libre.sampler.publishers.PatternEventSource;
 import libre.sampler.views.PianoRollNoteView;
 
 public class PianoRollController {
-    private Project project;
+    private ProjectViewModel viewModel;
     private final PatternThread patternThread;
     private Pattern activePattern;
     private Instrument pianoRollInstrument;
-    private final InstrumentEventSource instrumentEventSource;
-    private final PatternEventSource patternEventSource;
 
     public PianoRollAdapter adapter;
 
@@ -90,17 +86,17 @@ public class PianoRollController {
 
     private Spinner instrumentSpinner;
     private ArrayAdapter<String> instrumentSpinnerAdapter;
+    private List<Instrument> instrumentSpinnerItems;
+
     private NumberPicker loopLengthPickerBars;
     private NumberPicker loopLengthPickerSixteenths;
     private EditText tempoEditText;
 
-    public PianoRollController(ProjectActivity activity) {
-        this.project = activity.project;
-        this.patternThread = activity.patternThread;
-        this.activePattern = activity.pianoRollPattern;
-        this.pianoRollInstrument = activity.keyboardInstrument;
-        this.instrumentEventSource = activity.instrumentEventSource;
-        this.patternEventSource = activity.patternEventSource;
+    public PianoRollController(ProjectViewModel viewModel, PatternThread patternThread) {
+        this.viewModel = viewModel;
+        this.patternThread = patternThread;
+        this.activePattern = viewModel.getPianoRollPattern();
+        this.pianoRollInstrument = viewModel.getKeyboardInstrument();
 
         this.noteLength = new MusicTime(0, 4, 0);
         this.snap = new MusicTime(0, 1, 0);
@@ -108,7 +104,7 @@ public class PianoRollController {
         this.inputLoopLength = Pattern.DEFAULT_LOOP_LENGTH;
         this.inputTempo = Pattern.DEFAULT_TEMPO;
 
-        this.patternEventSource.add("PianoRollController", new Consumer<PatternEvent>() {
+        viewModel.patternEventSource.add("PianoRollController", new Consumer<PatternEvent>() {
             @Override
             public void accept(PatternEvent event) {
                 if(event.action == PatternEvent.PATTERN_SELECT || event.action == PatternEvent.PATTERN_CREATE_SELECT) {
@@ -119,12 +115,13 @@ public class PianoRollController {
             }
         });
 
-        this.instrumentEventSource.add("PianoRollController", new Consumer<InstrumentEvent>() {
+        viewModel.instrumentEventSource.add("PianoRollController", new Consumer<InstrumentEvent>() {
             @Override
             public void accept(InstrumentEvent event) {
                 if(event.action == InstrumentEvent.INSTRUMENT_DELETE ||
                         event.action == InstrumentEvent.INSTRUMENT_CREATE ||
                         event.action == InstrumentEvent.INSTRUMENT_EDIT) {
+                    instrumentSpinnerItems = PianoRollController.this.viewModel.getProject().getInstruments();
                     updateInstrumentInput();
                 }
             }
@@ -208,7 +205,7 @@ public class PianoRollController {
                 int insertIdx = Collections.binarySearch(activePattern.events, noteEvent, new Comparator<ScheduledNoteEvent>() {
                     @Override
                     public int compare(ScheduledNoteEvent o1, ScheduledNoteEvent o2) {
-                        return o1.offsetTicks.compareTo(o2.offsetTicks);
+                        return Long.compare(o1.offsetTicks, o2.offsetTicks);
                     }
                 });
                 if(insertIdx < 0) {
@@ -271,6 +268,7 @@ public class PianoRollController {
         this.instrumentSpinner = spinner;
         this.instrumentSpinnerAdapter = new ArrayAdapter<>(
                 instrumentSpinner.getContext(), R.layout.component_spinner_item);
+        this.instrumentSpinnerItems = viewModel.getProject().getInstruments();
 
         instrumentSpinnerAdapter.setDropDownViewResource(R.layout.component_spinner_dropdown_item);
         instrumentSpinner.setAdapter(instrumentSpinnerAdapter);
@@ -278,8 +276,8 @@ public class PianoRollController {
         instrumentSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                pianoRollInstrument = project.getInstruments().get(position);
-                instrumentEventSource.dispatch(new InstrumentEvent(InstrumentEvent.INSTRUMENT_LOAD, pianoRollInstrument));
+                pianoRollInstrument = instrumentSpinnerItems.get(position);
+                viewModel.instrumentEventSource.dispatch(new InstrumentEvent(InstrumentEvent.INSTRUMENT_LOAD, pianoRollInstrument));
             }
 
             @Override
@@ -292,14 +290,14 @@ public class PianoRollController {
 
     private void updateInstrumentInput() {
         if(instrumentSpinner != null && instrumentSpinnerAdapter != null) {
-            String[] options = new String[project.getInstruments().size()];
+            String[] options = new String[instrumentSpinnerItems.size()];
             for(int i = 0; i < options.length; i++) {
-                options[i] = project.getInstruments().get(i).name;
+                options[i] = instrumentSpinnerItems.get(i).name;
             }
 
             instrumentSpinnerAdapter.clear();
             instrumentSpinnerAdapter.addAll(options);
-            instrumentSpinner.setSelection(project.getInstruments().indexOf(pianoRollInstrument));
+            instrumentSpinner.setSelection(instrumentSpinnerItems.indexOf(pianoRollInstrument));
         }
     }
 
