@@ -1,5 +1,6 @@
 package libre.sampler.adapters;
 
+import android.graphics.Color;
 import android.graphics.Rect;
 import android.view.GestureDetector;
 import android.view.LayoutInflater;
@@ -18,15 +19,15 @@ import androidx.annotation.NonNull;
 import androidx.core.view.GestureDetectorCompat;
 import androidx.recyclerview.widget.RecyclerView;
 import libre.sampler.R;
-import libre.sampler.utils.PianoRollController;
+import libre.sampler.fragments.ProjectPatternsFragment;
 import libre.sampler.utils.RepeatingDrawable;
-import libre.sampler.views.PianoRollNoteView;
+import libre.sampler.views.VisualNote;
 
 public class PianoRollAdapter extends RecyclerView.Adapter<PianoRollAdapter.ViewHolder> {
     public static final int SPAN_COUNT = 8;
 
-    public List<PianoRollNoteView> pianoRollNotes;
-    private PianoRollController pianoRollController;
+    public List<VisualNote> pianoRollNotes;
+    private ProjectPatternsFragment controller;
     private Set<ViewHolder> viewHolderSet;
     private int rollWidth;
 
@@ -41,8 +42,8 @@ public class PianoRollAdapter extends RecyclerView.Adapter<PianoRollAdapter.View
         }
     }
 
-    public PianoRollAdapter(PianoRollController pianoRollController) {
-        this.pianoRollController = pianoRollController;
+    public PianoRollAdapter(ProjectPatternsFragment controller) {
+        this.controller = controller;
         this.pianoRollNotes = new ArrayList<>();
         this.viewHolderSet = new HashSet<>();
     }
@@ -66,9 +67,9 @@ public class PianoRollAdapter extends RecyclerView.Adapter<PianoRollAdapter.View
         holder.notePane.setLayoutParams(params);
 
         holder.notePane.removeAllViews();
-        for(PianoRollNoteView n : pianoRollNotes) {
+        for(VisualNote n : pianoRollNotes) {
             if(n.containerIndex == position) {
-                holder.notePane.addView(n, n.layoutParams);
+                displayNote(holder, n);
             }
         }
 
@@ -87,7 +88,21 @@ public class PianoRollAdapter extends RecyclerView.Adapter<PianoRollAdapter.View
         return SPAN_COUNT;
     }
 
-    public void setPianoRollNotes(List<PianoRollNoteView> notes) {
+    public void displayNote(ViewHolder holder, VisualNote note) {
+        double tickWidth = controller.getTickWidth();
+        float keyHeight = controller.getKeyHeight();
+        RelativeLayout.LayoutParams layoutParams = new RelativeLayout.LayoutParams(
+                (int) (note.lengthTicks * tickWidth), (int) keyHeight);
+        layoutParams.leftMargin = (int) (note.startTicks * tickWidth);
+        layoutParams.topMargin = (int) (note.keyIndex * keyHeight);
+        View view = new View(holder.notePane.getContext());
+        view.setBackgroundColor(Color.WHITE);
+        view.setTag(note.tag);
+
+        holder.notePane.addView(view, layoutParams);
+    }
+
+    public void setPianoRollNotes(List<VisualNote> notes) {
         pianoRollNotes = notes;
         notifyItemRangeChanged(0, getItemCount());
     }
@@ -118,23 +133,24 @@ public class PianoRollAdapter extends RecyclerView.Adapter<PianoRollAdapter.View
             int containerIndex = holder.getAdapterPosition();
 
             Rect r = new Rect();
-            for(PianoRollNoteView n : pianoRollNotes) {
+            for(VisualNote n : pianoRollNotes) {
                 if(n.containerIndex == containerIndex) {
-                    n.getLocalVisibleRect(r);
-                    holder.notePane.offsetDescendantRectToMyCoords(n, r);
+                    View view = holder.notePane.findViewWithTag(n.tag);
+                    view.getLocalVisibleRect(r);
+                    holder.notePane.offsetDescendantRectToMyCoords(view, r);
                     if(r.contains((int) e.getX(), (int) e.getY())) {
-                        holder.notePane.removeView(n);
-                        pianoRollController.onRemovePianoRollNote(n);
+                        holder.notePane.removeView(view);
+                        controller.onRemovePianoRollNote(n);
                         pianoRollNotes.remove(n);
                         return;
                     }
                 }
             }
 
-            PianoRollNoteView note = new PianoRollNoteView(holder.notePane.getContext());
-            pianoRollController.onCreatePianoRollNote(note, containerIndex, e.getX(), e.getY());  // set layout params
+            VisualNote note = new VisualNote(containerIndex);
+            controller.onCreatePianoRollNote(note, containerIndex, e.getX(), e.getY());
             pianoRollNotes.add(note);
-            holder.notePane.addView(note, note.layoutParams);
+            displayNote(holder, note);
         }
     }
 

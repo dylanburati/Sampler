@@ -48,10 +48,6 @@ public class MidiEventDispatcher implements MidiManager.OnDeviceOpenedListener {
             System.arraycopy(msg, offset, data, 0, count);
             Log.d("MidiEventDispatcher", Arrays.toString(data));
 
-            if(viewModel.noteEventSource == null) {
-                return;
-            }
-
             for(int commandIdx = 0; commandIdx < count; /* increment handled per message */) {
                 byte command = (byte) (data[commandIdx] & MidiConstants.STATUS_COMMAND_MASK);
                 if(command == MidiConstants.STATUS_NOTE_ON) {
@@ -70,9 +66,9 @@ public class MidiEventDispatcher implements MidiManager.OnDeviceOpenedListener {
                     int controller = data[commandIdx + 1] & 0xFF;
                     if(controller == 0x30) {
                         if(data[commandIdx + 2] != 0) {
-                            // patternEventSource.dispatch(new PatternEvent(PatternEvent.PATTERN_ON, ));
+                            // viewModel.patternEventSource.dispatch(new PatternEvent(PatternEvent.PATTERN_ON, ));
                         } else {
-                            // patternEventSource.dispatch(new PatternEvent(PatternEvent.PATTERN_OFF, ));
+                            // viewModel.patternEventSource.dispatch(new PatternEvent(PatternEvent.PATTERN_OFF, ));
                         }
                     }
                 }

@@ -13,10 +13,16 @@ public interface ScheduledNoteEventDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     void insertAll(List<ScheduledNoteEvent> events);
 
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    void insertAll(ScheduledNoteEvent[] events);
+
     @Query("DELETE FROM scheduledNoteEvent WHERE patternId = :patternId")
     void deleteAll(int patternId);
 
     @Query("DELETE FROM scheduledNoteEvent WHERE patternId IN (:patternIds)")
     void deleteAll(List<Integer> patternIds);
+
+    @Query("SELECT * FROM scheduledNoteEvent")
+    List<ScheduledNoteEvent> getAll();
 }
 

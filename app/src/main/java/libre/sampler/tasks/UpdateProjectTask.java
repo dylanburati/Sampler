@@ -57,7 +57,7 @@ public class UpdateProjectTask extends AsyncTask<Void, Void, Void> {
         }
         patternDao.insertAll(project.getPatterns());
         for(Pattern p : project.getPatterns()) {
-            scheduledNoteEventDao.insertAll(p.events);
+            scheduledNoteEventDao.insertAll(p.getEventsDeepCopy());
         }
         return null;
     }

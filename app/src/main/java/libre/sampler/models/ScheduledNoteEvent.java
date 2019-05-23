@@ -2,6 +2,7 @@ package libre.sampler.models;
 
 import android.util.Pair;
 
+import androidx.annotation.NonNull;
 import androidx.room.Entity;
 import androidx.room.Ignore;
 
@@ -48,5 +49,11 @@ public class ScheduledNoteEvent {
     public void setInstrument(Instrument t) {
         instrument = t;
         instrumentId = t.id;
+    }
+
+    @NonNull
+    @Override
+    public String toString() {
+        return String.format("ScheduledNoteEvent(patternId=%d, id=%d, instrumentId=%d, offsetTicks=%d)", this.patternId, this.id, this.instrumentId, this.offsetTicks);
     }
 }

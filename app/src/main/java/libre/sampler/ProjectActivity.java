@@ -5,11 +5,7 @@ import android.content.ComponentName;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.res.Resources;
-import android.media.midi.MidiDeviceInfo;
-import android.media.midi.MidiManager;
-import android.os.Build;
 import android.os.Bundle;
-import android.os.Handler;
 import android.os.IBinder;
 import android.util.Log;
 import android.view.Menu;
@@ -37,6 +33,7 @@ import libre.sampler.adapters.ProjectFragmentAdapter;
 import libre.sampler.models.Instrument;
 import libre.sampler.models.InstrumentEvent;
 import libre.sampler.models.NoteEvent;
+import libre.sampler.models.Pattern;
 import libre.sampler.models.PatternEvent;
 import libre.sampler.models.ProjectViewModel;
 import libre.sampler.models.Sample;
@@ -75,8 +72,6 @@ public class ProjectActivity extends AppCompatActivity {
     private SampleBindingList pdSampleBindings;
     private Instrument pdLoadingInstrument;
     private int pdPatchHandle;
-
-    private MidiEventDispatcher midiEventDispatcher;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -157,19 +152,6 @@ public class ProjectActivity extends AppCompatActivity {
         startService(serviceIntent);
     }
 
-    @Override
-    protected void onResume() {
-        super.onResume();
-        attachEventListeners();
-
-        if(adapter == null) {
-            initUI();
-        }
-        if(pdService == null) {
-            initPdService();
-        }
-    }
-
     private void initPd() {
         pdVoiceBindings = new VoiceBindingList(AppConstants.PD_NUM_VOICES);
         pdSampleBindings = new SampleBindingList(AppConstants.PD_NUM_SAMPLES);
@@ -198,6 +180,19 @@ public class ProjectActivity extends AppCompatActivity {
     }
 
     @Override
+    protected void onResume() {
+        super.onResume();
+        attachEventListeners();
+
+        if(adapter == null) {
+            initUI();
+        }
+        if(pdService == null) {
+            initPdService();
+        }
+    }
+
+    @Override
     protected void onPause() {
         super.onPause();
         patternThread.suspendLoop();
@@ -211,9 +206,6 @@ public class ProjectActivity extends AppCompatActivity {
         super.onDestroy();
         patternThread.finish();
         unbindService(pdConnection);
-        if(midiEventDispatcher != null) {
-            midiEventDispatcher.closeMidi();
-        }
     }
 
     @Override
@@ -227,6 +219,14 @@ public class ProjectActivity extends AppCompatActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
         if(item.getItemId() == R.id.appbar_save) {
             viewModel.getProject().mtime = System.currentTimeMillis();
+            patternThread.lock.lock();
+            try {
+                for(Pattern p : viewModel.getProject().getPatterns()) {
+                    p.prepareEventsDeepCopy();
+                }
+            } finally {
+                patternThread.lock.unlock();
+            }
             DatabaseConnectionManager.runTask(new UpdateProjectTask(viewModel.getProject(), new Runnable() {
                 @Override
                 public void run() {
@@ -243,16 +243,9 @@ public class ProjectActivity extends AppCompatActivity {
     }
 
     private void refreshMidiConnection() {
-        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            MidiManager midiManager = (MidiManager) getSystemService(MIDI_SERVICE);
-            MidiDeviceInfo[] midiDeviceInfos = midiManager.getDevices();
-            if(midiDeviceInfos.length > 0) {
-                if(midiEventDispatcher == null) {
-                    midiEventDispatcher = new MidiEventDispatcher(viewModel);
-                }
-                midiManager.openDevice(midiDeviceInfos[0], midiEventDispatcher, new Handler());
-                Log.d("midiManager", "openDevice called");
-            }
+        MidiEventDispatcher midiEventDispatcher = viewModel.getMidiEventDispatcher();
+        if(midiEventDispatcher != null) {
+            Log.d("MidiEventDispatcher", "obtained");
         }
     }
 
@@ -277,17 +270,22 @@ public class ProjectActivity extends AppCompatActivity {
                 viewModel.getProject().removeInstrument(event.instrument);
             } else if(event.action == InstrumentEvent.INSTRUMENT_SELECT) {
                 viewModel.setKeyboardInstrument(event.instrument);
-                pdLoadingInstrument = event.instrument;
-                for(Sample s : pdLoadingInstrument.getSamples()) {
-                    if(pdSampleBindings.getBinding(s)) {
-                        PdBase.sendList("sample_file", s.sampleIndex, s.filename);
+                if(pdService != null && pdService.isRunning()) {
+                    pdLoadingInstrument = event.instrument;
+                    for(Sample s : pdLoadingInstrument.getSamples()) {
+                        if(pdSampleBindings.getBinding(s)) {
+                            PdBase.sendList("sample_file", s.sampleIndex, s.filename);
+                        }
                     }
                 }
             } else if(event.action == InstrumentEvent.INSTRUMENT_LOAD) {
                 pdLoadingInstrument = event.instrument;
-                for(Sample s : pdLoadingInstrument.getSamples()) {
-                    if(pdSampleBindings.getBinding(s)) {
-                        PdBase.sendList("sample_file", s.sampleIndex, s.filename);
+                if(pdService != null && pdService.isRunning()) {
+                    pdLoadingInstrument = event.instrument;
+                    for(Sample s : pdLoadingInstrument.getSamples()) {
+                        if(pdSampleBindings.getBinding(s)) {
+                            PdBase.sendList("sample_file", s.sampleIndex, s.filename);
+                        }
                     }
                 }
             }

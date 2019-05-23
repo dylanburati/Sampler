@@ -22,9 +22,11 @@ public class Pattern {
     @Ignore
     private int nextEventId;
     @Ignore
-    public List<ScheduledNoteEvent> events;
+    private List<ScheduledNoteEvent> events;
     @Ignore
     private IdStatus idStatus = new IdStatus("Pattern,ScheduledNoteEvent");
+    @Ignore
+    private ScheduledNoteEvent[] eventsDeepCopy;
 
     private double nanosPerTick;
     private long loopLengthTicks;
@@ -58,7 +60,7 @@ public class Pattern {
         this.name = name;
         this.id = id;
 
-        idStatus.set(IdStatus.CHILDREN_DB);
+        idStatus.set(IdStatus.SELF);
     }
 
     public void setPatternId(int id) {
@@ -73,9 +75,26 @@ public class Pattern {
     // should be called with the `events` obtained from the database
     public void setEvents(List<ScheduledNoteEvent> events) {
         this.events = events;
+        for(ScheduledNoteEvent e : events) {
+            if(e.id >= nextEventId) {
+                nextEventId = e.id + 1;
+            }
+        }
 
         idStatus.require(IdStatus.SELF);
-        idStatus.set(IdStatus.CHILDREN_ADDED);
+        idStatus.set(IdStatus.CHILDREN_DB);
+    }
+
+    public List<ScheduledNoteEvent> getEvents() {
+        return events;
+    }
+
+    public void prepareEventsDeepCopy() {
+        eventsDeepCopy = events.toArray(new ScheduledNoteEvent[0]);
+    }
+
+    public ScheduledNoteEvent[] getEventsDeepCopy() {
+        return eventsDeepCopy;
     }
 
     public long getLoopLengthTicks() {

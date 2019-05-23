@@ -50,6 +50,7 @@ public class GetInstrumentsTask extends AsyncTask<Void, Void, GetInstrumentsTask
         Project proj = null;
         Map<Integer, Instrument> projInstrumentsMap = new HashMap<>();
         List<Pattern> projPatterns = new ArrayList<>();
+        // List<ScheduledNoteEvent> tmp = DatabaseConnectionManager.getInstance().scheduledNoteEventDao().getAll();
 
         List<ProjectDao.ProjectWithRelations> relations = DatabaseConnectionManager.getInstance().projectDao().getWithRelations(projectId);
         for(ProjectDao.ProjectWithRelations prj : relations) {
