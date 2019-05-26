@@ -6,15 +6,571 @@
     android:layout_height="match_parent"
     android:orientation="vertical">
 
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/instruments_data"
+    <LinearLayout
+        android:id="@+id/instruments_select_container"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="#27FFFFFF"
-        android:orientation="vertical"
-        android:scrollbars="horizontal"
-        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager">
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:orientation="vertical">
 
-    </androidx.recyclerview.widget.RecyclerView>
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/instruments_select"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="#27FFFFFF"
+            android:orientation="vertical"
+            android:scrollbars="horizontal"
+            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager">
+
+        </androidx.recyclerview.widget.RecyclerView>
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:background="@drawable/border_top"
+        android:orientation="horizontal">
+
+        <!--Instrument Volume-->
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:background="@drawable/border_right"
+            android:orientation="vertical"
+            android:paddingLeft="@dimen/margin2"
+            android:paddingTop="@dimen/margin2"
+            android:paddingRight="@dimen/margin2_border"
+            android:paddingBottom="@dimen/margin2">
+
+            <com.android.musicfx.SeekBarRotator
+                android:layout_width="wrap_content"
+                android:layout_height="0dp"
+                android:layout_gravity="center_horizontal"
+                android:layout_weight="1">
+
+                <SeekBar
+                    android:id="@+id/instrument_volume_slider"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+
+            </com.android.musicfx.SeekBarRotator>
+
+            <RelativeLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_weight="0">
+
+                <EditText
+                    android:id="@+id/instrument_volume"
+                    android:layout_width="@dimen/instrument_editor_edittext_width"
+                    android:layout_height="wrap_content"
+                    android:imeOptions="actionDone"
+                    android:inputType="numberDecimal|numberSigned" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignBaseline="@id/instrument_volume"
+                    android:layout_toRightOf="@id/instrument_volume"
+                    android:text="@string/dB" />
+            </RelativeLayout>
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_weight="0"
+                android:gravity="center"
+                android:labelFor="@id/instrument_volume"
+                android:minLines="2"
+                android:text="@string/instrument_volume" />
+        </LinearLayout>
+
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:paddingLeft="@dimen/margin2_border_out"
+            android:paddingTop="@dimen/margin2"
+            android:paddingRight="@dimen/margin2"
+            android:paddingBottom="@dimen/margin2">
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <RelativeLayout
+                    android:id="@+id/sample_select_container"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content">
+
+                    <Spinner
+                        android:id="@+id/sample_edit_select"
+                        android:layout_width="match_parent"
+                        android:layout_height="40dp" />
+
+                    <EditText
+                        android:id="@+id/input_sample_paths"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_below="@id/sample_edit_select"
+                        android:layout_marginRight="@dimen/margin2"
+                        android:hint="@string/path_to_samples_hint"
+                        android:inputType="textUri" />
+
+                    <Button
+                        android:id="@+id/sample_add"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_below="@id/input_sample_paths"
+                        android:layout_toLeftOf="@+id/sample_replace"
+                        android:text="@string/sample_add_button" />
+                    <!--android:backgroundTint="#ff4caf50"-->
+
+                    <Button
+                        android:id="@+id/sample_replace"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_below="@id/input_sample_paths"
+                        android:layout_toLeftOf="@+id/sample_delete"
+                        android:text="@string/sample_replace_button" />
+                    <!--android:backgroundTint="@color/colorReplace"-->
+
+                    <Button
+                        android:id="@+id/sample_delete"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_below="@id/input_sample_paths"
+                        android:layout_alignRight="@id/input_sample_paths"
+                        android:backgroundTint="@color/colorError"
+                        android:text="@string/sample_delete_button" />
+                </RelativeLayout>
+
+                <com.google.android.flexbox.FlexboxLayout
+                    android:id="@+id/expanded_sample_data"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/margin3"
+                    app:flexDirection="row"
+                    app:flexWrap="wrap">
+
+                    <!--Sample Zone Pitch-->
+                    <RelativeLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginRight="@dimen/margin2"
+                        android:layout_marginBottom="@dimen/margin2">
+
+                        <TextView
+                            android:id="@+id/label_pitch"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/label_pitch" />
+
+                        <EditText
+                            android:id="@+id/pitch_min"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_below="@id/label_pitch"
+                            android:layout_alignLeft="@id/label_pitch"
+                            android:ems="3"
+                            android:hint="@string/min"
+                            android:imeOptions="actionNext"
+                            android:inputType="number"
+                            android:nextFocusRight="@+id/pitch_max" />
+
+                        <EditText
+                            android:id="@+id/pitch_max"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_alignBaseline="@id/pitch_min"
+                            android:layout_toRightOf="@id/pitch_min"
+                            android:ems="3"
+                            android:hint="@string/max"
+                            android:imeOptions="actionNext"
+                            android:inputType="number"
+                            android:nextFocusRight="@+id/pitch_base" />
+
+                        <EditText
+                            android:id="@+id/pitch_base"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_alignBaseline="@id/pitch_min"
+                            android:layout_toRightOf="@id/pitch_max"
+                            android:ems="3"
+                            android:hint="@string/base"
+                            android:imeOptions="actionNext"
+                            android:inputType="number"
+                            android:nextFocusRight="@+id/velocity_min" />
+                    </RelativeLayout>
+
+                    <!--Sample Zone Velocity-->
+                    <RelativeLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginRight="@dimen/margin2"
+                        android:layout_marginBottom="@dimen/margin2">
+
+                        <TextView
+                            android:id="@+id/label_velocity"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/label_velocity" />
+
+                        <EditText
+                            android:id="@+id/velocity_min"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_below="@id/label_velocity"
+                            android:layout_alignLeft="@id/label_velocity"
+                            android:ems="3"
+                            android:hint="@string/min"
+                            android:imeOptions="actionNext"
+                            android:inputType="number"
+                            android:nextFocusRight="@+id/velocity_max" />
+
+                        <EditText
+                            android:id="@+id/velocity_max"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_alignBaseline="@id/velocity_min"
+                            android:layout_toRightOf="@id/velocity_min"
+                            android:ems="3"
+                            android:hint="@string/max"
+                            android:imeOptions="actionNext"
+                            android:inputType="number"
+                            android:nextFocusRight="@+id/position_start" />
+                    </RelativeLayout>
+
+                    <!--Sample Position-->
+                    <RelativeLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginRight="@dimen/margin2"
+                        android:layout_marginBottom="@dimen/margin2">
+
+                        <TextView
+                            android:id="@+id/label_position"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/label_position" />
+
+                        <EditText
+                            android:id="@+id/position_start"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_below="@id/label_position"
+                            android:layout_alignLeft="@id/label_position"
+                            android:layout_marginRight="@dimen/margin2_dense"
+                            android:ems="4"
+                            android:hint="@string/start"
+                            android:imeOptions="actionNext"
+                            android:inputType="numberDecimal"
+                            android:nextFocusRight="@+id/position_end" />
+
+                        <EditText
+                            android:id="@+id/position_end"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_alignBaseline="@id/position_start"
+                            android:layout_marginRight="@dimen/margin2_dense"
+                            android:layout_toRightOf="@id/position_start"
+                            android:ems="4"
+                            android:hint="@string/end"
+                            android:imeOptions="actionNext"
+                            android:inputType="numberDecimal"
+                            android:nextFocusRight="@+id/position_resume" />
+
+                        <EditText
+                            android:id="@+id/position_resume"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_alignBaseline="@id/position_start"
+                            android:layout_marginRight="@dimen/margin2_dense"
+                            android:layout_toRightOf="@id/position_end"
+                            android:ems="4"
+                            android:hint="@string/loop"
+                            android:imeOptions="actionDone"
+                            android:inputType="numberDecimal" />
+                    </RelativeLayout>
+
+                    <!--Sample Volume-->
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="@dimen/volume_slider_height"
+                        android:orientation="vertical"
+                        android:paddingLeft="@dimen/margin2_dense"
+                        android:paddingTop="@dimen/margin2"
+                        android:paddingRight="@dimen/margin2_dense"
+                        app:layout_wrapBefore="true">
+
+                        <com.android.musicfx.SeekBarRotator
+                            android:layout_width="wrap_content"
+                            android:layout_height="0dp"
+                            android:layout_gravity="center_horizontal"
+                            android:layout_weight="1">
+
+                            <SeekBar
+                                android:id="@+id/sample_volume_slider"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content" />
+
+                        </com.android.musicfx.SeekBarRotator>
+
+                        <RelativeLayout
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="center_horizontal"
+                            android:layout_weight="0">
+
+                            <EditText
+                                android:id="@+id/sample_volume"
+                                android:layout_width="@dimen/instrument_editor_edittext_width"
+                                android:layout_height="wrap_content"
+                                android:imeOptions="actionDone"
+                                android:inputType="numberDecimal|numberSigned" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_alignBaseline="@id/sample_volume"
+                                android:layout_toRightOf="@id/sample_volume"
+                                android:text="@string/dB" />
+                        </RelativeLayout>
+
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="center_horizontal"
+                            android:layout_weight="0"
+                            android:gravity="center_horizontal|top"
+                            android:labelFor="@id/sample_volume"
+                            android:minLines="2"
+                            android:text="@string/sample_volume" />
+                    </LinearLayout>
+
+                    <!--Attack-->
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="@dimen/volume_slider_height"
+                        android:orientation="vertical"
+                        android:paddingLeft="@dimen/margin2_dense"
+                        android:paddingTop="@dimen/margin2"
+                        android:paddingRight="@dimen/margin2_dense">
+
+                        <com.android.musicfx.SeekBarRotator
+                            android:layout_width="wrap_content"
+                            android:layout_height="0dp"
+                            android:layout_gravity="center_horizontal"
+                            android:layout_weight="1">
+
+                            <SeekBar
+                                android:id="@+id/sample_attack_slider"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content" />
+
+                        </com.android.musicfx.SeekBarRotator>
+
+                        <RelativeLayout
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="center_horizontal"
+                            android:layout_weight="0">
+
+                            <EditText
+                                android:id="@+id/sample_attack"
+                                android:layout_width="@dimen/instrument_editor_edittext_width"
+                                android:layout_height="wrap_content"
+                                android:imeOptions="actionDone"
+                                android:inputType="numberDecimal" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_alignBaseline="@id/sample_attack"
+                                android:layout_toRightOf="@id/sample_attack"
+                                android:text="@string/milliseconds" />
+                        </RelativeLayout>
+
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="center_horizontal"
+                            android:layout_weight="0"
+                            android:gravity="center_horizontal|top"
+                            android:labelFor="@id/sample_attack"
+                            android:minLines="2"
+                            android:text="@string/attack" />
+                    </LinearLayout>
+
+                    <!--Decay-->
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="@dimen/volume_slider_height"
+                        android:orientation="vertical"
+                        android:paddingLeft="@dimen/margin2_dense"
+                        android:paddingTop="@dimen/margin2"
+                        android:paddingRight="@dimen/margin2_dense">
+
+                        <com.android.musicfx.SeekBarRotator
+                            android:layout_width="wrap_content"
+                            android:layout_height="0dp"
+                            android:layout_gravity="center_horizontal"
+                            android:layout_weight="1">
+
+                            <SeekBar
+                                android:id="@+id/sample_decay_slider"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content" />
+
+                        </com.android.musicfx.SeekBarRotator>
+
+                        <RelativeLayout
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="center_horizontal"
+                            android:layout_weight="0">
+
+                            <EditText
+                                android:id="@+id/sample_decay"
+                                android:layout_width="@dimen/instrument_editor_edittext_width"
+                                android:layout_height="wrap_content"
+                                android:imeOptions="actionDone"
+                                android:inputType="numberDecimal" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_alignBaseline="@id/sample_decay"
+                                android:layout_toRightOf="@id/sample_decay"
+                                android:text="@string/milliseconds" />
+                        </RelativeLayout>
+
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="center_horizontal"
+                            android:layout_weight="0"
+                            android:gravity="center_horizontal|top"
+                            android:labelFor="@id/sample_decay"
+                            android:minLines="2"
+                            android:text="@string/decay" />
+                    </LinearLayout>
+
+                    <!--Sustain-->
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="@dimen/volume_slider_height"
+                        android:orientation="vertical"
+                        android:paddingLeft="@dimen/margin2_dense"
+                        android:paddingTop="@dimen/margin2"
+                        android:paddingRight="@dimen/margin2_dense"
+                        app:layout_wrapBefore="true">
+
+                        <com.android.musicfx.SeekBarRotator
+                            android:layout_width="wrap_content"
+                            android:layout_height="0dp"
+                            android:layout_gravity="center_horizontal"
+                            android:layout_weight="1">
+
+                            <SeekBar
+                                android:id="@+id/sample_sustain_slider"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content" />
+
+                        </com.android.musicfx.SeekBarRotator>
+
+                        <RelativeLayout
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="center_horizontal"
+                            android:layout_weight="0">
+
+                            <EditText
+                                android:id="@+id/sample_sustain"
+                                android:layout_width="@dimen/instrument_editor_edittext_width"
+                                android:layout_height="wrap_content"
+                                android:imeOptions="actionDone"
+                                android:inputType="numberDecimal|numberSigned" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_alignBaseline="@id/sample_sustain"
+                                android:layout_toRightOf="@id/sample_sustain"
+                                android:text="@string/dB" />
+                        </RelativeLayout>
+
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="center_horizontal"
+                            android:layout_weight="0"
+                            android:gravity="center_horizontal|top"
+                            android:labelFor="@id/sample_sustain"
+                            android:minLines="2"
+                            android:text="@string/sustain" />
+                    </LinearLayout>
+
+                    <!--Release-->
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="@dimen/volume_slider_height"
+                        android:orientation="vertical"
+                        android:paddingLeft="@dimen/margin2_dense"
+                        android:paddingTop="@dimen/margin2"
+                        android:paddingRight="@dimen/margin2_dense">
+
+                        <com.android.musicfx.SeekBarRotator
+                            android:layout_width="wrap_content"
+                            android:layout_height="0dp"
+                            android:layout_gravity="center_horizontal"
+                            android:layout_weight="1">
+
+                            <SeekBar
+                                android:id="@+id/sample_release_slider"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content" />
+
+                        </com.android.musicfx.SeekBarRotator>
+
+                        <RelativeLayout
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="center_horizontal"
+                            android:layout_weight="0">
+
+                            <EditText
+                                android:id="@+id/sample_release"
+                                android:layout_width="@dimen/instrument_editor_edittext_width"
+                                android:layout_height="wrap_content"
+                                android:imeOptions="actionDone"
+                                android:inputType="numberDecimal"
+                                android:text="10000" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_alignBaseline="@id/sample_release"
+                                android:layout_toRightOf="@id/sample_release"
+                                android:text="@string/milliseconds" />
+                        </RelativeLayout>
+
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="center_horizontal"
+                            android:layout_weight="0"
+                            android:gravity="center_horizontal|top"
+                            android:labelFor="@id/sample_release"
+                            android:minLines="2"
+                            android:text="@string/release" />
+                    </LinearLayout>
+                </com.google.android.flexbox.FlexboxLayout>
+            </LinearLayout>
+        </ScrollView>
+    </LinearLayout>
 
 </LinearLayout>

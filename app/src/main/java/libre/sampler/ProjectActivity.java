@@ -123,11 +123,6 @@ public class ProjectActivity extends AppCompatActivity {
                 } else if(event.action == PatternEvent.PATTERN_OFF) {
                     closeNotes();
                     patternThread.clearPatterns();
-                } else if(event.action == PatternEvent.PATTERN_SELECT) {
-                    viewModel.setPianoRollPattern(event.pattern);
-                } else if(event.action == PatternEvent.PATTERN_CREATE_SELECT) {
-                    viewModel.getProject().addPattern(event.pattern);
-                    viewModel.setPianoRollPattern(event.pattern);
                 }
             }
         });
@@ -170,7 +165,7 @@ public class ProjectActivity extends AppCompatActivity {
             pdService.initAudio(AudioParameters.suggestSampleRate(), 0, 2, 8);
             pdService.startAudio();
             if(viewModel.getKeyboardInstrument() != null) {
-                viewModel.instrumentEventSource.dispatch(new InstrumentEvent(InstrumentEvent.INSTRUMENT_LOAD, viewModel.getKeyboardInstrument()));
+                viewModel.instrumentEventSource.dispatch(new InstrumentEvent(InstrumentEvent.INSTRUMENT_PD_LOAD, viewModel.getKeyboardInstrument()));
             }
         } catch (IOException e) {
             finish();
@@ -262,14 +257,7 @@ public class ProjectActivity extends AppCompatActivity {
     private class InstrumentEventConsumer implements Consumer<InstrumentEvent> {
         @Override
         public void accept(InstrumentEvent event) {
-            if(event.action == InstrumentEvent.INSTRUMENT_CREATE) {
-                viewModel.getProject().addInstrument(event.instrument);
-            } else if(event.action == InstrumentEvent.INSTRUMENT_EDIT) {
-                // handled in ProjectInstrumentsFragment
-            } else if(event.action == InstrumentEvent.INSTRUMENT_DELETE) {
-                viewModel.getProject().removeInstrument(event.instrument);
-            } else if(event.action == InstrumentEvent.INSTRUMENT_SELECT) {
-                viewModel.setKeyboardInstrument(event.instrument);
+            if(event.action == InstrumentEvent.INSTRUMENT_SELECT) {
                 if(pdService != null && pdService.isRunning()) {
                     pdLoadingInstrument = event.instrument;
                     for(Sample s : pdLoadingInstrument.getSamples()) {
@@ -278,7 +266,7 @@ public class ProjectActivity extends AppCompatActivity {
                         }
                     }
                 }
-            } else if(event.action == InstrumentEvent.INSTRUMENT_LOAD) {
+            } else if(event.action == InstrumentEvent.INSTRUMENT_PD_LOAD) {
                 pdLoadingInstrument = event.instrument;
                 if(pdService != null && pdService.isRunning()) {
                     pdLoadingInstrument = event.instrument;
@@ -306,7 +294,7 @@ public class ProjectActivity extends AppCompatActivity {
                         pdService.startAudio();
                     }
                     for(Sample s : samples) {
-                        if(!s.isInfoLoaded || !s.checkLoop()) {
+                        if(!s.isInfoLoaded() || !s.checkLoop()) {
                             continue;
                         }
 
@@ -318,7 +306,7 @@ public class ProjectActivity extends AppCompatActivity {
                             PdBase.sendList("note", voiceIndex, noteEvent.keyNum,
                                     /*velocity*/   noteEvent.velocity,
                                     /*ADSR*/       s.attack, s.decay, s.sustain, s.release,
-                                    /*sampleInfo*/ s.sampleIndex, s.getStartTime(), s.getResumeTime(), s.getEndTime(), s.sampleRate, s.basePitch);
+                                    /*sampleInfo*/ s.sampleIndex, s.getLoopStart(), s.getLoopResume(), s.getLoopEnd(), s.sampleRate, s.basePitch);
                         } else if(noteEvent.action == NoteEvent.NOTE_OFF) {
                             int voiceIndex = pdVoiceBindings.releaseBinding(noteEvent, s.id);
                             if(voiceIndex == -1) {
@@ -327,7 +315,7 @@ public class ProjectActivity extends AppCompatActivity {
                             PdBase.sendList("note", voiceIndex, noteEvent.keyNum,
                                     /*velocity*/   0,
                                     /*ADSR*/       s.attack, s.decay, s.sustain, s.release,
-                                    /*sampleInfo*/ s.sampleIndex, s.getStartTime(), s.getResumeTime(), s.getEndTime(), s.sampleRate, s.basePitch);
+                                    /*sampleInfo*/ s.sampleIndex, s.getLoopStart(), s.getLoopResume(), s.getLoopEnd(), s.sampleRate, s.basePitch);
                         } else if(noteEvent.action == NoteEvent.CLOSE) {
                             int voiceIndex = pdVoiceBindings.releaseBinding(noteEvent, s.id);
                             if(voiceIndex == -1) {
@@ -336,7 +324,7 @@ public class ProjectActivity extends AppCompatActivity {
                             PdBase.sendList("note", voiceIndex, noteEvent.keyNum,
                                     /*velocity*/   0,
                                     /*ADSR*/       s.attack, s.decay, s.sustain, 0,
-                                    /*sampleInfo*/ s.sampleIndex, s.getStartTime(), s.getResumeTime(), s.getEndTime(), s.sampleRate, s.basePitch);
+                                    /*sampleInfo*/ s.sampleIndex, s.getLoopStart(), s.getLoopResume(), s.getLoopEnd(), s.sampleRate, s.basePitch);
                         }
                     }
                 } catch(IOException e) {
@@ -382,7 +370,6 @@ public class ProjectActivity extends AppCompatActivity {
                         for(Sample s : pdLoadingInstrument.getSamples()) {
                             if(s.sampleIndex == sampleIndex) {
                                 s.setSampleInfo((int)((float) args[args.length - 1]), (int)((float) args[2]));
-                                s.isInfoLoaded = true;
                             }
                         }
                         Log.d("pdReciever", String.format("sample_info index=%d length=%d rate=%d",

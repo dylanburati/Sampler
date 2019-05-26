@@ -1,6 +1,7 @@
 package libre.sampler.tasks;
 
 import android.os.AsyncTask;
+import android.util.Log;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -40,6 +41,7 @@ public class UpdateProjectTask extends AsyncTask<Void, Void, Void> {
                 for(Instrument t : d.instruments) {
                     instrumentIds.add(t.id);
                 }
+                Log.d("Delete instruments", instrumentIds.toString());
                 sampleDao.deleteAll(instrumentIds);
                 instrumentDao.deleteAll(project.id);
 

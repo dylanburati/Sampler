@@ -161,7 +161,7 @@ public class ProjectPatternsFragment extends Fragment {
                 if(event.action == PatternEvent.PATTERN_SELECT || event.action == PatternEvent.PATTERN_CREATE_SELECT) {
                     patternDerivedData = viewModel.getPatternDerivedData(viewModel.getPianoRollPattern());
                     for(Instrument t : patternDerivedData.getInstrumentList()) {
-                        viewModel.instrumentEventSource.dispatch(new InstrumentEvent(InstrumentEvent.INSTRUMENT_LOAD, t));
+                        viewModel.instrumentEventSource.dispatch(new InstrumentEvent(InstrumentEvent.INSTRUMENT_PD_LOAD, t));
                     }
                     updatePatternLengthInputs();
                     updateTempoInput();
@@ -183,7 +183,7 @@ public class ProjectPatternsFragment extends Fragment {
 
         patternDerivedData = viewModel.getPatternDerivedData(viewModel.getPianoRollPattern());
         for(Instrument t : patternDerivedData.getInstrumentList()) {
-            viewModel.instrumentEventSource.dispatch(new InstrumentEvent(InstrumentEvent.INSTRUMENT_LOAD, t));
+            viewModel.instrumentEventSource.dispatch(new InstrumentEvent(InstrumentEvent.INSTRUMENT_PD_LOAD, t));
         }
         if(!patternDerivedData.getInstrumentList().isEmpty()) {
             pianoRollInstrument = patternDerivedData.getInstrumentList().get(0);
@@ -288,10 +288,10 @@ public class ProjectPatternsFragment extends Fragment {
     private void registerInstrumentInput(Spinner spinner) {
         this.instrumentSpinner = spinner;
         this.instrumentSpinnerAdapter = new ArrayAdapter<>(
-                instrumentSpinner.getContext(), R.layout.component_spinner_item);
+                instrumentSpinner.getContext(), android.R.layout.simple_spinner_item);
         this.instrumentSpinnerItems = viewModel.getProject().getInstruments();
 
-        instrumentSpinnerAdapter.setDropDownViewResource(R.layout.component_spinner_dropdown_item);
+        instrumentSpinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         instrumentSpinner.setAdapter(instrumentSpinnerAdapter);
 
         instrumentSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
@@ -299,7 +299,7 @@ public class ProjectPatternsFragment extends Fragment {
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 pianoRollInstrument = instrumentSpinnerItems.get(position);
                 updatePianoRollNotes();
-                viewModel.instrumentEventSource.dispatch(new InstrumentEvent(InstrumentEvent.INSTRUMENT_LOAD, pianoRollInstrument));
+                viewModel.instrumentEventSource.dispatch(new InstrumentEvent(InstrumentEvent.INSTRUMENT_PD_LOAD, pianoRollInstrument));
             }
 
             @Override
@@ -417,8 +417,8 @@ public class ProjectPatternsFragment extends Fragment {
         }
 
         ArrayAdapter<SpannableString> spinnerAdapter = new ArrayAdapter<>(
-                spinner.getContext(), R.layout.component_spinner_item, options);
-        spinnerAdapter.setDropDownViewResource(R.layout.component_spinner_dropdown_item);
+                spinner.getContext(), android.R.layout.simple_spinner_item, options);
+        spinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spinner.setAdapter(spinnerAdapter);
         spinner.setSelection(currentSelection);
 

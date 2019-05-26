@@ -13,7 +13,7 @@ public class PatternLoader {
     public PatternLoader(PatternThread patternThread) {
         this.patternThread = patternThread;
     }
-    
+
     public void addToPattern(Pattern pattern, ScheduledNoteEvent... noteEvents) {
         patternThread.lock.lock();
         try {
@@ -57,7 +57,7 @@ public class PatternLoader {
         } finally {
             patternThread.lock.unlock();
         }
-        
+
     }
 
     public void setTempo(Pattern pattern, double bpm) {

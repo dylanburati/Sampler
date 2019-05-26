@@ -4,8 +4,16 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.SeekBar;
+import android.widget.Spinner;
 
+import java.io.File;
 import java.util.ArrayList;
+import java.util.List;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -18,14 +26,20 @@ import libre.sampler.R;
 import libre.sampler.adapters.InstrumentListAdapter;
 import libre.sampler.dialogs.InstrumentCreateDialog;
 import libre.sampler.dialogs.InstrumentEditDialog;
+import libre.sampler.listeners.StatefulSeekBarChangeListener;
+import libre.sampler.listeners.StatefulTextWatcher;
 import libre.sampler.models.Instrument;
 import libre.sampler.models.InstrumentEvent;
 import libre.sampler.models.Project;
 import libre.sampler.models.ProjectViewModel;
+import libre.sampler.models.Sample;
 import libre.sampler.publishers.InstrumentEventSource;
 import libre.sampler.utils.AdapterLoader;
+import libre.sampler.utils.MyDecimalFormat;
+import libre.sampler.utils.SliderConverter;
 
 public class ProjectInstrumentsFragment extends Fragment {
+    private View rootView;
     private RecyclerView data;
     private ProjectViewModel viewModel;
     private InstrumentEventSource instrumentEventSource;
@@ -33,12 +47,17 @@ public class ProjectInstrumentsFragment extends Fragment {
 
     private boolean isAdapterLoaded;
 
+    private Spinner sampleSpinner;
+    private ArrayAdapter<String> sampleSpinnerAdapter;
+
+    private boolean isInstrumentEditorReady;
+
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        View rootView = inflater.inflate(R.layout.fragment_project_instruments, container, false);
+        this.rootView = inflater.inflate(R.layout.fragment_project_instruments, container, false);
 
-        this.data = (RecyclerView) rootView.findViewById(R.id.instruments_data);
+        this.data = (RecyclerView) rootView.findViewById(R.id.instruments_select);
 
         viewModel = ViewModelProviders.of(getActivity()).get(ProjectViewModel.class);
         adapter = new InstrumentListAdapter(new ArrayList<Instrument>(),
@@ -64,11 +83,33 @@ public class ProjectInstrumentsFragment extends Fragment {
                         adapter.activateInstrument(event.instrument);
                     }
                 } else if(event.action == InstrumentEvent.INSTRUMENT_DELETE) {
+                    // accounts for offset due to 'New' instrument tile
+                    int removeIdx = adapter.items.indexOf(event.instrument) - 1;
                     AdapterLoader.removeItem(adapter, event.instrument);
+                    if(event.instrument == viewModel.getKeyboardInstrument()) {
+                        if(viewModel.getProject().getInstruments().size() > removeIdx) {
+                            viewModel.setKeyboardInstrument(viewModel.getProject().getInstruments().get(removeIdx));
+                        } else if(removeIdx > 0) {
+                            // removeIdx is one past the end of the list
+                            viewModel.setKeyboardInstrument(viewModel.getProject().getInstruments().get(removeIdx - 1));
+                        } else {
+                            viewModel.setKeyboardInstrument(null);
+                        }
+                        data.postDelayed(new Runnable() {
+                            @Override
+                            public void run() {
+                                adapter.activateInstrument(viewModel.getKeyboardInstrument());
+                            }
+                        }, 100);
+                    }
+                } else if(event.action == InstrumentEvent.INSTRUMENT_SELECT) {
+                    updateInstrumentEditor();
                 }
             }
         });
         loadAdapter();
+
+        initInstrumentEditor();
 
         return rootView;
     }
@@ -84,6 +125,391 @@ public class ProjectInstrumentsFragment extends Fragment {
         }
     }
 
+    private void initInstrumentEditor() {
+        sampleSpinner = rootView.findViewById(R.id.sample_edit_select);
+        sampleSpinnerAdapter = new ArrayAdapter<>(sampleSpinner.getContext(), android.R.layout.simple_spinner_item);
+        sampleSpinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        sampleSpinner.setAdapter(sampleSpinnerAdapter);
+
+        updateInstrumentEditor();
+    }
+
+    private void attachInstrumentEditorListeners() {
+        sampleSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                viewModel.setEditorSample(viewModel.getKeyboardInstrument().getSamples().get(position));
+                updateInstrumentEditor();
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+            }
+        });
+
+        ((Button) rootView.findViewById(R.id.sample_add)).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String path = ((EditText) rootView.findViewById(R.id.input_sample_paths)).getText().toString();
+                File sampleFile = new File(path);
+                // todo support wildcard search: File.listFiles
+                if(sampleFile.isFile() && sampleFile.canRead()) {
+                    Sample s = viewModel.getKeyboardInstrument().addSample(sampleFile.getAbsolutePath());
+                    viewModel.setEditorSample(s);
+                    viewModel.instrumentEventSource.dispatch(new InstrumentEvent(
+                            InstrumentEvent.INSTRUMENT_PD_LOAD, viewModel.getKeyboardInstrument()));
+                    updateInstrumentEditor();
+                }
+            }
+        });
+
+        ((Button) rootView.findViewById(R.id.sample_replace)).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String path = ((EditText) rootView.findViewById(R.id.input_sample_paths)).getText().toString();
+                File sampleFile = new File(path);
+                // todo support wildcard search: File.listFiles
+                Sample editorSample = viewModel.getEditorSample();
+                if(sampleFile.isFile() && sampleFile.canRead() && editorSample != null) {
+                    editorSample.setFilename(sampleFile.getAbsolutePath());
+                    viewModel.instrumentEventSource.dispatch(new InstrumentEvent(
+                            InstrumentEvent.INSTRUMENT_PD_LOAD, viewModel.getKeyboardInstrument()));
+                    updateSampleSpinner();
+                }
+            }
+        });
+
+        ((Button) rootView.findViewById(R.id.sample_delete)).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Sample toRemove = viewModel.getEditorSample();
+                if(toRemove != null) {
+                    Instrument keyboardInstrument = viewModel.getKeyboardInstrument();
+                    int currentSelection = sampleSpinner.getSelectedItemPosition();
+                    if(currentSelection == keyboardInstrument.getSamples().size() - 1) {
+                        if(keyboardInstrument.getSamples().size() > 1) {
+                            viewModel.setEditorSample(keyboardInstrument.getSamples().get(currentSelection - 1));
+                        } else {
+                            viewModel.setEditorSample(null);
+                        }
+                    } else {
+                        viewModel.setEditorSample(keyboardInstrument.getSamples().get(currentSelection + 1));
+                    }
+                    viewModel.getKeyboardInstrument().removeSample(toRemove);
+                    updateInstrumentEditor();
+                }
+            }
+        });
+
+        final MyDecimalFormat fmt1 = new MyDecimalFormat(1, 4);
+        int[] textOnlyInputs = new int[]{R.id.pitch_min, R.id.pitch_max, R.id.pitch_base,
+                R.id.velocity_min, R.id.velocity_max,
+                R.id.position_start, R.id.position_end, R.id.position_resume};
+
+        for(int id : textOnlyInputs) {
+            EditText ed = (EditText) rootView.findViewById(id);
+            ed.addTextChangedListener(new StatefulTextWatcher<EditText>(ed) {
+                @Override
+                public void onTextChanged(CharSequence s, int start, int before, int count) {
+                    float val;
+                    if(s.length() == 0) {
+                        return;
+                    }
+                    try {
+                        val = Float.parseFloat(s.toString());
+                    } catch(NumberFormatException e) {
+                        return;
+                    }
+                    Sample editorSample = viewModel.getEditorSample();
+                    if(editorSample == null) {
+                        return;
+                    }
+                    switch(this.data.getId()) {
+                        case R.id.pitch_min:
+                            editorSample.setMinPitch((int) val);
+                            break;
+                        case R.id.pitch_max:
+                            editorSample.setMaxPitch((int) val);
+                            break;
+                        case R.id.pitch_base:
+                            editorSample.setBasePitch((int) val);
+                            break;
+                        case R.id.velocity_min:
+                            editorSample.setMinVelocity((int) val);
+                            break;
+                        case R.id.velocity_max:
+                            editorSample.setMaxVelocity((int) val);
+                            break;
+                        case R.id.position_start:
+                            editorSample.setLoopStart(val);
+                            break;
+                        case R.id.position_end:
+                            editorSample.setLoopEnd(val);
+                            break;
+                        case R.id.position_resume:
+                            editorSample.setLoopResume(val);
+                            break;
+                        default:
+                            break;
+                    }
+                }
+            });
+        }
+
+        int[] sliderTextPairInputs = new int[]{R.id.instrument_volume_slider, R.id.instrument_volume,
+                R.id.sample_volume_slider, R.id.sample_volume,
+                R.id.sample_attack_slider, R.id.sample_attack,
+                R.id.sample_decay_slider, R.id.sample_decay,
+                R.id.sample_sustain_slider, R.id.sample_sustain,
+                R.id.sample_release_slider, R.id.sample_release};
+
+        for(int i = 0; i < sliderTextPairInputs.length; i += 2) {
+            SeekBar slider = (SeekBar) rootView.findViewById(sliderTextPairInputs[i]);
+            EditText ed = (EditText) rootView.findViewById(sliderTextPairInputs[i + 1]);
+            ed.addTextChangedListener(new StatefulTextWatcher<SeekBar>(slider) {
+                @Override
+                public void onTextChanged(CharSequence s, int start, int before, int count) {
+                    float val;
+                    if(s.length() == 0) {
+                        return;
+                    }
+                    try {
+                        val = Float.parseFloat(s.toString());
+                    } catch(NumberFormatException e) {
+                        return;
+                    }
+                    switch(this.data.getId()) {
+                        case R.id.instrument_volume_slider:
+                        case R.id.sample_volume_slider:
+                        case R.id.sample_sustain_slider:
+                            this.data.setProgress(Math.round(this.data.getMax() *
+                                    SliderConverter.DECIBELS.toSlider(val)));
+                            break;
+                        case R.id.sample_attack_slider:
+                        case R.id.sample_decay_slider:
+                        case R.id.sample_release_slider:
+                            this.data.setProgress(Math.round(this.data.getMax() *
+                                    SliderConverter.MILLISECONDS.toSlider(val)));
+                            break;
+                        default:
+                            break;
+                    }
+                    Sample editorSample = viewModel.getEditorSample();
+                    if(editorSample != null) {
+                        switch(this.data.getId()) {
+                            case R.id.instrument_volume_slider:
+                                // todo add volume property
+                                break;
+                            case R.id.sample_volume_slider:
+                                // todo add volume property
+                                break;
+                            case R.id.sample_attack_slider:
+                                editorSample.setAttack(val);
+                                break;
+                            case R.id.sample_decay_slider:
+                                editorSample.setDecay(val);
+                                break;
+                            case R.id.sample_sustain_slider:
+                                editorSample.setSustainDecibels(val);
+                                break;
+                            case R.id.sample_release_slider:
+                                editorSample.setRelease(val);
+                                break;
+                            default:
+                                break;
+                        }
+                    }
+                }
+            });
+
+            slider.setOnSeekBarChangeListener(new StatefulSeekBarChangeListener<EditText>(ed) {
+                @Override
+                public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                    if(fromUser) {
+                        float sliderVal = progress / 1.0f / seekBar.getMax();
+                        switch(seekBar.getId()) {
+                            case R.id.instrument_volume_slider:
+                            case R.id.sample_volume_slider:
+                            case R.id.sample_sustain_slider:
+                                this.data.setText(fmt1.format(SliderConverter.DECIBELS.fromSlider(sliderVal)));
+                                break;
+                            case R.id.sample_attack_slider:
+                            case R.id.sample_decay_slider:
+                            case R.id.sample_release_slider:
+                                this.data.setText(fmt1.format(SliderConverter.MILLISECONDS.fromSlider(sliderVal)));
+                                break;
+                            default:
+                                break;
+                        }
+                    }
+                }
+            });
+        }
+    }
+
+    private boolean updateSampleSpinner() {
+        Instrument keyboardInstrument = viewModel.getKeyboardInstrument();
+        if(keyboardInstrument == null) {
+            return false;
+        }
+
+        List<Sample> sampleSpinnerItems = keyboardInstrument.getSamples();
+        sampleSpinnerAdapter.clear();
+        for(int i = 0; i < sampleSpinnerItems.size(); i++) {
+            sampleSpinnerAdapter.add(String.format("%03d %s", i + 1, sampleSpinnerItems.get(i).filename));
+        }
+
+        Sample editorSample = viewModel.getEditorSample();
+        if(editorSample != null) {
+            sampleSpinner.setSelection(sampleSpinnerItems.indexOf(editorSample));
+            ((EditText) rootView.findViewById(R.id.input_sample_paths)).setText(editorSample.filename);
+        }
+        return true;
+    }
+
+    private void updateInstrumentEditor() {
+        boolean projectReady = updateSampleSpinner();
+        if(!projectReady) {
+            return;
+        }
+
+        int[] textOnlyInputs = new int[]{R.id.pitch_min, R.id.pitch_max, R.id.pitch_base,
+                R.id.velocity_min, R.id.velocity_max,
+                R.id.position_start, R.id.position_end, R.id.position_resume};
+
+        int[] sliderTextPairInputs = new int[]{R.id.instrument_volume_slider, R.id.instrument_volume,
+                R.id.sample_volume_slider, R.id.sample_volume,
+                R.id.sample_attack_slider, R.id.sample_attack,
+                R.id.sample_decay_slider, R.id.sample_decay,
+                R.id.sample_sustain_slider, R.id.sample_sustain,
+                R.id.sample_release_slider, R.id.sample_release};
+
+        Sample editorSample = viewModel.getEditorSample();
+        if(editorSample != null) {
+            final MyDecimalFormat fmt3 = new MyDecimalFormat(3, 6);
+            for(int id : textOnlyInputs) {
+                EditText ed = ((EditText) rootView.findViewById(id));
+                switch(id) {
+                    case R.id.pitch_min:
+                        if(editorSample.shouldDisplay(Sample.FIELD_MIN_PITCH)) {
+                            ed.setText(String.format("%d", editorSample.minPitch));
+                        } else {
+                            ed.setText("");
+                        }
+                        break;
+                    case R.id.pitch_max:
+                        if(editorSample.shouldDisplay(Sample.FIELD_MAX_PITCH)) {
+                            ed.setText(String.format("%d", editorSample.maxPitch));
+                        } else {
+                            ed.setText("");
+                        }
+                        break;
+                    case R.id.pitch_base:
+                        if(editorSample.shouldDisplay(Sample.FIELD_BASE_PITCH)) {
+                            ed.setText(String.format("%d", editorSample.basePitch));
+                        } else {
+                            ed.setText("");
+                        }
+                        break;
+                    case R.id.velocity_min:
+                        if(editorSample.shouldDisplay(Sample.FIELD_MIN_VELOCITY)) {
+                            ed.setText(String.format("%d", editorSample.minVelocity));
+                        } else {
+                            ed.setText("");
+                        }
+                        break;
+                    case R.id.velocity_max:
+                        if(editorSample.shouldDisplay(Sample.FIELD_MAX_VELOCITY)) {
+                            ed.setText(String.format("%d", editorSample.maxVelocity));
+                        } else {
+                            ed.setText("");
+                        }
+                        break;
+                    case R.id.position_start:
+                        if(!editorSample.shouldUseDefaultLoopStart) {
+                            ed.setText(fmt3.format(editorSample.startTime));
+                        } else {
+                            ed.setText("");
+                        }
+                        break;
+                    case R.id.position_end:
+                        if(!editorSample.shouldUseDefaultLoopResume) {
+                            ed.setText(fmt3.format(editorSample.endTime));
+                        } else {
+                            ed.setText("");
+                        }
+                        break;
+                    case R.id.position_resume:
+                        if(!editorSample.shouldUseDefaultLoopEnd) {
+                            ed.setText(fmt3.format(editorSample.resumeTime));
+                        } else {
+                            ed.setText("");
+                        }
+                        break;
+                    default:
+                        break;
+                }
+            }
+
+            for(int i = 0; i < sliderTextPairInputs.length; i += 2) {
+                SeekBar slider = (SeekBar) rootView.findViewById(sliderTextPairInputs[i]);
+                EditText ed = (EditText) rootView.findViewById(sliderTextPairInputs[i + 1]);
+                switch(sliderTextPairInputs[i + 1]) {
+                    case R.id.instrument_volume:
+                        // todo add volume property
+                        break;
+                    case R.id.sample_volume:
+                        // todo add volume property
+                        break;
+                    case R.id.sample_attack:
+                        ed.setText(fmt3.format(editorSample.attack));
+                        slider.setProgress(Math.round(slider.getMax() *
+                                SliderConverter.MILLISECONDS.toSlider(editorSample.attack)));
+                        break;
+                    case R.id.sample_decay:
+                        ed.setText(fmt3.format(editorSample.decay));
+                        slider.setProgress(Math.round(slider.getMax() *
+                                SliderConverter.MILLISECONDS.toSlider(editorSample.decay)));
+                        break;
+                    case R.id.sample_sustain:
+                        float db = editorSample.getSustainDecibels();
+                        db = Math.max(-100, Math.min(0, db));
+                        ed.setText(fmt3.format(db));
+                        slider.setProgress(Math.round(slider.getMax() *
+                                SliderConverter.DECIBELS.toSlider(db)));
+                        break;
+                    case R.id.sample_release:
+                        ed.setText(fmt3.format(editorSample.release));
+                        slider.setProgress(Math.round(slider.getMax() *
+                                SliderConverter.MILLISECONDS.toSlider(editorSample.release)));
+                        break;
+                    default:
+                        break;
+                }
+            }
+
+            if(!isInstrumentEditorReady) {
+                attachInstrumentEditorListeners();
+                isInstrumentEditorReady = true;
+            }
+        } else {
+            // no editor sample
+            String defaultSamplePath = viewModel.getProject().getDefaultSamplePath();
+            if(defaultSamplePath != null) {
+                ((EditText) rootView.findViewById(R.id.input_sample_paths)).setText(defaultSamplePath);
+            }
+            for(int id : textOnlyInputs) {
+                ((EditText) rootView.findViewById(id)).setText("");
+            }
+            for(int i = 0; i < sliderTextPairInputs.length; i += 2) {
+                SeekBar slider = (SeekBar) rootView.findViewById(sliderTextPairInputs[i]);
+                EditText ed = (EditText) rootView.findViewById(sliderTextPairInputs[i + 1]);
+                slider.setProgress(0);
+                ed.setText("");
+            }
+        }
+    }
+
     private class InstrumentEditConsumer implements Consumer<Instrument> {
         public InstrumentEditConsumer() {
         }
@@ -93,7 +519,6 @@ public class ProjectInstrumentsFragment extends Fragment {
             FragmentManager fm = ProjectInstrumentsFragment.this.getFragmentManager();
             if(fm != null) {
                 InstrumentEditDialog dialog = new InstrumentEditDialog();
-                dialog.defaultSamplePath = viewModel.getProject().getDefaultSamplePath();
                 viewModel.setEditDialogInstrument(instrument);
                 dialog.show(fm, "dialog_instrument_edit");
             }
@@ -109,7 +534,6 @@ public class ProjectInstrumentsFragment extends Fragment {
             FragmentManager fm = ProjectInstrumentsFragment.this.getFragmentManager();
             if(fm != null) {
                 InstrumentCreateDialog dialog = new InstrumentCreateDialog();
-                dialog.defaultSamplePath = viewModel.getProject().getDefaultSamplePath();
                 Instrument toCreate = new Instrument(null);
                 viewModel.setCreateDialogInstrument(toCreate);
                 viewModel.getProject().registerInstrument(toCreate);
@@ -121,7 +545,7 @@ public class ProjectInstrumentsFragment extends Fragment {
     private class InstrumentSelectConsumer implements Consumer<Instrument> {
         @Override
         public void accept(Instrument instrument) {
-            viewModel.instrumentEventSource.dispatch(new InstrumentEvent(InstrumentEvent.INSTRUMENT_SELECT, instrument));
+            viewModel.setKeyboardInstrument(instrument);
             adapter.activateInstrument(instrument);
         }
     }

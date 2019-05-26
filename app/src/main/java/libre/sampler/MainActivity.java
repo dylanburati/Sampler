@@ -18,10 +18,8 @@ import androidx.core.content.ContextCompat;
 import androidx.core.util.Consumer;
 import androidx.lifecycle.ViewModelProviders;
 import androidx.recyclerview.widget.RecyclerView;
-import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import libre.sampler.adapters.ProjectListAdapter;
 import libre.sampler.dialogs.ProjectCreateDialog;
-import libre.sampler.listeners.MySwipeRefreshListener;
 import libre.sampler.models.MainViewModel;
 import libre.sampler.models.Project;
 import libre.sampler.tasks.CreateProjectTask;
@@ -31,7 +29,6 @@ import libre.sampler.utils.AppConstants;
 import libre.sampler.utils.DatabaseConnectionManager;
 
 public class MainActivity extends AppCompatActivity implements ProjectCreateDialog.ProjectCreateDialogListener {
-    private SwipeRefreshLayout refreshLayout;
     private RecyclerView data;
     private ProjectListAdapter dataAdapter;
     private ProjectCreateDialog projectCreateDialog;
@@ -61,13 +58,6 @@ public class MainActivity extends AppCompatActivity implements ProjectCreateDial
     }
 
     private void initUI() {
-        refreshLayout = (SwipeRefreshLayout) findViewById(R.id.main_refresh);
-        refreshLayout.setOnRefreshListener(new MySwipeRefreshListener() {
-            @Override
-            public void onRefresh() {
-                refreshLayout.setRefreshing(false);
-            }
-        });
         this.data = (RecyclerView) findViewById(R.id.main_data);
         this.dataAdapter = new ProjectListAdapter(new ArrayList<Project>(), new Consumer<Project>() {
             @Override

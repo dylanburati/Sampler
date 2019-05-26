@@ -89,6 +89,10 @@ public class Instrument {
         idStatus.set(IdStatus.CHILDREN_ADDED);
     }
 
+    public void removeSample(Sample toRemove) {
+        samples.remove(toRemove);
+    }
+
     public List<Sample> getSamples() {
         return samples;
     }
@@ -106,5 +110,4 @@ public class Instrument {
     public String firstFilename() {
         return firstFilename;
     }
-
 }

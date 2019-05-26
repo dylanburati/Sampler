@@ -28,33 +28,25 @@
 
     </com.google.android.material.appbar.AppBarLayout> -->
 
-    <androidx.swiperefreshlayout.widget.SwipeRefreshLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
         xmlns:app="http://schemas.android.com/apk/res-auto"
         xmlns:tools="http://schemas.android.com/tools"
-        android:id="@+id/main_refresh"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_below="@id/toolbar"
+        android:orientation="vertical"
         app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
-        <LinearLayout
-            android:id="@+id/main_holder"
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/main_data"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/margin2">
+            android:layout_height="match_parent"
+            android:background="#27FFFFFF"
+            android:scrollbars="vertical"
+            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager">
 
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/main_data"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:background="#27FFFFFF"
-                android:scrollbars="vertical"
-                app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager">
-
-            </androidx.recyclerview.widget.RecyclerView>
-        </LinearLayout>
-
-    </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
+        </androidx.recyclerview.widget.RecyclerView>
+    </LinearLayout>
 
     <!-- <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/fab"

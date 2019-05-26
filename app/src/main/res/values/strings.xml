@@ -44,4 +44,15 @@
     <string name="change">Change</string>
     <string name="tempo_label">TEMPO</string>
     <string name="select_instrument">Select instrument</string>
+    <string name="dB">dB</string>
+    <string name="master_volume">Master Volume</string>
+    <string name="instrument_volume">Instr. Volume</string>
+    <string name="sample_replace_button">Replace</string>
+    <string name="sample_delete_button">Delete</string>
+    <string name="sample_volume">Sample Volume</string>
+    <string name="milliseconds">ms</string>
+    <string name="attack">Attack</string>
+    <string name="decay">Decay</string>
+    <string name="sustain">Sustain</string>
+    <string name="release">Release</string>
 </resources>

@@ -10,23 +10,23 @@ public class VoiceBindingList {
         public NoteEvent event;
         public int sampleId;
         public boolean closed;
-    
+
         public VoiceBindingData(NoteEvent evt, int sampleId) {
             this.event = evt;
             this.sampleId = sampleId;
             this.closed = false;
         }
     }
-    
+
     private List<VoiceBindingData> bindings;
-    
+
     public VoiceBindingList(int size) {
         bindings = new ArrayList<>(size);
         for(int i = 0; i < size; i++) {
             bindings.add(null);
         }
     }
-    
+
     public int getBinding(NoteEvent openEvt, int sampleId) {
         int voiceIndex = 0;
         while(voiceIndex < bindings.size() && bindings.get(voiceIndex) != null) {

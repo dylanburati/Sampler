@@ -40,12 +40,21 @@ public class Sample {
     public int displayFlags;
 
     @Ignore
-    public boolean isInfoLoaded = false;
+    private boolean isInfoLoaded = false;
 
     public Sample(String filename, int id) {
         this.filename = filename;
         this.id = id;
-        this.setSampleZone(-1, -1, 0, 128);
+        this.sampleIndex = -1;
+
+        this.setSampleZone(-1, -1, 0, 127);
+        this.sustain = 1.0f;
+        this.displayFlags |= FIELD_MIN_PITCH | FIELD_MAX_PITCH;
+    }
+
+    public void setFilename(String filename) {
+        this.filename = filename;
+        this.sampleIndex = -1;
     }
 
     public void setSampleZone(int minPitch, int maxPitch, int minVelocity, int maxVelocity) {
@@ -58,13 +67,11 @@ public class Sample {
     public void setSampleInfo(int sampleLength, int sampleRate) {
         this.sampleLength = sampleLength;
         this.sampleRate = sampleRate;
+        this.isInfoLoaded = true;
     }
 
-    public void setEnvelope(float attack, float decay, float sustain, float release) {
-        this.attack = attack;
-        this.decay = decay;
-        this.sustain = sustain;
-        this.release = release;
+    public boolean isInfoLoaded() {
+        return this.isInfoLoaded;
     }
 
     public void setMinPitch(int minPitch) {
@@ -92,16 +99,37 @@ public class Sample {
         this.displayFlags |= FIELD_MAX_VELOCITY;
     }
 
+    public float getLoopStart() {
+        if(shouldUseDefaultLoopStart) {
+            return 0;
+        }
+        return startTime;
+    }
+
     public void setLoopStart(float startTime) {
         this.startTime = startTime;
         this.shouldUseDefaultLoopStart = false;
         this.displayFlags |= FIELD_LOOP_START;
     }
 
+    public float getLoopEnd() {
+        if(shouldUseDefaultLoopEnd) {
+            this.endTime = sampleLength / 1.0f / sampleRate;
+        }
+        return endTime;
+    }
+
     public void setLoopEnd(float endTime) {
         this.endTime = endTime;
         this.shouldUseDefaultLoopEnd = false;
         this.displayFlags |= FIELD_LOOP_END;
+    }
+
+    public float getLoopResume() {
+        if(shouldUseDefaultLoopResume) {
+            return -1;
+        }
+        return resumeTime;
     }
 
     public void setLoopResume(float resumeTime) {
@@ -120,6 +148,19 @@ public class Sample {
         this.displayFlags |= FIELD_DECAY;
     }
 
+    public float getSustainDecibels() {
+        return 20 * (float) Math.log10((double) this.sustain);
+    }
+
+    public void setSustainDecibels(float sustainDecibels) {
+        if(sustainDecibels >= 0) {
+            this.sustain = 1;
+        } else {
+            // dB to amplitude
+            this.sustain = (float) Math.pow(10, sustainDecibels / 20.0);
+        }
+    }
+
     public void setSustain(float sustain) {
         this.sustain = sustain;
         this.displayFlags |= FIELD_SUSTAIN;
@@ -128,27 +169,6 @@ public class Sample {
     public void setRelease(float release) {
         this.release = release;
         this.displayFlags |= FIELD_RELEASE;
-    }
-
-    public float getStartTime() {
-        if(shouldUseDefaultLoopStart) {
-            return 0;
-        }
-        return startTime;
-    }
-
-    public float getResumeTime() {
-        if(shouldUseDefaultLoopResume) {
-            return -1;
-        }
-        return resumeTime;
-    }
-
-    public float getEndTime() {
-        if(shouldUseDefaultLoopEnd) {
-            this.endTime = sampleLength / 1.0f / sampleRate;
-        }
-        return endTime;
     }
 
     public boolean contains(NoteEvent e) {
@@ -160,12 +180,12 @@ public class Sample {
     }
 
     public boolean checkLoop() {
-        float loopLength0 = this.getEndTime() - this.getStartTime();
+        float loopLength0 = this.getLoopEnd() - this.getLoopStart();
         if(Math.abs(loopLength0) < 1e-4) {
             return false;
         }
         if(this.resumeTime >= 0) {
-            float loopLength1 = this.getEndTime() - this.getResumeTime();
+            float loopLength1 = this.getLoopEnd() - this.getLoopResume();
             if(Math.abs(loopLength1) < 1e-4) {
                 return false;
             }
@@ -188,5 +208,4 @@ public class Sample {
     public boolean shouldDisplay(int field) {
         return (displayFlags & field) != 0;
     }
-
 }

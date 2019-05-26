@@ -10,4 +10,6 @@
 
     <color name="piano_roll_white">#5C5C66</color>
     <color name="piano_roll_black">#373741</color>
+    <color name="colorError">#FFD32F2F</color>
+    <color name="colorReplace">#FF2196F3</color>
 </resources>

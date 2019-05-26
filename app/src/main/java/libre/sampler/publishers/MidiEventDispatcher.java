@@ -18,7 +18,7 @@ import libre.sampler.utils.MidiConstants;
 
 @RequiresApi(api = Build.VERSION_CODES.M)
 public class MidiEventDispatcher implements MidiManager.OnDeviceOpenedListener {
-    private ProjectViewModel viewModel; 
+    private ProjectViewModel viewModel;
 
     private MidiReceiver receiver;
     private MidiOutputPort receivePort;

@@ -278,7 +278,7 @@ public class Pattern {
             schedulerEventIndex = 0;
         }
     }
-    
+
     public long getTimeToNextEvent() {
         if(events.size() == 0) {
             return Long.MAX_VALUE;

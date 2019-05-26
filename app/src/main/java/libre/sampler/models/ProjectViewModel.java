@@ -29,7 +29,10 @@ public class ProjectViewModel extends AndroidViewModel {
     // public String projectName = "";
 
     private Project project;
+    private boolean isGetProjectTaskRunning;
+
     private Instrument keyboardInstrument;
+    private Sample editorSample;
 
     private Pattern pianoRollPattern;
     private HashMap<Pattern, PatternDerivedData> patternDerivedDataCache = new HashMap<>();
@@ -54,11 +57,12 @@ public class ProjectViewModel extends AndroidViewModel {
     }
 
     public Project getProject() {
-        if(project == null) {
+        if(project == null && !isGetProjectTaskRunning) {
             if(projectId < 0) {
                 throw new AssertionError("Project ID not set");
             }
 
+            isGetProjectTaskRunning = true;
             DatabaseConnectionManager.initialize(getApplication());
             DatabaseConnectionManager.runTask(new GetInstrumentsTask(projectId,
                     new Consumer<Project>() {
@@ -87,8 +91,9 @@ public class ProjectViewModel extends AndroidViewModel {
                             }
                             projectEventSource.dispatch(project);
                             if(keyboardInstrument != null) {
-                                instrumentEventSource.dispatch(new InstrumentEvent(InstrumentEvent.INSTRUMENT_LOAD, keyboardInstrument));
+                                instrumentEventSource.dispatch(new InstrumentEvent(InstrumentEvent.INSTRUMENT_SELECT, keyboardInstrument));
                             }
+                            isGetProjectTaskRunning = false;
                         }
                     }));
         }
@@ -102,6 +107,10 @@ public class ProjectViewModel extends AndroidViewModel {
 
     public void setKeyboardInstrument(Instrument keyboardInstrument) {
         this.keyboardInstrument = keyboardInstrument;
+        this.editorSample = null;
+        if(keyboardInstrument != null) {
+            instrumentEventSource.dispatch(new InstrumentEvent(InstrumentEvent.INSTRUMENT_SELECT, keyboardInstrument));
+        }
     }
 
     public Pattern getPianoRollPattern() {
@@ -110,6 +119,7 @@ public class ProjectViewModel extends AndroidViewModel {
 
     public void setPianoRollPattern(Pattern pianoRollPattern) {
         this.pianoRollPattern = pianoRollPattern;
+        patternEventSource.dispatch(new PatternEvent(PatternEvent.PATTERN_SELECT, pianoRollPattern));
     }
 
     public Instrument getCreateDialogInstrument() {
@@ -178,6 +188,20 @@ public class ProjectViewModel extends AndroidViewModel {
         }
 
         derivedData = new PatternDerivedData(derivedMap);
+        patternDerivedDataCache.put(pattern, derivedData);
         return derivedData;
+    }
+
+    public Sample getEditorSample() {
+        if(editorSample == null) {
+            if(keyboardInstrument != null && keyboardInstrument.getSamples().size() > 0) {
+                editorSample = keyboardInstrument.getSamples().get(0);
+            }
+        }
+        return editorSample;
+    }
+
+    public void setEditorSample(Sample editorSample) {
+        this.editorSample = editorSample;
     }
 }

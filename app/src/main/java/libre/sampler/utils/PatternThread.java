@@ -32,7 +32,7 @@ public class PatternThread extends Thread {
         this.noteEventSource = noteEventSource;
         this.runningPatterns = new HashMap<>();
     }
-    
+
     public void addPattern(String tag, Pattern p) {
         runningPatterns.put(tag, p);
         p.start();
