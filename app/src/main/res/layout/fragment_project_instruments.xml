@@ -50,6 +50,7 @@
                 android:layout_weight="1">
 
                 <SeekBar
+                    style="@style/SeekBar"
                     android:id="@+id/instrument_volume_slider"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content" />
@@ -89,6 +90,7 @@
         </LinearLayout>
 
         <ScrollView
+            android:id="@+id/instrument_editor_scrollview"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:paddingLeft="@dimen/margin2_border_out"
@@ -313,6 +315,7 @@
                             android:layout_weight="1">
 
                             <SeekBar
+                                style="@style/SeekBar"
                                 android:id="@+id/sample_volume_slider"
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content" />
@@ -367,6 +370,7 @@
                             android:layout_weight="1">
 
                             <SeekBar
+                                style="@style/SeekBar"
                                 android:id="@+id/sample_attack_slider"
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content" />
@@ -421,6 +425,7 @@
                             android:layout_weight="1">
 
                             <SeekBar
+                                style="@style/SeekBar"
                                 android:id="@+id/sample_decay_slider"
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content" />
@@ -466,8 +471,7 @@
                         android:orientation="vertical"
                         android:paddingLeft="@dimen/margin2_dense"
                         android:paddingTop="@dimen/margin2"
-                        android:paddingRight="@dimen/margin2_dense"
-                        app:layout_wrapBefore="true">
+                        android:paddingRight="@dimen/margin2_dense">
 
                         <com.android.musicfx.SeekBarRotator
                             android:layout_width="wrap_content"
@@ -476,6 +480,7 @@
                             android:layout_weight="1">
 
                             <SeekBar
+                                style="@style/SeekBar"
                                 android:id="@+id/sample_sustain_slider"
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content" />
@@ -530,6 +535,7 @@
                             android:layout_weight="1">
 
                             <SeekBar
+                                style="@style/SeekBar"
                                 android:id="@+id/sample_release_slider"
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content" />

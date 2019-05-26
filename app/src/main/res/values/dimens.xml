@@ -34,9 +34,11 @@
     <dimen name="piano_roll_beatwidth">96dp</dimen>
     <dimen name="pattern_footer_height">40dp</dimen>
 
-    <dimen name="piano_roll_direction_threshold">820dp</dimen>
+    <dimen name="split_screen_direction_threshold">820dp</dimen>
     <dimen name="border_width">2dp</dimen>
     <dimen name="margin2_border_out">7dp</dimen>
     <dimen name="volume_slider_height">250dp</dimen>
     <dimen name="instrument_editor_edittext_width">57sp</dimen>
+    <dimen name="progressBarCornerRadius">0dp</dimen>
+    <dimen name="volume_slider_width">5dp</dimen>
 </resources>

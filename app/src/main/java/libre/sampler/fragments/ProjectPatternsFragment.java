@@ -117,7 +117,7 @@ public class ProjectPatternsFragment extends Fragment {
 
         // if landscape and not tablet, put piano roll on left instead of top
         if(getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE &&
-                getResources().getDisplayMetrics().widthPixels < getResources().getDimensionPixelOffset(R.dimen.piano_roll_direction_threshold)) {
+                getResources().getDisplayMetrics().widthPixels < getResources().getDimensionPixelOffset(R.dimen.split_screen_direction_threshold)) {
             LinearLayout patternsBody = rootView.findViewById(R.id.patterns_body);
             patternsBody.setOrientation(LinearLayout.HORIZONTAL);
             int nChildren = patternsBody.getChildCount();

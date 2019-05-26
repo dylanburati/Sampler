@@ -1,13 +1,17 @@
 package libre.sampler.fragments;
 
+import android.content.res.Configuration;
 import android.os.Bundle;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.LinearLayout;
+import android.widget.ScrollView;
 import android.widget.SeekBar;
 import android.widget.Spinner;
 
@@ -59,6 +63,23 @@ public class ProjectInstrumentsFragment extends Fragment {
 
         this.data = (RecyclerView) rootView.findViewById(R.id.instruments_select);
 
+        // if landscape and not tablet, put instrument editor on right instead of bottom
+        if(getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE &&
+                getResources().getDisplayMetrics().widthPixels < getResources().getDimensionPixelOffset(R.dimen.split_screen_direction_threshold)) {
+            LinearLayout fragmentBody = (LinearLayout) rootView;
+            fragmentBody.setOrientation(LinearLayout.HORIZONTAL);
+            int nChildren = fragmentBody.getChildCount();
+            for(int i = 0; i < nChildren; i++) {
+                ViewGroup.LayoutParams params = fragmentBody.getChildAt(i).getLayoutParams();
+                params.height = ViewGroup.LayoutParams.MATCH_PARENT;
+                params.width = 0;
+                fragmentBody.getChildAt(i).setLayoutParams(params);
+                if(i > 0) {
+                    fragmentBody.getChildAt(i).setBackground(getResources().getDrawable(R.drawable.border_left));
+                }
+            }
+        }
+
         viewModel = ViewModelProviders.of(getActivity()).get(ProjectViewModel.class);
         adapter = new InstrumentListAdapter(new ArrayList<Instrument>(),
                 new InstrumentEditConsumer(), new InstrumentSelectConsumer(), new InstrumentCreateRunnable());
@@ -107,11 +128,18 @@ public class ProjectInstrumentsFragment extends Fragment {
                 }
             }
         });
+        isAdapterLoaded = false;
         loadAdapter();
 
+        isInstrumentEditorReady = false;
         initInstrumentEditor();
 
         return rootView;
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
     }
 
     private void loadAdapter() {
@@ -130,6 +158,33 @@ public class ProjectInstrumentsFragment extends Fragment {
         sampleSpinnerAdapter = new ArrayAdapter<>(sampleSpinner.getContext(), android.R.layout.simple_spinner_item);
         sampleSpinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         sampleSpinner.setAdapter(sampleSpinnerAdapter);
+
+        int[] seekbarIds = new int[]{R.id.instrument_volume_slider,
+                R.id.sample_volume_slider,
+                R.id.sample_attack_slider,
+                R.id.sample_decay_slider,
+                R.id.sample_sustain_slider,
+                R.id.sample_release_slider};
+
+        final ScrollView scrollView = rootView.findViewById(R.id.instrument_editor_scrollview);
+        for(int id : seekbarIds) {
+            ((SeekBar) rootView.findViewById(id)).setOnTouchListener(new View.OnTouchListener() {
+                @Override
+                public boolean onTouch(View v, MotionEvent event) {
+                    switch(event.getActionMasked()) {
+                        case MotionEvent.ACTION_DOWN:
+                            scrollView.requestDisallowInterceptTouchEvent(true);
+                            break;
+                        case MotionEvent.ACTION_UP:
+                            scrollView.requestDisallowInterceptTouchEvent(false);
+                            break;
+                    }
+
+                    v.onTouchEvent(event);
+                    return true;
+                }
+            });
+        }
 
         updateInstrumentEditor();
     }
@@ -487,11 +542,6 @@ public class ProjectInstrumentsFragment extends Fragment {
                         break;
                 }
             }
-
-            if(!isInstrumentEditorReady) {
-                attachInstrumentEditorListeners();
-                isInstrumentEditorReady = true;
-            }
         } else {
             // no editor sample
             String defaultSamplePath = viewModel.getProject().getDefaultSamplePath();
@@ -507,6 +557,11 @@ public class ProjectInstrumentsFragment extends Fragment {
                 slider.setProgress(0);
                 ed.setText("");
             }
+        }
+
+        if(!isInstrumentEditorReady) {
+            attachInstrumentEditorListeners();
+            isInstrumentEditorReady = true;
         }
     }
 
