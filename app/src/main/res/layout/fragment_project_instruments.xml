@@ -553,8 +553,7 @@
                                 android:layout_width="@dimen/instrument_editor_edittext_width"
                                 android:layout_height="wrap_content"
                                 android:imeOptions="actionDone"
-                                android:inputType="numberDecimal"
-                                android:text="10000" />
+                                android:inputType="numberDecimal" />
 
                             <TextView
                                 android:layout_width="wrap_content"

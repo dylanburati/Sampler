@@ -190,16 +190,22 @@ public class ProjectActivity extends AppCompatActivity {
     @Override
     protected void onPause() {
         super.onPause();
-        patternThread.suspendLoop();
-        closeNotes();
-        pdService.stopAudio();
+        if(patternThread != null) {
+            patternThread.suspendLoop();
+        }
+        if(pdService != null) {
+            closeNotes();
+            pdService.stopAudio();
+        }
     }
 
     @SuppressLint("NewApi")
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        patternThread.finish();
+        if(patternThread != null) {
+            patternThread.finish();
+        }
         unbindService(pdConnection);
     }
 

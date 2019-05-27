@@ -1,31 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
-<selector xmlns:android="http://schemas.android.com/apk/res/android">
-    <item android:state_activated="false">
-        <vector
-            android:width="48dp"
-            android:height="210dp"
-            android:viewportWidth="48"
-            android:viewportHeight="210">
-        
-            <path
-                android:fillColor="@color/piano_white_up"
-                android:pathData="M9.333,0 H38.667 V140 H48 V210 H0 V140 H9.333 z"
-                android:strokeWidth="4"
-                android:strokeColor="#47000000" />
-        </vector>
-    </item>
-    <item android:state_activated="true">
-        <vector
-            android:width="48dp"
-            android:height="210dp"
-            android:viewportWidth="48"
-            android:viewportHeight="210">
-        
-            <path
-                android:fillColor="@color/piano_white_down"
-                android:pathData="M9.333,0 H38.667 V140 H48 V210 H0 V140 H9.333 z"
-                android:strokeWidth="4"
-                android:strokeColor="#47000000" />
-        </vector>
-    </item>
-</selector>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="48dp"
+    android:height="210dp"
+    android:viewportWidth="48"
+    android:viewportHeight="210">
+
+    <path
+        android:fillColor="@color/piano_white_up"
+        android:pathData="M9.333,0 H38.667 V140 H48 V210 H0 V140 H9.333 z"
+        android:strokeWidth="4"
+        android:strokeColor="#47000000" />
+</vector>

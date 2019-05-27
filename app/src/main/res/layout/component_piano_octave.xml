@@ -20,6 +20,8 @@
         android:layout_height="@dimen/piano_height"
         android:layout_below="@id/piano_octave_label"
         android:layout_toRightOf="@id/piano_c"
+        android:backgroundTintMode="multiply"
+        android:backgroundTint="@color/piano_key_white"
         android:background="@drawable/piano_c" />
 
     <View
@@ -28,6 +30,8 @@
         android:layout_height="@dimen/piano_height"
         android:layout_alignTop="@id/piano_c"
         android:layout_toRightOf="@id/piano_c"
+        android:backgroundTintMode="multiply"
+        android:backgroundTint="@color/piano_key_white"
         android:background="@drawable/piano_d" />
 
     <View
@@ -36,6 +40,8 @@
         android:layout_height="@dimen/piano_height"
         android:layout_alignTop="@id/piano_c"
         android:layout_toRightOf="@id/piano_d"
+        android:backgroundTintMode="multiply"
+        android:backgroundTint="@color/piano_key_white"
         android:background="@drawable/piano_e" />
 
     <View
@@ -44,6 +50,8 @@
         android:layout_height="@dimen/piano_height"
         android:layout_alignTop="@id/piano_c"
         android:layout_toRightOf="@id/piano_e"
+        android:backgroundTintMode="multiply"
+        android:backgroundTint="@color/piano_key_white"
         android:background="@drawable/piano_f" />
 
 
@@ -53,6 +61,8 @@
         android:layout_height="@dimen/piano_height"
         android:layout_alignTop="@id/piano_c"
         android:layout_toRightOf="@id/piano_f"
+        android:backgroundTintMode="multiply"
+        android:backgroundTint="@color/piano_key_white"
         android:background="@drawable/piano_g" />
 
     <View
@@ -61,6 +71,8 @@
         android:layout_height="@dimen/piano_height"
         android:layout_alignTop="@id/piano_c"
         android:layout_toRightOf="@id/piano_g"
+        android:backgroundTintMode="multiply"
+        android:backgroundTint="@color/piano_key_white"
         android:background="@drawable/piano_a" />
 
     <View
@@ -69,6 +81,8 @@
         android:layout_height="@dimen/piano_height"
         android:layout_alignTop="@id/piano_c"
         android:layout_toRightOf="@id/piano_a"
+        android:backgroundTintMode="multiply"
+        android:backgroundTint="@color/piano_key_white"
         android:background="@drawable/piano_b" />
 
     <View
@@ -78,7 +92,8 @@
         android:layout_alignTop="@id/piano_c"
         android:layout_toRightOf="@id/piano_c"
         android:layout_marginLeft="@dimen/piano_keywidth_b2"
-        android:background="@drawable/piano_black" />
+        android:background="@color/piano_black_up"
+        android:backgroundTint="@color/piano_key_black" />
 
 
     <View
@@ -88,7 +103,8 @@
         android:layout_alignTop="@id/piano_c"
         android:layout_toLeftOf="@id/piano_e"
         android:layout_marginRight="@dimen/piano_keywidth_b2"
-        android:background="@drawable/piano_black" />
+        android:background="@color/piano_black_up"
+        android:backgroundTint="@color/piano_key_black" />
 
     <View
         android:id="@+id/piano_f_sharp"
@@ -97,7 +113,8 @@
         android:layout_alignTop="@id/piano_c"
         android:layout_toRightOf="@id/piano_f"
         android:layout_marginLeft="@dimen/piano_keywidth_b3"
-        android:background="@drawable/piano_black" />
+        android:background="@color/piano_black_up"
+        android:backgroundTint="@color/piano_key_black" />
 
     <View
         android:id="@+id/piano_g_sharp"
@@ -106,7 +123,8 @@
         android:layout_alignTop="@id/piano_c"
         android:layout_toRightOf="@id/piano_g"
         android:layout_marginLeft="@dimen/piano_keywidth_b1"
-        android:background="@drawable/piano_black" />
+        android:background="@color/piano_black_up"
+        android:backgroundTint="@color/piano_key_black" />
 
     <View
         android:id="@+id/piano_a_sharp"
@@ -115,6 +133,7 @@
         android:layout_alignTop="@id/piano_c"
         android:layout_toLeftOf="@id/piano_b"
         android:layout_marginRight="@dimen/piano_keywidth_b3"
-        android:background="@drawable/piano_black" />
+        android:background="@color/piano_black_up"
+        android:backgroundTint="@color/piano_key_black" />
 
 </RelativeLayout>
