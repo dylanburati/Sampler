@@ -3,7 +3,6 @@ package libre.sampler.fragments;
 import android.content.res.Configuration;
 import android.os.Bundle;
 import android.view.LayoutInflater;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
@@ -11,8 +10,6 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
-import android.widget.ScrollView;
-import android.widget.SeekBar;
 import android.widget.Spinner;
 
 import java.io.File;
@@ -30,8 +27,8 @@ import libre.sampler.R;
 import libre.sampler.adapters.InstrumentListAdapter;
 import libre.sampler.dialogs.InstrumentCreateDialog;
 import libre.sampler.dialogs.InstrumentEditDialog;
-import libre.sampler.listeners.StatefulSeekBarChangeListener;
 import libre.sampler.listeners.StatefulTextWatcher;
+import libre.sampler.listeners.StatefulVerticalSliderChangeListener;
 import libre.sampler.models.Instrument;
 import libre.sampler.models.InstrumentEvent;
 import libre.sampler.models.Project;
@@ -41,6 +38,7 @@ import libre.sampler.publishers.InstrumentEventSource;
 import libre.sampler.utils.AdapterLoader;
 import libre.sampler.utils.MyDecimalFormat;
 import libre.sampler.utils.SliderConverter;
+import libre.sampler.views.VerticalSlider;
 
 public class ProjectInstrumentsFragment extends Fragment {
     private View rootView;
@@ -158,33 +156,6 @@ public class ProjectInstrumentsFragment extends Fragment {
         sampleSpinnerAdapter = new ArrayAdapter<>(sampleSpinner.getContext(), android.R.layout.simple_spinner_item);
         sampleSpinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         sampleSpinner.setAdapter(sampleSpinnerAdapter);
-
-        int[] seekbarIds = new int[]{R.id.instrument_volume_slider,
-                R.id.sample_volume_slider,
-                R.id.sample_attack_slider,
-                R.id.sample_decay_slider,
-                R.id.sample_sustain_slider,
-                R.id.sample_release_slider};
-
-        final ScrollView scrollView = rootView.findViewById(R.id.instrument_editor_scrollview);
-        for(int id : seekbarIds) {
-            ((SeekBar) rootView.findViewById(id)).setOnTouchListener(new View.OnTouchListener() {
-                @Override
-                public boolean onTouch(View v, MotionEvent event) {
-                    switch(event.getActionMasked()) {
-                        case MotionEvent.ACTION_DOWN:
-                            scrollView.requestDisallowInterceptTouchEvent(true);
-                            break;
-                        case MotionEvent.ACTION_UP:
-                            scrollView.requestDisallowInterceptTouchEvent(false);
-                            break;
-                    }
-
-                    v.onTouchEvent(event);
-                    return true;
-                }
-            });
-        }
 
         updateInstrumentEditor();
     }
@@ -319,9 +290,9 @@ public class ProjectInstrumentsFragment extends Fragment {
                 R.id.sample_release_slider, R.id.sample_release};
 
         for(int i = 0; i < sliderTextPairInputs.length; i += 2) {
-            SeekBar slider = (SeekBar) rootView.findViewById(sliderTextPairInputs[i]);
+            VerticalSlider slider = (VerticalSlider) rootView.findViewById(sliderTextPairInputs[i]);
             EditText ed = (EditText) rootView.findViewById(sliderTextPairInputs[i + 1]);
-            ed.addTextChangedListener(new StatefulTextWatcher<SeekBar>(slider) {
+            ed.addTextChangedListener(new StatefulTextWatcher<VerticalSlider>(slider) {
                 @Override
                 public void onTextChanged(CharSequence s, int start, int before, int count) {
                     float val;
@@ -337,14 +308,12 @@ public class ProjectInstrumentsFragment extends Fragment {
                         case R.id.instrument_volume_slider:
                         case R.id.sample_volume_slider:
                         case R.id.sample_sustain_slider:
-                            this.data.setProgress(Math.round(this.data.getMax() *
-                                    SliderConverter.DECIBELS.toSlider(val)));
+                            this.data.setProgress(SliderConverter.DECIBELS.toSlider(val));
                             break;
                         case R.id.sample_attack_slider:
                         case R.id.sample_decay_slider:
                         case R.id.sample_release_slider:
-                            this.data.setProgress(Math.round(this.data.getMax() *
-                                    SliderConverter.MILLISECONDS.toSlider(val)));
+                            this.data.setProgress(SliderConverter.MILLISECONDS.toSlider(val));
                             break;
                         default:
                             break;
@@ -377,21 +346,20 @@ public class ProjectInstrumentsFragment extends Fragment {
                 }
             });
 
-            slider.setOnSeekBarChangeListener(new StatefulSeekBarChangeListener<EditText>(ed) {
+            slider.addListener(new StatefulVerticalSliderChangeListener<EditText>(ed) {
                 @Override
-                public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                public void onProgressChanged(VerticalSlider v, float progress, boolean fromUser) {
                     if(fromUser) {
-                        float sliderVal = progress / 1.0f / seekBar.getMax();
-                        switch(seekBar.getId()) {
+                        switch(v.getId()) {
                             case R.id.instrument_volume_slider:
                             case R.id.sample_volume_slider:
                             case R.id.sample_sustain_slider:
-                                this.data.setText(fmt1.format(SliderConverter.DECIBELS.fromSlider(sliderVal)));
+                                this.data.setText(fmt1.format(SliderConverter.DECIBELS.fromSlider(progress)));
                                 break;
                             case R.id.sample_attack_slider:
                             case R.id.sample_decay_slider:
                             case R.id.sample_release_slider:
-                                this.data.setText(fmt1.format(SliderConverter.MILLISECONDS.fromSlider(sliderVal)));
+                                this.data.setText(fmt1.format(SliderConverter.MILLISECONDS.fromSlider(progress)));
                                 break;
                             default:
                                 break;
@@ -507,7 +475,7 @@ public class ProjectInstrumentsFragment extends Fragment {
             }
 
             for(int i = 0; i < sliderTextPairInputs.length; i += 2) {
-                SeekBar slider = (SeekBar) rootView.findViewById(sliderTextPairInputs[i]);
+                VerticalSlider slider = (VerticalSlider) rootView.findViewById(sliderTextPairInputs[i]);
                 EditText ed = (EditText) rootView.findViewById(sliderTextPairInputs[i + 1]);
                 switch(sliderTextPairInputs[i + 1]) {
                     case R.id.instrument_volume:
@@ -518,25 +486,21 @@ public class ProjectInstrumentsFragment extends Fragment {
                         break;
                     case R.id.sample_attack:
                         ed.setText(fmt3.format(editorSample.attack));
-                        slider.setProgress(Math.round(slider.getMax() *
-                                SliderConverter.MILLISECONDS.toSlider(editorSample.attack)));
+                        slider.setProgress(SliderConverter.MILLISECONDS.toSlider(editorSample.attack));
                         break;
                     case R.id.sample_decay:
                         ed.setText(fmt3.format(editorSample.decay));
-                        slider.setProgress(Math.round(slider.getMax() *
-                                SliderConverter.MILLISECONDS.toSlider(editorSample.decay)));
+                        slider.setProgress(SliderConverter.MILLISECONDS.toSlider(editorSample.decay));
                         break;
                     case R.id.sample_sustain:
                         float db = editorSample.getSustainDecibels();
                         db = Math.max(-100, Math.min(0, db));
                         ed.setText(fmt3.format(db));
-                        slider.setProgress(Math.round(slider.getMax() *
-                                SliderConverter.DECIBELS.toSlider(db)));
+                        slider.setProgress(SliderConverter.DECIBELS.toSlider(db));
                         break;
                     case R.id.sample_release:
                         ed.setText(fmt3.format(editorSample.release));
-                        slider.setProgress(Math.round(slider.getMax() *
-                                SliderConverter.MILLISECONDS.toSlider(editorSample.release)));
+                        slider.setProgress(SliderConverter.MILLISECONDS.toSlider(editorSample.release));
                         break;
                     default:
                         break;
@@ -552,7 +516,7 @@ public class ProjectInstrumentsFragment extends Fragment {
                 ((EditText) rootView.findViewById(id)).setText("");
             }
             for(int i = 0; i < sliderTextPairInputs.length; i += 2) {
-                SeekBar slider = (SeekBar) rootView.findViewById(sliderTextPairInputs[i]);
+                VerticalSlider slider = (VerticalSlider) rootView.findViewById(sliderTextPairInputs[i]);
                 EditText ed = (EditText) rootView.findViewById(sliderTextPairInputs[i + 1]);
                 slider.setProgress(0);
                 ed.setText("");

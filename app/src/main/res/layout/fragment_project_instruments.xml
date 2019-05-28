@@ -43,19 +43,12 @@
             android:paddingRight="@dimen/margin2_border"
             android:paddingBottom="@dimen/margin2">
 
-            <com.android.musicfx.SeekBarRotator
+            <libre.sampler.views.VerticalSlider
+                android:id="@+id/instrument_volume_slider"
                 android:layout_width="wrap_content"
                 android:layout_height="0dp"
                 android:layout_gravity="center_horizontal"
-                android:layout_weight="1">
-
-                <SeekBar
-                    style="@style/SeekBar"
-                    android:id="@+id/instrument_volume_slider"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content" />
-
-            </com.android.musicfx.SeekBarRotator>
+                android:layout_weight="1" />
 
             <RelativeLayout
                 android:layout_width="wrap_content"
@@ -120,6 +113,7 @@
                         android:layout_below="@id/sample_edit_select"
                         android:layout_marginRight="@dimen/margin2"
                         android:hint="@string/path_to_samples_hint"
+                        android:imeOptions="actionDone"
                         android:inputType="textUri" />
 
                     <Button
@@ -308,19 +302,12 @@
                         android:paddingRight="@dimen/margin2_dense"
                         app:layout_wrapBefore="true">
 
-                        <com.android.musicfx.SeekBarRotator
+                        <libre.sampler.views.VerticalSlider
+                            android:id="@+id/sample_volume_slider"
                             android:layout_width="wrap_content"
                             android:layout_height="0dp"
                             android:layout_gravity="center_horizontal"
-                            android:layout_weight="1">
-
-                            <SeekBar
-                                style="@style/SeekBar"
-                                android:id="@+id/sample_volume_slider"
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content" />
-
-                        </com.android.musicfx.SeekBarRotator>
+                            android:layout_weight="1" />
 
                         <RelativeLayout
                             android:layout_width="wrap_content"
@@ -362,20 +349,12 @@
                         android:paddingLeft="@dimen/margin2_dense"
                         android:paddingTop="@dimen/margin2"
                         android:paddingRight="@dimen/margin2_dense">
-
-                        <com.android.musicfx.SeekBarRotator
+                        <libre.sampler.views.VerticalSlider
+                            android:id="@+id/sample_attack_slider"
                             android:layout_width="wrap_content"
                             android:layout_height="0dp"
                             android:layout_gravity="center_horizontal"
-                            android:layout_weight="1">
-
-                            <SeekBar
-                                style="@style/SeekBar"
-                                android:id="@+id/sample_attack_slider"
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content" />
-
-                        </com.android.musicfx.SeekBarRotator>
+                            android:layout_weight="1" />
 
                         <RelativeLayout
                             android:layout_width="wrap_content"
@@ -418,19 +397,12 @@
                         android:paddingTop="@dimen/margin2"
                         android:paddingRight="@dimen/margin2_dense">
 
-                        <com.android.musicfx.SeekBarRotator
+                        <libre.sampler.views.VerticalSlider
+                            android:id="@+id/sample_decay_slider"
                             android:layout_width="wrap_content"
                             android:layout_height="0dp"
                             android:layout_gravity="center_horizontal"
-                            android:layout_weight="1">
-
-                            <SeekBar
-                                style="@style/SeekBar"
-                                android:id="@+id/sample_decay_slider"
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content" />
-
-                        </com.android.musicfx.SeekBarRotator>
+                            android:layout_weight="1" />
 
                         <RelativeLayout
                             android:layout_width="wrap_content"
@@ -473,19 +445,12 @@
                         android:paddingTop="@dimen/margin2"
                         android:paddingRight="@dimen/margin2_dense">
 
-                        <com.android.musicfx.SeekBarRotator
+                        <libre.sampler.views.VerticalSlider
+                            android:id="@+id/sample_sustain_slider"
                             android:layout_width="wrap_content"
                             android:layout_height="0dp"
                             android:layout_gravity="center_horizontal"
-                            android:layout_weight="1">
-
-                            <SeekBar
-                                style="@style/SeekBar"
-                                android:id="@+id/sample_sustain_slider"
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content" />
-
-                        </com.android.musicfx.SeekBarRotator>
+                            android:layout_weight="1" />
 
                         <RelativeLayout
                             android:layout_width="wrap_content"
@@ -528,19 +493,12 @@
                         android:paddingTop="@dimen/margin2"
                         android:paddingRight="@dimen/margin2_dense">
 
-                        <com.android.musicfx.SeekBarRotator
+                        <libre.sampler.views.VerticalSlider
+                            android:id="@+id/sample_release_slider"
                             android:layout_width="wrap_content"
                             android:layout_height="0dp"
                             android:layout_gravity="center_horizontal"
-                            android:layout_weight="1">
-
-                            <SeekBar
-                                style="@style/SeekBar"
-                                android:id="@+id/sample_release_slider"
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content" />
-
-                        </com.android.musicfx.SeekBarRotator>
+                            android:layout_weight="1" />
 
                         <RelativeLayout
                             android:layout_width="wrap_content"
