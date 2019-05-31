@@ -1,8 +1,8 @@
 package android.util;
 
 public class Pair<F, S> {
-    F first;
-    S second;
+    public F first;
+    public S second;
 
     public Pair(F first, S second) {
         this.first = first;

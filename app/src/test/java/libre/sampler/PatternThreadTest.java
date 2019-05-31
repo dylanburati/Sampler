@@ -1,20 +1,26 @@
 package libre.sampler;
 
+import android.util.Log;
+import android.util.Pair;
+
 import org.junit.Test;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Random;
 
 import androidx.core.util.Consumer;
 import libre.sampler.models.NoteEvent;
 import libre.sampler.models.Pattern;
 import libre.sampler.models.ScheduledNoteEvent;
 import libre.sampler.publishers.NoteEventSource;
+import libre.sampler.utils.PatternLoader;
 import libre.sampler.utils.PatternThread;
 
 import static libre.sampler.utils.AppConstants.NANOS_PER_MILLI;
 import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 public class PatternThreadTest {
@@ -30,11 +36,11 @@ public class PatternThreadTest {
     }
 
     @Test
-    public void patternThread() {
+    public void patternThread_correctOrderingAndTiming() {
         final int TEST_RESULTS_SIZE = 20;
         final int LOOP_SIZE = 10;
 
-        TestNoteEventConsumer noteEventConsumer = new TestNoteEventConsumer(TEST_RESULTS_SIZE);
+        TimingNoteEventConsumer noteEventConsumer = new TimingNoteEventConsumer(TEST_RESULTS_SIZE);
         final NoteEventSource noteEventSource = new NoteEventSource();
         noteEventSource.add("test", noteEventConsumer);
 
@@ -98,12 +104,12 @@ public class PatternThreadTest {
         }
     }
 
-    private static class TestNoteEventConsumer implements Consumer<NoteEvent> {
+    private static class TimingNoteEventConsumer implements Consumer<NoteEvent> {
         private int noteIdx = 0;
         private final int[] testResults;
         private final long[] testTimings;
 
-        public TestNoteEventConsumer(int TEST_RESULTS_SIZE) {
+        public TimingNoteEventConsumer(int TEST_RESULTS_SIZE) {
             this.testResults = new int[TEST_RESULTS_SIZE];
             this.testTimings = new long[TEST_RESULTS_SIZE];
         }
@@ -116,5 +122,90 @@ public class PatternThreadTest {
                 noteIdx++;
             }
         }
+    }
+
+    @Test
+    public void patternThread_correctAdditionAndRemoval() {
+        Log.setEnabled(true);
+        final int NUM_NOTES = 10;
+        final int NUM_CHANGES = 100;
+        final TestVisualNote[] notes = new TestVisualNote[NUM_NOTES];
+
+        NoteEventSource noteEventSource = new NoteEventSource();
+        noteEventSource.add("correctAdditionAndRemoval", new Consumer<NoteEvent>() {
+            @Override
+            public void accept(NoteEvent event) {
+                if(event.action == NoteEvent.NOTE_ON) {
+                    assertEquals("Note was not closed", 0, notes[event.keyNum].numVoices);
+                    notes[event.keyNum].numVoices++;
+                    notes[event.keyNum].lastEventIdOn = event.eventId;
+                } else if(event.action == NoteEvent.NOTE_OFF) {
+                    if(notes[event.keyNum].numVoices > 0) {
+                        assertEquals("Note was not closed", notes[event.keyNum].lastEventIdOn.first, event.eventId.first);
+                        assertEquals("Note was not closed", notes[event.keyNum].lastEventIdOn.second, event.eventId.second);
+                        notes[event.keyNum].numVoices = 0;
+                        notes[event.keyNum].lastEventIdOn = null;
+                    }
+                }
+            }
+        });
+
+        PatternThread patternThread = new PatternThread(noteEventSource);
+        patternThread.start();
+        Pattern pattern = Pattern.getEmptyPattern();
+        pattern.setPatternId(0);
+        PatternLoader patternLoader = new PatternLoader(patternThread);
+
+        Random rand = new Random();
+        final long POSITIVE_MASK = (-1L >>> 1);
+        for(int i = 0; i < NUM_NOTES; i++) {
+            notes[i] = new TestVisualNote();
+            long startTicks = (rand.nextLong() & POSITIVE_MASK) % Pattern.DEFAULT_LOOP_LENGTH.getTicks();
+            notes[i].eventOn = new ScheduledNoteEvent(startTicks, NoteEvent.NOTE_ON, null, i, 0, i);
+            long endTicks = startTicks + ((rand.nextLong() & POSITIVE_MASK) % (Pattern.DEFAULT_LOOP_LENGTH.getTicks() - startTicks));
+            notes[i].eventOff = new ScheduledNoteEvent(endTicks, NoteEvent.NOTE_OFF, null, i, 0, i);
+            patternLoader.addToPattern(pattern, notes[i].eventOn, notes[i].eventOff);
+        }
+
+        patternThread.addPattern("test", pattern);
+
+        long MIN_WAIT_MILLIS = 30;
+        long MAX_WAIT_MILLIS = 300;
+        for(int changeIdx = 0; changeIdx < NUM_CHANGES; changeIdx++) {
+            long waitMillis = rand.nextInt(Math.toIntExact(MAX_WAIT_MILLIS - MIN_WAIT_MILLIS + 1)) + MIN_WAIT_MILLIS;
+            try {
+                Thread.sleep(waitMillis);
+            } catch(InterruptedException ignored) {
+            }
+
+            int j = rand.nextInt(NUM_NOTES);
+            patternLoader.removeFromPattern(pattern, notes[j].eventOn, notes[j].eventOff);
+
+            waitMillis = rand.nextInt(Math.toIntExact(MAX_WAIT_MILLIS - MIN_WAIT_MILLIS + 1)) + MIN_WAIT_MILLIS;
+            try {
+                Thread.sleep(waitMillis);
+            } catch(InterruptedException ignored) {
+            }
+
+            long startTicks = (rand.nextLong() & POSITIVE_MASK) % Pattern.DEFAULT_LOOP_LENGTH.getTicks();
+            notes[j].eventOn.offsetTicks = startTicks;
+            long endTicks = startTicks + ((rand.nextLong() & POSITIVE_MASK) % (Pattern.DEFAULT_LOOP_LENGTH.getTicks() - startTicks));
+            notes[j].eventOff.offsetTicks = endTicks;
+            patternLoader.addToPattern(pattern, notes[j].eventOn, notes[j].eventOff);
+        }
+
+        try {
+            patternThread.finish();
+            patternThread.join();
+        } catch(InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static class TestVisualNote {
+        public ScheduledNoteEvent eventOn;
+        public ScheduledNoteEvent eventOff;
+        public Pair<Long, Integer> lastEventIdOn;
+        public int numVoices;
     }
 }
