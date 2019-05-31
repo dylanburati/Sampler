@@ -1,7 +1,5 @@
 package libre.sampler.utils;
 
-import android.util.Log;
-
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.locks.Condition;
@@ -122,6 +120,7 @@ public class PatternThread extends Thread {
                 }
 
                 if(minWaitTime > NANOS_FOR_WAIT) {
+                    // Log.d("PatternThread", "Waiting " + (minWaitTime / 1e9) + " seconds");
                     // awaiting allows lock to be used by other thread
                     while(minWaitTime > NANOS_FOR_WAIT) {
                         long t0 = System.nanoTime();
@@ -154,15 +153,21 @@ public class PatternThread extends Thread {
                     lock.unlock();
                 }
             } else if(!done && runningPatternsModCount == lastModCount && noteEventsOut != null) {
-                for(NoteEvent e : noteEventsOut) {
-                    if(e != null) {
-                        noteEventSource.dispatch(e);
-                    } else {
-                        break;
+                lock.lock();
+                try {
+                    nextPattern.confirmPending();
+                    for(NoteEvent e : noteEventsOut) {
+                        if(e != null) {
+                            noteEventSource.dispatch(e);
+                        } else {
+                            break;
+                        }
                     }
+                } finally {
+                    lock.unlock();
                 }
             } else {
-                Log.d("PatternThread", "Skipped");
+                // Log.d("PatternThread", "Skipped");
             }
         }
     }

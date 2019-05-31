@@ -38,12 +38,14 @@ public class PatternLoader {
     public void removeFromPattern(Pattern pattern, ScheduledNoteEvent noteEventOn, ScheduledNoteEvent noteEventOff) {
         patternThread.lock.lock();
         try {
-            pattern.removeEvent(noteEventOn);
-            NoteEvent sendOff = pattern.removeAndGetEvent(noteEventOff);
-            if(sendOff != null) {
-                patternThread.noteEventSource.dispatch(sendOff);
+            boolean hasEvent = pattern.removeEvent(noteEventOn);
+            if(hasEvent) {
+                NoteEvent sendOff = pattern.removeAndGetEvent(noteEventOff);
+                if(sendOff != null) {
+                    patternThread.noteEventSource.dispatch(sendOff);
+                }
+                patternThread.notifyPatternsChanged();
             }
-            patternThread.notifyPatternsChanged();
         } finally {
             patternThread.lock.unlock();
         }
