@@ -38,6 +38,7 @@ import libre.sampler.R;
 import libre.sampler.adapters.PianoRollAdapter;
 import libre.sampler.fragments.patternedit.PatternEditBase;
 import libre.sampler.fragments.patternedit.PatternEditNoteProperties;
+import libre.sampler.fragments.patternedit.PatternEditPatternLength;
 import libre.sampler.fragments.patternedit.PatternEditSnapLength;
 import libre.sampler.models.Instrument;
 import libre.sampler.models.InstrumentEvent;
@@ -319,6 +320,11 @@ public class ProjectPatternsFragment extends Fragment {
         }
     }
 
+    public void setPatternLength(MusicTime inputLoopLength) {
+        patternLoader.setLoopLength(viewModel.getPianoRollPattern(), inputLoopLength);
+        pianoRollAdapter.updateRollLength((int) (inputLoopLength.getTicks() * getTickWidth()));
+    }
+
     private void registerTempoInput(EditText tempoEditText) {
         this.tempoEditText = tempoEditText;
 
@@ -402,6 +408,8 @@ public class ProjectPatternsFragment extends Fragment {
                 fragment = new PatternEditSnapLength();
             } else if(which == AppConstants.PATTERN_EDITOR_NOTE_PROPERTIES) {
                 fragment = new PatternEditNoteProperties();
+            } else if(which == AppConstants.PATTERN_EDITOR_PATTERN_LENGTH) {
+                fragment = new PatternEditPatternLength();
             } else {
                 return;
             }

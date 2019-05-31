@@ -61,9 +61,15 @@ public class PatternEditNoteProperties extends Fragment {
     }
 
     private void initNoteStartPickers() {
+        int visibility = (selectedNotes.size() > 0) ? View.VISIBLE : View.GONE;
         final NumberPicker pickerBars = rootView.findViewById(R.id.note_start_picker_bars);
         final NumberPicker pickerSixteenths = rootView.findViewById(R.id.note_start_picker_sixteenths);
         final NumberPicker pickerUserTicks = rootView.findViewById(R.id.note_start_picker_ticks);
+        pickerBars.setVisibility(visibility);
+        pickerSixteenths.setVisibility(visibility);
+        pickerUserTicks.setVisibility(visibility);
+        rootView.findViewById(R.id.note_start_label).setVisibility(visibility);
+
         inputNoteStart = new MusicTime(0L);
         if(selectedNotes.size() > 0) {
             inputNoteStart.setTicks(selectedNotes.iterator().next().startTicks);
@@ -158,9 +164,14 @@ public class PatternEditNoteProperties extends Fragment {
     }
 
     private void initNoteLengthPickers() {
+        int visibility = (selectedNotes.size() <= 1) ? View.VISIBLE : View.GONE;
         final NumberPicker pickerBars = rootView.findViewById(R.id.note_length_picker_bars);
         final NumberPicker pickerSixteenths = rootView.findViewById(R.id.note_length_picker_sixteenths);
         final NumberPicker pickerUserTicks = rootView.findViewById(R.id.note_length_picker_ticks);
+        pickerBars.setVisibility(visibility);
+        pickerSixteenths.setVisibility(visibility);
+        pickerUserTicks.setVisibility(visibility);
+        rootView.findViewById(R.id.note_length_label).setVisibility(visibility);
         MusicTime initialLength = patternsFragment.getNoteLength();
 
         final StatefulScrollListener pickerUserTicksScrolling = new StatefulScrollListener();
@@ -243,9 +254,14 @@ public class PatternEditNoteProperties extends Fragment {
     }
 
     private void updateNoteStartPickers() {
+        int visibility = (selectedNotes.size() <= 1) ? View.VISIBLE : View.GONE;
         final NumberPicker pickerBars = rootView.findViewById(R.id.note_start_picker_bars);
         final NumberPicker pickerSixteenths = rootView.findViewById(R.id.note_start_picker_sixteenths);
         final NumberPicker pickerUserTicks = rootView.findViewById(R.id.note_start_picker_ticks);
+        pickerBars.setVisibility(visibility);
+        pickerSixteenths.setVisibility(visibility);
+        pickerUserTicks.setVisibility(visibility);
+        rootView.findViewById(R.id.note_start_label).setVisibility(visibility);
 
         if(selectedNotes.size() > 0) {
             pickerBars.setVisibility(View.VISIBLE);
@@ -264,15 +280,16 @@ public class PatternEditNoteProperties extends Fragment {
     }
 
     private void updateNoteLengthPickers() {
+        int visibility = (selectedNotes.size() <= 1) ? View.VISIBLE : View.GONE;
         final NumberPicker pickerBars = rootView.findViewById(R.id.note_length_picker_bars);
         final NumberPicker pickerSixteenths = rootView.findViewById(R.id.note_length_picker_sixteenths);
         final NumberPicker pickerUserTicks = rootView.findViewById(R.id.note_length_picker_ticks);
+        pickerBars.setVisibility(visibility);
+        pickerSixteenths.setVisibility(visibility);
+        pickerUserTicks.setVisibility(visibility);
+        rootView.findViewById(R.id.note_length_label).setVisibility(visibility);
 
         if(selectedNotes.size() == 1) {
-            pickerBars.setVisibility(View.VISIBLE);
-            pickerSixteenths.setVisibility(View.VISIBLE);
-            pickerUserTicks.setVisibility(View.VISIBLE);
-
             MusicTime inputNoteLength = patternsFragment.getNoteLength();
             inputNoteLength.setTicks(selectedNotes.iterator().next().lengthTicks);
             pickerBars.setValue(inputNoteLength.bars);
@@ -280,18 +297,10 @@ public class PatternEditNoteProperties extends Fragment {
             pickerUserTicks.setValue(inputNoteLength.userTicks);
             patternsFragment.setNoteLength(inputNoteLength, false);
         } else if(selectedNotes.size() == 0) {
-            pickerBars.setVisibility(View.VISIBLE);
-            pickerSixteenths.setVisibility(View.VISIBLE);
-            pickerUserTicks.setVisibility(View.VISIBLE);
-
             MusicTime inputNoteLength = patternsFragment.getNoteLength();
             pickerBars.setValue(inputNoteLength.bars);
             pickerSixteenths.setValue(inputNoteLength.sixteenths);
             pickerUserTicks.setValue(inputNoteLength.userTicks);
-        } else {
-            pickerBars.setVisibility(View.GONE);
-            pickerSixteenths.setVisibility(View.GONE);
-            pickerUserTicks.setVisibility(View.GONE);
         }
     }
 

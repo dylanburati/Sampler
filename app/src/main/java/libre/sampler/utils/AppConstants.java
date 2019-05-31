@@ -32,4 +32,5 @@ public class AppConstants {
     public static final int PATTERN_EDITOR_BASE = 0;
     public static final int PATTERN_EDITOR_SNAP_LENGTH = 1;
     public static final int PATTERN_EDITOR_NOTE_PROPERTIES = 2;
+    public static final int PATTERN_EDITOR_PATTERN_LENGTH = 3;
 }

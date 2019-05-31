@@ -59,6 +59,7 @@
     <string name="set_snap_length">Set Snap Length</string>
     <string name="done">Done</string>
     <string name="note_properties">Note Properties</string>
+    <string name="set_pattern_length">Set Pattern Length</string>
     <plurals name="selected_notes_label">
         <item quantity="one">%d note selected</item>
         <item quantity="other">%d notes selected</item>

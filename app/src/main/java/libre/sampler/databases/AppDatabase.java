@@ -11,7 +11,7 @@ import libre.sampler.models.Project;
 import libre.sampler.models.Sample;
 import libre.sampler.models.ScheduledNoteEvent;
 
-@Database(entities = {Project.class, Instrument.class, Sample.class, Pattern.class, ScheduledNoteEvent.class}, version = 5)
+@Database(entities = {Project.class, Instrument.class, Sample.class, Pattern.class, ScheduledNoteEvent.class}, version = 6)
 public abstract class AppDatabase extends RoomDatabase {
     public abstract ProjectDao projectDao();
     public abstract InstrumentDao instrumentDao();
@@ -80,6 +80,14 @@ public abstract class AppDatabase extends RoomDatabase {
                     "PRIMARY KEY(`patternId`, `id`))");
             database.execSQL("INSERT INTO `scheduledNoteEvent` SELECT * FROM `tmp_scheduledNoteEvent`");
             database.execSQL("DROP TABLE `tmp_scheduledNoteEvent`");
+        }
+    };
+
+    public static final Migration MIGRATION_5_6 = new Migration(5, 6) {
+        @Override
+        public void migrate(@NonNull SupportSQLiteDatabase database) {
+            database.execSQL("ALTER TABLE `instrument` ADD COLUMN `volume` REAL NOT NULL DEFAULT 1");
+            database.execSQL("ALTER TABLE `sample` ADD COLUMN `volume` REAL NOT NULL DEFAULT 1");
         }
     };
 }

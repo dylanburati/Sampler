@@ -322,10 +322,10 @@ public class ProjectInstrumentsFragment extends Fragment {
                     if(editorSample != null) {
                         switch(this.data.getId()) {
                             case R.id.instrument_volume_slider:
-                                // todo add volume property
+                                viewModel.getKeyboardInstrument().setVolumeDecibels(val);
                                 break;
                             case R.id.sample_volume_slider:
-                                // todo add volume property
+                                editorSample.setVolumeDecibels(val);
                                 break;
                             case R.id.sample_attack_slider:
                                 editorSample.setAttack(val);
@@ -479,10 +479,16 @@ public class ProjectInstrumentsFragment extends Fragment {
                 EditText ed = (EditText) rootView.findViewById(sliderTextPairInputs[i + 1]);
                 switch(sliderTextPairInputs[i + 1]) {
                     case R.id.instrument_volume:
-                        // todo add volume property
+                        float iVol = viewModel.getKeyboardInstrument().getVolumeDecibels();
+                        iVol = Math.max(-100, Math.min(0, iVol));
+                        ed.setText(fmt3.format(iVol));
+                        slider.setProgress(SliderConverter.DECIBELS.toSlider(iVol));
                         break;
                     case R.id.sample_volume:
-                        // todo add volume property
+                        float sVol = editorSample.getVolumeDecibels();
+                        sVol = Math.max(-100, Math.min(0, sVol));
+                        ed.setText(fmt3.format(sVol));
+                        slider.setProgress(SliderConverter.DECIBELS.toSlider(sVol));
                         break;
                     case R.id.sample_attack:
                         ed.setText(fmt3.format(editorSample.attack));
@@ -493,10 +499,10 @@ public class ProjectInstrumentsFragment extends Fragment {
                         slider.setProgress(SliderConverter.MILLISECONDS.toSlider(editorSample.decay));
                         break;
                     case R.id.sample_sustain:
-                        float db = editorSample.getSustainDecibels();
-                        db = Math.max(-100, Math.min(0, db));
-                        ed.setText(fmt3.format(db));
-                        slider.setProgress(SliderConverter.DECIBELS.toSlider(db));
+                        float sus = editorSample.getSustainDecibels();
+                        sus = Math.max(-100, Math.min(0, sus));
+                        ed.setText(fmt3.format(sus));
+                        slider.setProgress(SliderConverter.DECIBELS.toSlider(sus));
                         break;
                     case R.id.sample_release:
                         ed.setText(fmt3.format(editorSample.release));

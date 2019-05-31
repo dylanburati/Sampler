@@ -13,6 +13,7 @@ public class Sample {
     @Ignore
     public int sampleIndex;
 
+    private float volume;
     public int minPitch;
     public int maxPitch;
     public int minVelocity;
@@ -72,6 +73,27 @@ public class Sample {
 
     public boolean isInfoLoaded() {
         return this.isInfoLoaded;
+    }
+
+    public float getVolume() {
+        return volume;
+    }
+
+    public float getVolumeDecibels() {
+        return 20 * (float) Math.log10((double) this.volume);
+    }
+
+    public void setVolume(float volume) {
+        this.volume = volume;
+    }
+
+    public void setVolumeDecibels(float volumeDecibels) {
+        if(volumeDecibels >= 0) {
+            this.volume = 1;
+        } else {
+            // dB to amplitude
+            this.volume = (float) Math.pow(10, volumeDecibels / 20.0);
+        }
     }
 
     public void setMinPitch(int minPitch) {

@@ -43,5 +43,12 @@
             android:layout_height="wrap_content"
             android:layout_marginRight="@dimen/margin2"
             android:text="@string/note_properties" />
+
+        <Button
+            android:id="@+id/open_pattern_length"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginRight="@dimen/margin2"
+            android:text="@string/set_pattern_length" />
     </com.google.android.flexbox.FlexboxLayout>
 </RelativeLayout>

@@ -296,12 +296,14 @@ public class ProjectActivity extends AppCompatActivity {
                         }
 
                         if(noteEvent.action == NoteEvent.NOTE_ON) {
+                            float adjVelocity = (float) (Math.pow(noteEvent.velocity / 128.0, 2) *
+                                    noteEvent.instrument.getVolume() * s.getVolume());
                             int voiceIndex = pdVoiceBindings.getBinding(noteEvent, s.id);
                             if(voiceIndex == -1) {
                                 continue;
                             }
                             PdBase.sendList("note", voiceIndex, noteEvent.keyNum,
-                                    /*velocity*/   noteEvent.velocity,
+                                    /*velocity*/   adjVelocity,
                                     /*ADSR*/       s.attack, s.decay, s.sustain, s.release,
                                     /*sampleInfo*/ s.sampleIndex, s.getLoopStart(), s.getLoopResume(), s.getLoopEnd(), s.sampleRate, s.basePitch);
                         } else if(noteEvent.action == NoteEvent.NOTE_OFF) {

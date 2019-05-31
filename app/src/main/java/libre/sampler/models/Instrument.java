@@ -12,6 +12,7 @@ public class Instrument {
     public int projectId;
     public int id;
     public String name;
+    private float volume;
 
     @Ignore
     private List<Sample> samples = new ArrayList<>();
@@ -109,5 +110,26 @@ public class Instrument {
 
     public String firstFilename() {
         return firstFilename;
+    }
+
+    public float getVolume() {
+        return volume;
+    }
+
+    public float getVolumeDecibels() {
+        return 20 * (float) Math.log10((double) this.volume);
+    }
+
+    public void setVolume(float volume) {
+        this.volume = volume;
+    }
+
+    public void setVolumeDecibels(float volumeDecibels) {
+        if(volumeDecibels >= 0) {
+            this.volume = 1;
+        } else {
+            // dB to amplitude
+            this.volume = (float) Math.pow(10, volumeDecibels / 20.0);
+        }
     }
 }
