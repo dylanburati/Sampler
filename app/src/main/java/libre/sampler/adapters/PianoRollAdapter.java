@@ -11,9 +11,7 @@ import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 import androidx.annotation.NonNull;
 import androidx.core.view.GestureDetectorCompat;
@@ -28,7 +26,7 @@ public class PianoRollAdapter extends RecyclerView.Adapter<PianoRollAdapter.View
 
     public List<VisualNote> pianoRollNotes;
     private ProjectPatternsFragment controller;
-    private Set<ViewHolder> viewHolderSet;
+    private List<ViewHolder> viewHolderList;
     private int rollWidth;
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
@@ -45,7 +43,10 @@ public class PianoRollAdapter extends RecyclerView.Adapter<PianoRollAdapter.View
     public PianoRollAdapter(ProjectPatternsFragment controller) {
         this.controller = controller;
         this.pianoRollNotes = new ArrayList<>();
-        this.viewHolderSet = new HashSet<>();
+        this.viewHolderList = new ArrayList<>(SPAN_COUNT);
+        for(int i = 0; i < SPAN_COUNT; i++) {
+            viewHolderList.add(null);
+        }
     }
 
     @NonNull
@@ -61,7 +62,7 @@ public class PianoRollAdapter extends RecyclerView.Adapter<PianoRollAdapter.View
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-        viewHolderSet.add(holder);
+        viewHolderList.set(position, holder);
         ViewGroup.LayoutParams params = holder.notePane.getLayoutParams();
         params.width = rollWidth;
         holder.notePane.setLayoutParams(params);
@@ -97,9 +98,23 @@ public class PianoRollAdapter extends RecyclerView.Adapter<PianoRollAdapter.View
         layoutParams.topMargin = (int) (note.keyIndex * keyHeight);
         View view = new View(holder.notePane.getContext());
         view.setBackgroundColor(Color.WHITE);
+        view.setBackgroundTintList(holder.notePane.getResources().getColorStateList(R.color.piano_roll_note));
         view.setTag(note.tag);
 
         holder.notePane.addView(view, layoutParams);
+    }
+
+    public void updateNote(VisualNote note) {
+        if(pianoRollNotes.contains(note)) {
+            ViewHolder holder = viewHolderList.get(note.containerIndex);
+            View view = holder.notePane.findViewWithTag(note.tag);
+            if(view != null) {
+                RelativeLayout.LayoutParams layoutParams = (RelativeLayout.LayoutParams) view.getLayoutParams();
+                layoutParams.leftMargin = (int) (note.startTicks * controller.getTickWidth());
+                layoutParams.topMargin = (int) (note.keyIndex * controller.getKeyHeight());
+                view.setLayoutParams(layoutParams);
+            }
+        }
     }
 
     public void setPianoRollNotes(List<VisualNote> notes) {
@@ -109,10 +124,12 @@ public class PianoRollAdapter extends RecyclerView.Adapter<PianoRollAdapter.View
 
     public void updateRollLength(int width) {
         this.rollWidth = width;
-        for(ViewHolder holder : viewHolderSet) {
-            ViewGroup.LayoutParams params = holder.notePane.getLayoutParams();
-            params.width = width;
-            holder.notePane.setLayoutParams(params);
+        for(ViewHolder holder : viewHolderList) {
+            if(holder != null) {
+                ViewGroup.LayoutParams params = holder.notePane.getLayoutParams();
+                params.width = width;
+                holder.notePane.setLayoutParams(params);
+            }
         }
     }
 
@@ -126,6 +143,26 @@ public class PianoRollAdapter extends RecyclerView.Adapter<PianoRollAdapter.View
         @Override
         public boolean onDown(MotionEvent e) {
             return true;
+        }
+
+        @Override
+        public boolean onSingleTapUp(MotionEvent e) {
+            int containerIndex = holder.getAdapterPosition();
+
+            Rect r = new Rect();
+            for(VisualNote n : pianoRollNotes) {
+                if(n.containerIndex == containerIndex) {
+                    View view = holder.notePane.findViewWithTag(n.tag);
+                    view.getLocalVisibleRect(r);
+                    holder.notePane.offsetDescendantRectToMyCoords(view, r);
+                    if(r.contains((int) e.getX(), (int) e.getY())) {
+                        boolean isSelected = controller.toggleSelect(n);
+                        view.setActivated(isSelected);
+                    }
+                }
+            }
+
+            return false;
         }
 
         @Override

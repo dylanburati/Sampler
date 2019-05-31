@@ -117,135 +117,15 @@
             </LinearLayout>
         </ScrollView>
 
-        <ScrollView
+        <LinearLayout
+            android:id="@+id/pattern_edit_fragment_container"
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="1"
-            android:background="@drawable/border_top"
-            android:scrollbars="vertical">
+            android:orientation="vertical"
+            android:background="@drawable/border_top">
 
-            <GridLayout
-                android:id="@+id/expanded_pattern_edit_controls"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:paddingLeft="@dimen/margin3"
-                android:paddingTop="@dimen/margin3"
-                android:paddingRight="@dimen/margin3"
-                android:columnCount="1">
-
-                <RelativeLayout
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="@dimen/margin2">
-
-                    <TextView
-                        android:id="@+id/piano_roll_settings_instrumentlabel"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/select_instrument" />
-
-                    <Spinner
-                        android:id="@+id/piano_roll_settings_instrument"
-                        android:layout_width="wrap_content"
-                        android:layout_height="40dp"
-                        android:layout_below="@id/piano_roll_settings_instrumentlabel" />
-                </RelativeLayout>
-
-                <RelativeLayout
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="@dimen/margin2">
-
-                    <TextView
-                        android:id="@+id/piano_roll_settings_lengthlabel"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/note_length_label" />
-
-                    <NumberPicker
-                        android:id="@+id/piano_roll_settings_length0"
-                        android:layout_width="wrap_content"
-                        android:layout_height="60sp"
-                        android:layout_below="@id/piano_roll_settings_lengthlabel"
-                        android:layout_marginBottom="0dp"
-                        android:dividerPadding="0dp" />
-
-                    <NumberPicker
-                        android:id="@+id/piano_roll_settings_length1"
-                        android:layout_width="wrap_content"
-                        android:layout_height="60sp"
-                        android:layout_alignTop="@id/piano_roll_settings_length0"
-                        android:layout_marginBottom="0dp"
-                        android:layout_toRightOf="@id/piano_roll_settings_length0"
-                        android:dividerPadding="0dp" />
-
-                    <NumberPicker
-                        android:id="@+id/piano_roll_settings_length2"
-                        android:layout_width="wrap_content"
-                        android:layout_height="60sp"
-                        android:layout_alignTop="@id/piano_roll_settings_length0"
-                        android:layout_marginBottom="0dp"
-                        android:layout_toRightOf="@id/piano_roll_settings_length1"
-                        android:dividerPadding="0dp" />
-                </RelativeLayout>
-
-                <RelativeLayout
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="@dimen/margin2">
-
-                    <TextView
-                        android:id="@+id/piano_roll_settings_snaplengthlabel"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/snap_length_label" />
-
-                    <Spinner
-                        android:id="@+id/piano_roll_settings_snaplength0"
-                        android:layout_width="wrap_content"
-                        android:layout_height="40dp"
-                        android:layout_below="@id/piano_roll_settings_snaplengthlabel" />
-                </RelativeLayout>
-
-                <RelativeLayout
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="@dimen/margin2"
-                    app:layout_flexBasisPercent="50%"
-                    app:layout_minWidth="240sp">
-
-                    <TextView
-                        android:id="@+id/piano_roll_settings_patternlengthlabel"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/pattern_length_label" />
-
-                    <NumberPicker
-                        android:id="@+id/piano_roll_settings_patternlength0"
-                        android:layout_width="wrap_content"
-                        android:layout_height="60sp"
-                        android:layout_below="@id/piano_roll_settings_patternlengthlabel"
-                        android:dividerPadding="0dp" />
-
-                    <NumberPicker
-                        android:id="@+id/piano_roll_settings_patternlength1"
-                        android:layout_width="wrap_content"
-                        android:layout_height="60sp"
-                        android:layout_alignTop="@id/piano_roll_settings_patternlength0"
-                        android:layout_toRightOf="@id/piano_roll_settings_patternlength0"
-                        android:dividerPadding="0dp" />
-
-                    <Button
-                        android:id="@+id/submit_patternlength"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_alignBottom="@id/piano_roll_settings_patternlength0"
-                        android:layout_marginLeft="@dimen/margin3"
-                        android:layout_toRightOf="@id/piano_roll_settings_patternlength1"
-                        android:text="@string/change" />
-                </RelativeLayout>
-            </GridLayout>
-        </ScrollView>
+        </LinearLayout>
     </LinearLayout>
 
     <LinearLayout

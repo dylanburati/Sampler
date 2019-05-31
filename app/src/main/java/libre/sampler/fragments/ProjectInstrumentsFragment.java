@@ -121,7 +121,7 @@ public class ProjectInstrumentsFragment extends Fragment {
                             }
                         }, 100);
                     }
-                } else if(event.action == InstrumentEvent.INSTRUMENT_SELECT) {
+                } else if(event.action == InstrumentEvent.INSTRUMENT_KEYBOARD_SELECT) {
                     updateInstrumentEditor();
                 }
             }

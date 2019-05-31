@@ -38,6 +38,7 @@
     <string name="project_saved">Saved project</string>
     <string name="play">PLAY</string>
     <string name="pause">PAUSE</string>
+    <string name="note_start_label">Note start (bars, sixteenths, ticks)</string>
     <string name="note_length_label">Note length (bars, sixteenths, ticks)</string>
     <string name="snap_length_label">Snap distance (bars, sixteenths, ticks)</string>
     <string name="pattern_length_label">Pattern length (bars, sixteenths)</string>
@@ -55,4 +56,11 @@
     <string name="decay">Decay</string>
     <string name="sustain">Sustain</string>
     <string name="release">Release</string>
+    <string name="set_snap_length">Set Snap Length</string>
+    <string name="done">Done</string>
+    <string name="note_properties">Note Properties</string>
+    <plurals name="selected_notes_label">
+        <item quantity="one">%d note selected</item>
+        <item quantity="other">%d notes selected</item>
+    </plurals>
 </resources>

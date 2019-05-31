@@ -4,39 +4,41 @@ import android.content.Context;
 import android.content.res.Configuration;
 import android.os.Bundle;
 import android.text.Editable;
-import android.text.SpannableString;
-import android.text.Spanned;
 import android.text.TextWatcher;
-import android.text.style.TextAppearanceSpan;
+import android.transition.Slide;
+import android.transition.Transition;
+import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.EditorInfo;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.NumberPicker;
-import android.widget.Spinner;
 import android.widget.TextView;
 
 import java.text.DecimalFormat;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.util.Consumer;
 import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentTransaction;
 import androidx.lifecycle.ViewModelProviders;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import libre.sampler.ProjectActivity;
 import libre.sampler.R;
 import libre.sampler.adapters.PianoRollAdapter;
-import libre.sampler.listeners.StatefulScrollListener;
+import libre.sampler.fragments.patternedit.PatternEditBase;
+import libre.sampler.fragments.patternedit.PatternEditNoteProperties;
+import libre.sampler.fragments.patternedit.PatternEditSnapLength;
 import libre.sampler.models.Instrument;
 import libre.sampler.models.InstrumentEvent;
 import libre.sampler.models.NoteEvent;
@@ -44,8 +46,10 @@ import libre.sampler.models.PatternDerivedData;
 import libre.sampler.models.PatternEvent;
 import libre.sampler.models.ProjectViewModel;
 import libre.sampler.models.ScheduledNoteEvent;
+import libre.sampler.publishers.EmptyEventSource;
 import libre.sampler.utils.AppConstants;
 import libre.sampler.utils.MusicTime;
+import libre.sampler.utils.NoTransitionPropagation;
 import libre.sampler.utils.PatternLoader;
 import libre.sampler.utils.PatternThread;
 import libre.sampler.views.VisualNote;
@@ -54,53 +58,22 @@ public class ProjectPatternsFragment extends Fragment {
     private ProjectViewModel viewModel;
     private PatternThread patternThread;
     private PatternDerivedData patternDerivedData;
-    private Instrument pianoRollInstrument;
 
     private RecyclerView pianoRollContainer;
     private PianoRollAdapter pianoRollAdapter;
+    private final Set<VisualNote> selectedNotes = new TreeSet<>();
     private PatternLoader patternLoader;
+    public EmptyEventSource patternEditEventSource = new EmptyEventSource();
 
     private double tickWidth;
     private float keyHeight;
 
-    private static final int MAX_INPUT_BARS = 99;
-    private static final String[] SNAP_OPTION_DESCRIPTIONS = new String[]{
-            "Whole note | 1:00:00",
-            "Quarter note | 0:04:00",
-            "Eighth note | 0:02:00",
-            "Triplet | 0:01:08",
-            "Sixteenth | 0:01:00",
-            "1/2 triplet | 0:00:16",
-            "Thirty-second | 0:00:12",
-            "1/4 triplet | 0:00:08",
-            "64th | 0:00:06",
-            "None | 0:00:01"
-    };
-    private static final MusicTime[] SNAP_OPTIONS = new MusicTime[]{
-            new MusicTime(1, 0, 0),
-            new MusicTime(0, 4, 0),
-            new MusicTime(0, 2, 0),
-            new MusicTime(0, 1, 8),
-            new MusicTime(0, 1, 0),
-            new MusicTime(0, 0, 16),
-            new MusicTime(0, 0, 12),
-            new MusicTime(0, 0, 8),
-            new MusicTime(0, 0, 6),
-            new MusicTime(0, 0, 1)
-    };
-
-    public MusicTime noteLength;
-    public MusicTime snap;
-    public MusicTime inputLoopLength;
-    public double inputTempo;
+    private MusicTime noteLength;
+    private MusicTime snap;
+    private MusicTime inputLoopLength;
+    private double inputTempo;
     public int velocity;
 
-    private Spinner instrumentSpinner;
-    private ArrayAdapter<String> instrumentSpinnerAdapter;
-    private List<Instrument> instrumentSpinnerItems;
-
-    private NumberPicker loopLengthPickerBars;
-    private NumberPicker loopLengthPickerSixteenths;
     private EditText tempoEditText;
 
     private ImageView patternStop;
@@ -142,14 +115,6 @@ public class ProjectPatternsFragment extends Fragment {
         this.inputLoopLength = new MusicTime(viewModel.getPianoRollPattern().getLoopLengthTicks());
         this.inputTempo = viewModel.getPianoRollPattern().getTempo();
 
-        registerInstrumentInput((Spinner) rootView.findViewById(R.id.piano_roll_settings_instrument));
-        registerNoteLengthInputs((NumberPicker) rootView.findViewById(R.id.piano_roll_settings_length0),
-                (NumberPicker) rootView.findViewById(R.id.piano_roll_settings_length1),
-                (NumberPicker) rootView.findViewById(R.id.piano_roll_settings_length2));
-        registerSnapInput((Spinner) rootView.findViewById(R.id.piano_roll_settings_snaplength0));
-        registerPatternLengthInputs((NumberPicker) rootView.findViewById(R.id.piano_roll_settings_patternlength0),
-                (NumberPicker) rootView.findViewById(R.id.piano_roll_settings_patternlength1),
-                (Button) rootView.findViewById(R.id.submit_patternlength));
         registerTempoInput((EditText) rootView.findViewById(R.id.pattern_tempo));
 
         pianoRollAdapter = new PianoRollAdapter(this);
@@ -163,7 +128,7 @@ public class ProjectPatternsFragment extends Fragment {
                     for(Instrument t : patternDerivedData.getInstrumentList()) {
                         viewModel.instrumentEventSource.dispatch(new InstrumentEvent(InstrumentEvent.INSTRUMENT_PD_LOAD, t));
                     }
-                    updatePatternLengthInputs();
+                    // updatePatternLengthInputs();
                     updateTempoInput();
                 }
             }
@@ -172,11 +137,10 @@ public class ProjectPatternsFragment extends Fragment {
         viewModel.instrumentEventSource.add("PatternLoader", new Consumer<InstrumentEvent>() {
             @Override
             public void accept(InstrumentEvent event) {
-                if(event.action == InstrumentEvent.INSTRUMENT_DELETE ||
-                        event.action == InstrumentEvent.INSTRUMENT_CREATE ||
-                        event.action == InstrumentEvent.INSTRUMENT_EDIT) {
-                    instrumentSpinnerItems = viewModel.getProject().getInstruments();
-                    updateInstrumentInput();
+                if(event.action == InstrumentEvent.INSTRUMENT_PIANO_ROLL_SELECT) {
+                    selectedNotes.clear();
+                    updatePianoRollNotes();
+                    patternEditEventSource.dispatch(AppConstants.SELECTED_NOTES);
                 }
             }
         });
@@ -186,9 +150,9 @@ public class ProjectPatternsFragment extends Fragment {
             viewModel.instrumentEventSource.dispatch(new InstrumentEvent(InstrumentEvent.INSTRUMENT_PD_LOAD, t));
         }
         if(!patternDerivedData.getInstrumentList().isEmpty()) {
-            pianoRollInstrument = patternDerivedData.getInstrumentList().get(0);
+            viewModel.setPianoRollInstrument(patternDerivedData.getInstrumentList().get(0));
         } else {
-            pianoRollInstrument = viewModel.getKeyboardInstrument();
+            viewModel.setPianoRollInstrument(viewModel.getKeyboardInstrument());
         }
         pianoRollAdapter.updateRollLength((int) (inputLoopLength.getTicks() * getTickWidth()));
         updatePianoRollNotes();
@@ -235,6 +199,8 @@ public class ProjectPatternsFragment extends Fragment {
         isPlaying = (isRunning && !patternThread.isSuspended);
         updatePlayPauseControls(getContext());
 
+        setEditorFragment(AppConstants.PATTERN_EDITOR_BASE);
+
         return rootView;
     }
 
@@ -256,9 +222,9 @@ public class ProjectPatternsFragment extends Fragment {
         int keyNum = (9 - containerIndex) * 12 + (11 - keyIndex);
         long baseId = AppConstants.PATTERN_EVENT_ID_OFFSET + System.currentTimeMillis();
         outView.eventOn = new ScheduledNoteEvent(startTicks, NoteEvent.NOTE_ON,
-                pianoRollInstrument, keyNum, velocity, baseId);
+                viewModel.getPianoRollInstrument(), keyNum, velocity, baseId);
         outView.eventOff = new ScheduledNoteEvent(startTicks + noteLengthTicks, NoteEvent.NOTE_OFF,
-                pianoRollInstrument, keyNum, velocity, baseId);
+                viewModel.getPianoRollInstrument(), keyNum, velocity, baseId);
 
         outView.calculateParams();
         patternLoader.addToPattern(viewModel.getPianoRollPattern(), outView.eventOn, outView.eventOff);
@@ -267,10 +233,24 @@ public class ProjectPatternsFragment extends Fragment {
     public void onRemovePianoRollNote(VisualNote outView) {
         if(outView.eventOn != null && outView.eventOff != null) {
             patternLoader.removeFromPattern(viewModel.getPianoRollPattern(), outView.eventOn, outView.eventOff);
+            if(selectedNotes.remove(outView)) {
+                patternEditEventSource.dispatch(AppConstants.SELECTED_NOTES);
+            }
         }
     }
 
+    public boolean toggleSelect(VisualNote n) {
+        if(selectedNotes.remove(n)) {
+            patternEditEventSource.dispatch(AppConstants.SELECTED_NOTES);
+            return false;
+        }
+        selectedNotes.add(n);
+        patternEditEventSource.dispatch(AppConstants.SELECTED_NOTES);
+        return true;
+    }
+
     private void updatePianoRollNotes() {
+        Instrument pianoRollInstrument = viewModel.getPianoRollInstrument();
         if(pianoRollInstrument != null) {
             List<VisualNote> noteViews = patternDerivedData.getNotesForInstrument(pianoRollInstrument);
             pianoRollAdapter.setPianoRollNotes(noteViews);
@@ -285,214 +265,57 @@ public class ProjectPatternsFragment extends Fragment {
         return keyHeight;
     }
 
-    private void registerInstrumentInput(Spinner spinner) {
-        this.instrumentSpinner = spinner;
-        this.instrumentSpinnerAdapter = new ArrayAdapter<>(
-                instrumentSpinner.getContext(), android.R.layout.simple_spinner_item);
-        this.instrumentSpinnerItems = viewModel.getProject().getInstruments();
-
-        instrumentSpinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        instrumentSpinner.setAdapter(instrumentSpinnerAdapter);
-
-        instrumentSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                pianoRollInstrument = instrumentSpinnerItems.get(position);
-                updatePianoRollNotes();
-                viewModel.instrumentEventSource.dispatch(new InstrumentEvent(InstrumentEvent.INSTRUMENT_PD_LOAD, pianoRollInstrument));
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {
-            }
-        });
-
-        updateInstrumentInput();
+    public MusicTime getSnapLength() {
+        return snap;
     }
 
-    private void updateInstrumentInput() {
-        if(instrumentSpinner != null && instrumentSpinnerAdapter != null) {
-            String[] options = new String[instrumentSpinnerItems.size()];
-            for(int i = 0; i < options.length; i++) {
-                options[i] = instrumentSpinnerItems.get(i).name;
-            }
+    public void setSnapLength(MusicTime snapLength) {
+        this.snap = snapLength;
+    }
 
-            instrumentSpinnerAdapter.clear();
-            instrumentSpinnerAdapter.addAll(options);
-            instrumentSpinner.setSelection(instrumentSpinnerItems.indexOf(pianoRollInstrument));
+    public MusicTime getNoteLength() {
+        return noteLength;
+    }
+
+    public void setNoteLength(MusicTime noteLength, boolean fromUser) {
+        this.noteLength = noteLength;
+    }
+
+    public Set<VisualNote> getSelectedNotes() {
+        return selectedNotes;
+    }
+
+    public void setNoteStart(MusicTime noteStart) {
+        if(selectedNotes.size() == 0) {
+            return;
         }
-    }
+        Iterator<VisualNote> iter = selectedNotes.iterator();
+        VisualNote n = iter.next();
+        long moveTicks = noteStart.getTicks() - n.startTicks;
 
-    public void registerNoteLengthInputs(final NumberPicker pickerBars, final NumberPicker pickerSixteenths, NumberPicker pickerUserTicks) {
-        final StatefulScrollListener pickerUserTicksScrolling = new StatefulScrollListener();
-        pickerUserTicks.setOnScrollListener(pickerUserTicksScrolling);
-        pickerUserTicks.setMinValue(0);
-        pickerUserTicks.setMaxValue(MusicTime.USER_TICKS_PER_SIXTEENTH - 1);
-        pickerUserTicks.setValue(noteLength.userTicks);
-        pickerUserTicks.setFormatter(new NumberPicker.Formatter() {
-            @Override
-            public String format(int value) {
-                return String.format("%02d", value);
-            }
-        });
-        pickerUserTicks.setOnValueChangedListener(new NumberPicker.OnValueChangeListener() {
-            @Override
-            public void onValueChange(NumberPicker picker, int oldVal, int newVal) {
-                noteLength.userTicks = newVal;
-                if(oldVal == picker.getMaxValue() && newVal == picker.getMinValue()) {
-                    // rollover +
-                    if(pickerUserTicksScrolling.scrollState != NumberPicker.OnScrollListener.SCROLL_STATE_IDLE) {
-                        noteLength.sixteenths += 1;
-                        pickerSixteenths.setValue(noteLength.sixteenths);
-                    }
-                } else if(oldVal == picker.getMinValue() && newVal == picker.getMaxValue()) {
-                    // rollover -
-                    if(pickerUserTicksScrolling.scrollState != NumberPicker.OnScrollListener.SCROLL_STATE_IDLE &&
-                            pickerSixteenths.getValue() > pickerSixteenths.getMinValue()) {
-                        noteLength.sixteenths -= 1;
-                        pickerSixteenths.setValue(noteLength.sixteenths);
+        boolean iterDone = false;
+        while(!iterDone) {
+            patternLoader.removeFromPattern(viewModel.getPianoRollPattern(), n.eventOn, n.eventOff);
+            n.startTicks += moveTicks;
+            n.eventOn.offsetTicks = n.startTicks;
+            n.eventOff.offsetTicks = n.startTicks + n.lengthTicks;
+
+            final VisualNote noteRef = n;
+            final int modCount = ++n.modificationCount;
+            pianoRollContainer.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    if(noteRef.modificationCount == modCount) {
+                        patternLoader.addToPattern(viewModel.getPianoRollPattern(), noteRef.eventOn, noteRef.eventOff);
+                        pianoRollAdapter.updateNote(noteRef);
                     }
                 }
+            }, 50);
+
+            iterDone = !iter.hasNext();
+            if(!iterDone) {
+                n = iter.next();
             }
-        });
-
-        final StatefulScrollListener pickerSixteenthsScrolling = new StatefulScrollListener();
-        pickerSixteenths.setOnScrollListener(pickerSixteenthsScrolling);
-        pickerSixteenths.setMinValue(0);
-        pickerSixteenths.setMaxValue(MusicTime.SIXTEENTHS_PER_BAR - 1);
-        pickerSixteenths.setValue(noteLength.sixteenths);
-        pickerSixteenths.setOnValueChangedListener(new NumberPicker.OnValueChangeListener() {
-            @Override
-            public void onValueChange(NumberPicker picker, int oldVal, int newVal) {
-                noteLength.sixteenths = newVal;
-                if(oldVal == picker.getMaxValue() && newVal == picker.getMinValue()) {
-                    // rollover +
-                    if(pickerSixteenthsScrolling.scrollState != NumberPicker.OnScrollListener.SCROLL_STATE_IDLE) {
-                        noteLength.bars += 1;
-                        pickerBars.setValue(noteLength.bars);
-                    }
-                } else if(oldVal == picker.getMinValue() && newVal == picker.getMaxValue()) {
-                    // rollover -
-                    if(pickerSixteenthsScrolling.scrollState != NumberPicker.OnScrollListener.SCROLL_STATE_IDLE &&
-                            pickerBars.getValue() > pickerBars.getMinValue()) {
-                        noteLength.bars -= 1;
-                        pickerBars.setValue(noteLength.bars);
-                    }
-                }
-            }
-        });
-
-        pickerBars.setMinValue(0);
-        pickerBars.setMaxValue(MAX_INPUT_BARS);
-        pickerBars.setValue(noteLength.bars);
-        pickerBars.setOnValueChangedListener(new NumberPicker.OnValueChangeListener() {
-            @Override
-            public void onValueChange(NumberPicker picker, int oldVal, int newVal) {
-                noteLength.bars = newVal;
-            }
-        });
-
-        pickerUserTicks.setWrapSelectorWheel(true);
-        pickerSixteenths.setWrapSelectorWheel(true);
-        pickerBars.setWrapSelectorWheel(false);
-    }
-
-    private void registerSnapInput(Spinner spinner) {
-        int currentSelection = 0;
-        if(snap == null) {
-            currentSelection = SNAP_OPTIONS.length - 1;
-        } else {
-            for(/* int currentSelection = 0 */; currentSelection < SNAP_OPTIONS.length; currentSelection++) {
-                if(SNAP_OPTIONS[currentSelection].getTicks() <= snap.getTicks()) {
-                    break;
-                }
-            }
-        }
-
-        SpannableString[] options = new SpannableString[SNAP_OPTION_DESCRIPTIONS.length];
-        for(int i = 0; i < SNAP_OPTION_DESCRIPTIONS.length; i++) {
-            options[i] = new SpannableString(SNAP_OPTION_DESCRIPTIONS[i]);
-            options[i].setSpan(new TextAppearanceSpan(spinner.getContext(), R.style.TextAppearanceMonospace),
-                    SNAP_OPTION_DESCRIPTIONS[i].indexOf("|") + 2, SNAP_OPTION_DESCRIPTIONS[i].length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-        }
-
-        ArrayAdapter<SpannableString> spinnerAdapter = new ArrayAdapter<>(
-                spinner.getContext(), android.R.layout.simple_spinner_item, options);
-        spinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        spinner.setAdapter(spinnerAdapter);
-        spinner.setSelection(currentSelection);
-
-        spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                snap = SNAP_OPTIONS[position];
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {
-            }
-        });
-    }
-
-    public void registerPatternLengthInputs(final NumberPicker pickerBars, NumberPicker pickerSixteenths, Button confirmButton) {
-        this.loopLengthPickerBars = pickerBars;
-        this.loopLengthPickerSixteenths = pickerSixteenths;
-
-        final StatefulScrollListener pickerSixteenthsScrolling = new StatefulScrollListener();
-        pickerSixteenths.setOnScrollListener(pickerSixteenthsScrolling);
-        pickerSixteenths.setMinValue(0);
-        pickerSixteenths.setMaxValue(MusicTime.SIXTEENTHS_PER_BAR - 1);
-        pickerSixteenths.setOnValueChangedListener(new NumberPicker.OnValueChangeListener() {
-            @Override
-            public void onValueChange(NumberPicker picker, int oldVal, int newVal) {
-                inputLoopLength.sixteenths = newVal;
-                if(oldVal == picker.getMaxValue() && newVal == picker.getMinValue()) {
-                    // rollover +
-                    if(pickerSixteenthsScrolling.scrollState != NumberPicker.OnScrollListener.SCROLL_STATE_IDLE) {
-                        inputLoopLength.bars += 1;
-                        pickerBars.setValue(inputLoopLength.bars);
-                    }
-                } else if(oldVal == picker.getMinValue() && newVal == picker.getMaxValue()) {
-                    // rollover -
-                    if(pickerSixteenthsScrolling.scrollState != NumberPicker.OnScrollListener.SCROLL_STATE_IDLE &&
-                            pickerBars.getValue() > pickerBars.getMinValue()) {
-                        inputLoopLength.bars -= 1;
-                        pickerBars.setValue(inputLoopLength.bars);
-                    }
-                }
-            }
-        });
-
-        pickerBars.setMinValue(0);
-        pickerBars.setMaxValue(MAX_INPUT_BARS);
-        pickerBars.setOnValueChangedListener(new NumberPicker.OnValueChangeListener() {
-            @Override
-            public void onValueChange(NumberPicker picker, int oldVal, int newVal) {
-                inputLoopLength.bars = newVal;
-            }
-        });
-
-        pickerSixteenths.setWrapSelectorWheel(true);
-        pickerBars.setWrapSelectorWheel(false);
-
-        confirmButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                patternLoader.setLoopLength(viewModel.getPianoRollPattern(), inputLoopLength);
-                pianoRollAdapter.updateRollLength((int) (inputLoopLength.getTicks() * getTickWidth()));
-            }
-        });
-
-        updatePatternLengthInputs();
-    }
-
-    private void updatePatternLengthInputs() {
-        if(loopLengthPickerBars != null && loopLengthPickerSixteenths != null) {
-            if(viewModel.getPianoRollPattern() != null) {
-                inputLoopLength.setTicks(viewModel.getPianoRollPattern().getLoopLengthTicks());
-            }
-            loopLengthPickerBars.setValue(inputLoopLength.bars);
-            loopLengthPickerSixteenths.setValue(inputLoopLength.sixteenths);
         }
     }
 
@@ -554,5 +377,46 @@ public class ProjectPatternsFragment extends Fragment {
         }
 
         patternStop.setEnabled(isRunning);
+    }
+
+    public void setEditorFragment(int which) {
+        FragmentManager fm = getChildFragmentManager();
+        FragmentTransaction transaction = fm.beginTransaction();
+        Fragment fragment = null;
+
+        if(which == AppConstants.PATTERN_EDITOR_BASE) {
+            if(fm.getBackStackEntryCount() == 0) {
+                fragment = new PatternEditBase();
+                Transition trIn = new Slide(Gravity.LEFT).setDuration(getResources().getInteger(android.R.integer.config_shortAnimTime));
+                trIn.setPropagation(new NoTransitionPropagation());
+                fragment.setEnterTransition(trIn);
+                Transition trOut = new Slide(Gravity.LEFT).setDuration(getResources().getInteger(android.R.integer.config_shortAnimTime));
+                trOut.setPropagation(new NoTransitionPropagation());
+                fragment.setExitTransition(trOut);
+            } else {
+                fm.popBackStack();
+            }
+        } else {
+            transaction.addToBackStack(null);
+            if(which == AppConstants.PATTERN_EDITOR_SNAP_LENGTH) {
+                fragment = new PatternEditSnapLength();
+            } else if(which == AppConstants.PATTERN_EDITOR_NOTE_PROPERTIES) {
+                fragment = new PatternEditNoteProperties();
+            } else {
+                return;
+            }
+
+            Transition trIn = new Slide(Gravity.RIGHT).setDuration(getResources().getInteger(android.R.integer.config_shortAnimTime));
+            trIn.setPropagation(new NoTransitionPropagation());
+            fragment.setEnterTransition(trIn);
+            Transition trOut = new Slide(Gravity.RIGHT).setDuration(getResources().getInteger(android.R.integer.config_shortAnimTime));
+            trOut.setPropagation(new NoTransitionPropagation());
+            fragment.setExitTransition(trOut);
+        }
+
+        if(fragment != null) {
+            transaction.replace(R.id.pattern_edit_fragment_container, fragment);
+            transaction.commit();
+        }
     }
 }

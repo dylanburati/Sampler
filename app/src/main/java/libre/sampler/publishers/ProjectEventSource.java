@@ -29,4 +29,9 @@ public class ProjectEventSource implements EventSource<Project> {
             fn.accept(project);
         }
     }
+
+    @Override
+    public void remove(String tag) {
+        listeners.remove(tag);
+    }
 }

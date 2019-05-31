@@ -30,9 +30,18 @@ public class NoteEventSource implements EventSource<NoteEvent> {
 
     @Override
     public void dispatchTo(String tag, NoteEvent noteEvent) {
-        Consumer<NoteEvent> fn = listeners.get(tag);
-        if(fn != null) {
-            fn.accept(noteEvent);
+        synchronized(lock) {
+            Consumer<NoteEvent> fn = listeners.get(tag);
+            if(fn != null) {
+                fn.accept(noteEvent);
+            }
+        }
+    }
+
+    @Override
+    public void remove(String tag) {
+        synchronized(lock) {
+            listeners.remove(tag);
         }
     }
 }

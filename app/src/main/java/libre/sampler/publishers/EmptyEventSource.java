@@ -28,4 +28,9 @@ public class EmptyEventSource implements EventSource<String> {
             fn.accept(eventName);
         }
     }
+
+    @Override
+    public void remove(String tag) {
+        listeners.remove(tag);
+    }
 }

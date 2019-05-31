@@ -30,9 +30,18 @@ public class PatternEventSource implements EventSource<PatternEvent> {
 
     @Override
     public void dispatchTo(String tag, PatternEvent patternEvent) {
-        Consumer<PatternEvent> fn = listeners.get(tag);
-        if(fn != null) {
-            fn.accept(patternEvent);
+        synchronized(lock) {
+            Consumer<PatternEvent> fn = listeners.get(tag);
+            if(fn != null) {
+                fn.accept(patternEvent);
+            }
+        }
+    }
+
+    @Override
+    public void remove(String tag) {
+        synchronized(lock) {
+            listeners.remove(tag);
         }
     }
 }

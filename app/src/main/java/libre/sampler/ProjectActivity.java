@@ -107,11 +107,28 @@ public class ProjectActivity extends AppCompatActivity {
         viewModel.noteEventSource.add("logger", new Consumer<NoteEvent>() {
             @Override
             public void accept(NoteEvent noteEvent) {
-                Log.d("ProjectActivity", String.format("noteEvent: action=%d keynum=%d velocity=%d", noteEvent.action, noteEvent.keyNum, noteEvent.velocity));
+                Log.d("ProjectActivity", String.format("noteEvent: action=%d keynum=%d velocity=%d id=%d", noteEvent.action, noteEvent.keyNum, noteEvent.velocity, noteEvent.eventId.second));
             }
         });
 
-        viewModel.instrumentEventSource.add("keyboard", new InstrumentEventConsumer());
+        viewModel.instrumentEventSource.add("keyboard", new Consumer<InstrumentEvent>() {
+            @Override
+            public void accept(InstrumentEvent event) {
+                if(event.action == InstrumentEvent.INSTRUMENT_KEYBOARD_SELECT ||
+                        event.action == InstrumentEvent.INSTRUMENT_PIANO_ROLL_SELECT ||
+                        event.action == InstrumentEvent.INSTRUMENT_PD_LOAD) {
+
+                    if(pdService != null && pdService.isRunning()) {
+                        pdLoadingInstrument = event.instrument;
+                        for(Sample s : pdLoadingInstrument.getSamples()) {
+                            if(pdSampleBindings.getBinding(s)) {
+                                PdBase.sendList("sample_file", s.sampleIndex, s.filename);
+                            }
+                        }
+                    }
+                }
+            }
+        });
 
         viewModel.noteEventSource.add("NoteEventConsumer", new NoteEventConsumer());
 
@@ -260,32 +277,6 @@ public class ProjectActivity extends AppCompatActivity {
         }
     }
 
-    private class InstrumentEventConsumer implements Consumer<InstrumentEvent> {
-        @Override
-        public void accept(InstrumentEvent event) {
-            if(event.action == InstrumentEvent.INSTRUMENT_SELECT) {
-                if(pdService != null && pdService.isRunning()) {
-                    pdLoadingInstrument = event.instrument;
-                    for(Sample s : pdLoadingInstrument.getSamples()) {
-                        if(pdSampleBindings.getBinding(s)) {
-                            PdBase.sendList("sample_file", s.sampleIndex, s.filename);
-                        }
-                    }
-                }
-            } else if(event.action == InstrumentEvent.INSTRUMENT_PD_LOAD) {
-                pdLoadingInstrument = event.instrument;
-                if(pdService != null && pdService.isRunning()) {
-                    pdLoadingInstrument = event.instrument;
-                    for(Sample s : pdLoadingInstrument.getSamples()) {
-                        if(pdSampleBindings.getBinding(s)) {
-                            PdBase.sendList("sample_file", s.sampleIndex, s.filename);
-                        }
-                    }
-                }
-            }
-        }
-    }
-
     private class NoteEventConsumer implements Consumer<NoteEvent> {
         @Override
         public void accept(NoteEvent noteEvent) {
@@ -358,7 +349,7 @@ public class ProjectActivity extends AppCompatActivity {
             if("voice_free".equals(source)) {
                 int indexToFree = (int) x;
                 pdVoiceBindings.voiceFree(indexToFree);
-                Log.d("pdReceiver", String.format("voice_free %d", indexToFree));
+                // Log.d("pdReceiver", String.format("voice_free %d", indexToFree));
             }
         }
 

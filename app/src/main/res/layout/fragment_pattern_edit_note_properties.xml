@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/pattern_edit_fragment_root"
+    android:paddingLeft="@dimen/margin3"
+    android:paddingTop="@dimen/margin3"
+    android:paddingRight="@dimen/margin3"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <TextView
+        android:id="@+id/selected_notes_label"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+
+    <TextView
+        android:id="@+id/note_start_label"
+        android:layout_below="@id/selected_notes_label"
+        android:layout_marginTop="@dimen/margin2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/note_start_label" />
+
+    <NumberPicker
+        android:id="@+id/note_start_picker_bars"
+        android:layout_width="wrap_content"
+        android:layout_height="60sp"
+        android:layout_below="@id/note_start_label"
+        android:layout_marginBottom="0dp"
+        android:dividerPadding="0dp" />
+
+    <NumberPicker
+        android:id="@+id/note_start_picker_sixteenths"
+        android:layout_width="wrap_content"
+        android:layout_height="60sp"
+        android:layout_alignTop="@id/note_start_picker_bars"
+        android:layout_marginBottom="0dp"
+        android:layout_toRightOf="@id/note_start_picker_bars"
+        android:dividerPadding="0dp" />
+
+    <NumberPicker
+        android:id="@+id/note_start_picker_ticks"
+        android:layout_width="wrap_content"
+        android:layout_height="60sp"
+        android:layout_alignTop="@id/note_start_picker_bars"
+        android:layout_marginBottom="0dp"
+        android:layout_toRightOf="@id/note_start_picker_sixteenths"
+        android:dividerPadding="0dp" />
+
+    <TextView
+        android:id="@+id/note_length_label"
+        android:layout_below="@id/note_start_picker_bars"
+        android:layout_marginTop="@dimen/margin2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/note_length_label" />
+
+    <NumberPicker
+        android:id="@+id/note_length_picker_bars"
+        android:layout_width="wrap_content"
+        android:layout_height="60sp"
+        android:layout_below="@id/note_length_label"
+        android:layout_marginBottom="0dp"
+        android:dividerPadding="0dp" />
+
+    <NumberPicker
+        android:id="@+id/note_length_picker_sixteenths"
+        android:layout_width="wrap_content"
+        android:layout_height="60sp"
+        android:layout_alignTop="@id/note_length_picker_bars"
+        android:layout_marginBottom="0dp"
+        android:layout_toRightOf="@id/note_length_picker_bars"
+        android:dividerPadding="0dp" />
+
+    <NumberPicker
+        android:id="@+id/note_length_picker_ticks"
+        android:layout_width="wrap_content"
+        android:layout_height="60sp"
+        android:layout_alignTop="@id/note_length_picker_bars"
+        android:layout_marginBottom="0dp"
+        android:layout_toRightOf="@id/note_length_picker_sixteenths"
+        android:dividerPadding="0dp" />
+    
+    <Button
+        android:id="@+id/close_note_properties"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentRight="true"
+        style="@style/Base.Widget.AppCompat.Button.Borderless"
+        android:text="@string/done"/>
+</RelativeLayout>

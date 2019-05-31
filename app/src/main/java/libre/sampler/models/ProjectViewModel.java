@@ -47,6 +47,7 @@ public class ProjectViewModel extends AndroidViewModel {
     public final NoteEventSource noteEventSource = new NoteEventSource();
     public final InstrumentEventSource instrumentEventSource = new InstrumentEventSource();
     public final PatternEventSource patternEventSource = new PatternEventSource();
+    private Instrument pianoRollInstrument;
 
     public ProjectViewModel(@NonNull Application application) {
         super(application);
@@ -91,7 +92,8 @@ public class ProjectViewModel extends AndroidViewModel {
                             }
                             projectEventSource.dispatch(project);
                             if(keyboardInstrument != null) {
-                                instrumentEventSource.dispatch(new InstrumentEvent(InstrumentEvent.INSTRUMENT_SELECT, keyboardInstrument));
+                                instrumentEventSource.dispatch(new InstrumentEvent(
+                                        InstrumentEvent.INSTRUMENT_KEYBOARD_SELECT, keyboardInstrument));
                             }
                             isGetProjectTaskRunning = false;
                         }
@@ -109,7 +111,8 @@ public class ProjectViewModel extends AndroidViewModel {
         this.keyboardInstrument = keyboardInstrument;
         this.editorSample = null;
         if(keyboardInstrument != null) {
-            instrumentEventSource.dispatch(new InstrumentEvent(InstrumentEvent.INSTRUMENT_SELECT, keyboardInstrument));
+            instrumentEventSource.dispatch(new InstrumentEvent(
+                    InstrumentEvent.INSTRUMENT_KEYBOARD_SELECT, keyboardInstrument));
         }
     }
 
@@ -203,5 +206,16 @@ public class ProjectViewModel extends AndroidViewModel {
 
     public void setEditorSample(Sample editorSample) {
         this.editorSample = editorSample;
+    }
+
+    public Instrument getPianoRollInstrument() {
+        return pianoRollInstrument;
+    }
+
+    public void setPianoRollInstrument(Instrument pianoRollInstrument) {
+        this.pianoRollInstrument = pianoRollInstrument;
+        instrumentEventSource.dispatch(new InstrumentEvent(
+                InstrumentEvent.INSTRUMENT_PIANO_ROLL_SELECT, pianoRollInstrument));
+
     }
 }

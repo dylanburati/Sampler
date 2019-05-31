@@ -2,7 +2,6 @@ package libre.sampler.utils;
 
 import android.os.Parcel;
 import android.os.Parcelable;
-import android.util.Log;
 
 public class IdStatus implements Parcelable {
     public static final int INVALID = 0;
@@ -27,9 +26,9 @@ public class IdStatus implements Parcelable {
         if(this.status > newStatus || (this.status == newStatus && !repeatsAllowed[this.status])) {
             throw new AssertionError(String.format("Invalid ID status change: %d -> %d", this.status, newStatus));
         }
-        if(this.tag != null) {
-            Log.d("IdStatus", String.format("ID status change: %s, %d -> %d", this.tag, this.status, newStatus));
-        }
+        // if(this.tag != null) {
+        //     Log.d("IdStatus", String.format("ID status change: %s, %d -> %d", this.tag, this.status, newStatus));
+        // }
         this.status = newStatus;
     }
 

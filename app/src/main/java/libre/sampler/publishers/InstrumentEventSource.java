@@ -29,4 +29,9 @@ public class InstrumentEventSource implements EventSource<InstrumentEvent> {
             fn.accept(event);
         }
     }
+
+    @Override
+    public void remove(String tag) {
+        listeners.remove(tag);
+    }
 }
