@@ -60,6 +60,7 @@
     <string name="done">Done</string>
     <string name="note_properties">Note Properties</string>
     <string name="set_pattern_length">Set Pattern Length</string>
+    <string name="piano_roll_position">Left gridline: %d:%d:00</string>
     <plurals name="selected_notes_label">
         <item quantity="one">%d note selected</item>
         <item quantity="other">%d notes selected</item>

@@ -128,7 +128,7 @@
         </LinearLayout>
     </LinearLayout>
 
-    <LinearLayout
+    <RelativeLayout
         android:id="@+id/patterns_footer"
         android:layout_width="match_parent"
         android:layout_height="@dimen/pattern_footer_height"
@@ -148,19 +148,29 @@
             android:id="@+id/pattern_stop"
             android:layout_width="@dimen/pattern_footer_height"
             android:layout_height="match_parent"
+            android:layout_toRightOf="@id/pattern_play"
             android:paddingLeft="@dimen/margin2_dense"
             android:paddingRight="@dimen/margin2_dense"
             android:src="@drawable/respond_to_click_ic_stop" />
 
-        <View
-            android:layout_width="0dp"
-            android:layout_height="0dp"
-            android:layout_weight="1" />
+        <TextView
+            android:id="@+id/piano_roll_position"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_toRightOf="@id/pattern_stop"
+            android:layout_toLeftOf="@+id/pattern_tempo_label"
+            android:paddingLeft="@dimen/margin2"
+            android:paddingRight="@dimen/margin2"
+            android:paddingBottom="@dimen/margin2"
+            android:gravity="bottom"
+            android:textSize="@dimen/subheading" />
 
         <TextView
+            android:id="@+id/pattern_tempo_label"
             android:labelFor="@+id/pattern_tempo"
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
+            android:layout_toLeftOf="@+id/pattern_tempo"
             android:gravity="bottom"
             android:paddingBottom="@dimen/margin2"
             android:layout_marginRight="@dimen/margin1"
@@ -172,6 +182,7 @@
             android:id="@+id/pattern_tempo"
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
+            android:layout_alignParentRight="true"
             android:layout_marginRight="@dimen/margin2"
             android:padding="0dp"
             android:gravity="center"
@@ -180,5 +191,5 @@
             android:imeOptions="actionDone"
             android:textSize="@dimen/title"
             android:minEms="3" />
-    </LinearLayout>
+    </RelativeLayout>
 </LinearLayout>

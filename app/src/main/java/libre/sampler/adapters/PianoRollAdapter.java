@@ -18,7 +18,7 @@ import androidx.core.view.GestureDetectorCompat;
 import androidx.recyclerview.widget.RecyclerView;
 import libre.sampler.R;
 import libre.sampler.fragments.ProjectPatternsFragment;
-import libre.sampler.utils.RepeatingDrawable;
+import libre.sampler.utils.RepeatingBarDrawable;
 import libre.sampler.views.VisualNote;
 
 public class PianoRollAdapter extends RecyclerView.Adapter<PianoRollAdapter.ViewHolder> {
@@ -55,7 +55,7 @@ public class PianoRollAdapter extends RecyclerView.Adapter<PianoRollAdapter.View
         LinearLayout v = (LinearLayout) LayoutInflater.from(parent.getContext())
                 .inflate(R.layout.component_piano_roll_column, parent, false);
         v.findViewById(R.id.piano_roll_column).setBackground(
-                new RepeatingDrawable(parent.getContext().getDrawable(R.drawable.piano_roll_column), RepeatingDrawable.HORIZONTAL));
+                new RepeatingBarDrawable(parent.getContext().getDrawable(R.drawable.piano_roll_column), RepeatingBarDrawable.HORIZONTAL));
 
         return new ViewHolder(v);
     }

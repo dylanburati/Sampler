@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<vector android:width="@dimen/piano_roll_beatwidth"
+<vector android:width="@dimen/piano_roll_barwidth"
     android:height="@dimen/piano_roll_colheight"
-    android:viewportWidth="1"
+    android:viewportWidth="4"
     android:viewportHeight="12"
     xmlns:android="http://schemas.android.com/apk/res/android">
 
@@ -9,13 +9,13 @@
     <path
         android:fillColor="@color/piano_roll_white"
         android:pathData="M0,0
-                h1 v1 H0 v1
-                h1 v1 H0 v1
-                h1 v1 H0 v1
-                h1 v1 H0 v0
-                h1 v1 H0 v1
-                h1 v1 H0 v1
-                h1 v1 H0 z"
+                h4 v1 H0 v1
+                h4 v1 H0 v1
+                h4 v1 H0 v1
+                h4 v1 H0 v0
+                h4 v1 H0 v1
+                h4 v1 H0 v1
+                h4 v1 H0 z"
         android:strokeWidth="0"
         android:strokeColor="@android:color/transparent" />
 
@@ -23,21 +23,26 @@
     <path
         android:fillColor="@color/piano_roll_black"
         android:pathData="M0,0 v1
-                h1 v1 H0 v1
-                h1 v1 H0 v1
-                h1 v1 H0 v2
-                h1 v1 H0 v1
-                h1 v1 H0 z"
+                h4 v1 H0 v1
+                h4 v1 H0 v1
+                h4 v1 H0 v2
+                h4 v1 H0 v1
+                h4 v1 H0 z"
         android:strokeWidth="0"
         android:strokeColor="@android:color/transparent" />
 
     <path
-        android:pathData="M0,-2 v14"
-        android:strokeWidth="0.03"
-        android:strokeColor="#77000000" />
+        android:pathData="M1,0 v12 M2,0 v12 M3,0 v12"
+        android:strokeWidth="0.015"
+        android:strokeColor="@color/piano_roll_dividers" />
 
     <path
-        android:pathData="M-1,0 h3 v1 h-3 v1 h3 v1 h-3 v1 h3 v1 h-3 v1 h3 v1 h-3 v1 h3 v1 h-3 v1 h3 v1 h-3 v1 h3"
+        android:pathData="M0,0 v12 M4,0 v12"
+        android:strokeWidth="0.02"
+        android:strokeColor="@android:color/black" />
+
+    <path
+        android:pathData="M0,0 h4 m-4,1 h4 m-4,1 h4 m-4,1 h4 m-4,1 h4 m-4,1 h4 m-4,1 h4 m-4,1 h4 m-4,1 h4 m-4,1 h4 m-4,1 h4 m-4,1 h4 m-4,1 h4"
         android:strokeWidth="0.06"
-        android:strokeColor="#77000000" />
+        android:strokeColor="@color/piano_roll_dividers" />
 </vector>

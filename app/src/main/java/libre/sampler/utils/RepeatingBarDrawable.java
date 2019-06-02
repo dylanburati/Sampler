@@ -6,12 +6,12 @@ import android.graphics.drawable.Drawable;
 
 import androidx.appcompat.graphics.drawable.DrawableWrapper;
 
-public class RepeatingDrawable extends DrawableWrapper {
+public class RepeatingBarDrawable extends DrawableWrapper {
     private int repeatDirection;
     public static final int HORIZONTAL = 1;
     public static final int VERTICAL = 2;
 
-    public RepeatingDrawable(Drawable drawable, int direction) {
+    public RepeatingBarDrawable(Drawable drawable, int direction) {
         super(drawable);
         repeatDirection = direction;
     }

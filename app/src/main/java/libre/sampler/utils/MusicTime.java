@@ -3,6 +3,8 @@ package libre.sampler.utils;
 public class MusicTime {
     public static final int USER_TICKS_PER_SIXTEENTH = 24;
     public static final int SIXTEENTHS_PER_BAR = 16;
+    public static final int BEATS_PER_BAR = 4;
+    public static final int SIXTEENTHS_PER_BEAT = 4;
 
     public static final long TICKS_PER_USER_TICK = 256;
     public static final long TICKS_PER_SIXTEENTH = TICKS_PER_USER_TICK * USER_TICKS_PER_SIXTEENTH;

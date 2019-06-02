@@ -213,9 +213,12 @@ public class ProjectViewModel extends AndroidViewModel {
     }
 
     public void setPianoRollInstrument(Instrument pianoRollInstrument) {
-        this.pianoRollInstrument = pianoRollInstrument;
-        instrumentEventSource.dispatch(new InstrumentEvent(
-                InstrumentEvent.INSTRUMENT_PIANO_ROLL_SELECT, pianoRollInstrument));
-
+        if(this.pianoRollInstrument != pianoRollInstrument) {
+            this.pianoRollInstrument = pianoRollInstrument;
+            if(pianoRollInstrument != null) {
+                instrumentEventSource.dispatch(new InstrumentEvent(
+                        InstrumentEvent.INSTRUMENT_PIANO_ROLL_SELECT, pianoRollInstrument));
+            }
+        }
     }
 }

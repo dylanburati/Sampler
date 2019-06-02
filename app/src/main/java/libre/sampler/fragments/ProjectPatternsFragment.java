@@ -40,6 +40,8 @@ import libre.sampler.fragments.patternedit.PatternEditBase;
 import libre.sampler.fragments.patternedit.PatternEditNoteProperties;
 import libre.sampler.fragments.patternedit.PatternEditPatternLength;
 import libre.sampler.fragments.patternedit.PatternEditSnapLength;
+import libre.sampler.listeners.RecyclerViewScrollChangeDispatcher;
+import libre.sampler.listeners.ScrollChangeListener;
 import libre.sampler.models.Instrument;
 import libre.sampler.models.InstrumentEvent;
 import libre.sampler.models.NoteEvent;
@@ -75,8 +77,8 @@ public class ProjectPatternsFragment extends Fragment {
     private double inputTempo;
     public int velocity;
 
+    private TextView pianoRollPosition;
     private EditText tempoEditText;
-
     private ImageView patternStop;
     private boolean isRunning;
     private ImageView patternPlay;
@@ -195,6 +197,17 @@ public class ProjectPatternsFragment extends Fragment {
                 updatePlayPauseControls(v.getContext());
             }
         });
+
+        pianoRollPosition = (TextView) rootView.findViewById(R.id.piano_roll_position);
+
+        RecyclerViewScrollChangeDispatcher scrollChangeDispatcher = new RecyclerViewScrollChangeDispatcher(pianoRollContainer);
+        scrollChangeDispatcher.setListener(new ScrollChangeListener() {
+            @Override
+            public void onScrollChange(int x, int y, int oldX, int oldY) {
+                updatePianoRollPosition(x);
+            }
+        });
+        updatePianoRollPosition(0);
 
         isRunning = (patternThread.runningPatterns.size() > 0);
         isPlaying = (isRunning && !patternThread.isSuspended);
@@ -383,6 +396,15 @@ public class ProjectPatternsFragment extends Fragment {
         }
 
         patternStop.setEnabled(isRunning);
+    }
+
+    private void updatePianoRollPosition(int scrollX) {
+        double beatWidth = tickWidth * MusicTime.TICKS_PER_BEAT;
+        double dividerWidth = 0.02 * beatWidth;
+        int beats = (int) Math.floor((scrollX - dividerWidth) / beatWidth) + 1;
+        int bars = beats / MusicTime.BEATS_PER_BAR;
+        int sixteenths = (beats % MusicTime.BEATS_PER_BAR) * MusicTime.SIXTEENTHS_PER_BEAT;
+        pianoRollPosition.setText(getResources().getString(R.string.piano_roll_position, bars, sixteenths));
     }
 
     public void setEditorFragment(int which) {
