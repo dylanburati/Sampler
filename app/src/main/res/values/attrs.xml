@@ -9,6 +9,7 @@
         <attr name="progress_color" format="color"/>
         <attr name="background_color" format="color"/>
         <attr name="thumb_color" format="color"/>
+        <attr name="paddingTop" format="dimension"/>
     </declare-styleable>
 
 </resources>

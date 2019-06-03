@@ -89,7 +89,7 @@ public class PianoRollAdapter extends RecyclerView.Adapter<PianoRollAdapter.View
         return SPAN_COUNT;
     }
 
-    public void displayNote(ViewHolder holder, VisualNote note) {
+    private void displayNote(ViewHolder holder, VisualNote note) {
         double tickWidth = controller.getTickWidth();
         float keyHeight = controller.getKeyHeight();
         RelativeLayout.LayoutParams layoutParams = new RelativeLayout.LayoutParams(
@@ -105,13 +105,17 @@ public class PianoRollAdapter extends RecyclerView.Adapter<PianoRollAdapter.View
     }
 
     public void updateNote(VisualNote note) {
-        if(pianoRollNotes.contains(note)) {
-            ViewHolder holder = viewHolderList.get(note.containerIndex);
+        ViewHolder holder = viewHolderList.get(note.containerIndex);
+        if(!pianoRollNotes.contains(note)) {
+            pianoRollNotes.add(note);
+            displayNote(holder, note);
+        } else {
             View view = holder.notePane.findViewWithTag(note.tag);
             if(view != null) {
                 RelativeLayout.LayoutParams layoutParams = (RelativeLayout.LayoutParams) view.getLayoutParams();
                 layoutParams.leftMargin = (int) (note.startTicks * controller.getTickWidth());
                 layoutParams.topMargin = (int) (note.keyIndex * controller.getKeyHeight());
+                layoutParams.width = (int) (note.lengthTicks * controller.getTickWidth());
                 view.setLayoutParams(layoutParams);
             }
         }
@@ -184,8 +188,7 @@ public class PianoRollAdapter extends RecyclerView.Adapter<PianoRollAdapter.View
                 }
             }
 
-            VisualNote note = new VisualNote(containerIndex);
-            controller.onCreatePianoRollNote(note, containerIndex, e.getX(), e.getY());
+            VisualNote note = controller.onCreatePianoRollNote(containerIndex, e.getX(), e.getY());
             pianoRollNotes.add(note);
             displayNote(holder, note);
         }

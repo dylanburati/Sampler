@@ -61,6 +61,12 @@
     <string name="note_properties">Note Properties</string>
     <string name="set_pattern_length">Set Pattern Length</string>
     <string name="piano_roll_position">Left gridline: %d:%d:00</string>
+    <string name="copy_multiple">Copy Multiple</string>
+    <string name="number_of_copies">Number of copies</string>
+    <string name="interval_label">Copy interval (bars, sixteenths, ticks)</string>
+    <string name="copy">Copy</string>
+    <string name="nothing_selected">Nothing selected</string>
+    <string name="copy_multiple_status_range">%s to %s</string>
     <plurals name="selected_notes_label">
         <item quantity="one">%d note selected</item>
         <item quantity="other">%d notes selected</item>

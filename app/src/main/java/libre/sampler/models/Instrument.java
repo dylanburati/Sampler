@@ -27,6 +27,7 @@ public class Instrument {
     public Instrument(String name) {
         this.name = name;
         this.nextSampleId = 0;
+        this.volume = 1.0f;
     }
 
     // should be called with the `id` obtained from the database

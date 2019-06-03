@@ -42,6 +42,7 @@ public class VerticalSlider extends View {
     public static final int DEFAULT_THUMB_WIDTH_DP = 12;
     public static final int DEFAULT_THUMB_PRESSED_WIDTH_DP = 16;
     public static final int DEFAULT_TOUCH_TARGET_WIDTH_DP = 26;
+    public static final int DEFAULT_PADDING_TOP_DP = 8;
 
     private Rect seekBounds;
     private Rect progressBar;
@@ -63,6 +64,7 @@ public class VerticalSlider extends View {
     private int thumbWidth;
     private int thumbPressedWidth;
     private int thumbPadding;
+    private int paddingTop;
 
     private int[] tempLocationOnScreen = new int[2];
     private Point tempTouchPosition = new Point();
@@ -84,6 +86,7 @@ public class VerticalSlider extends View {
         int defaultTouchTargetWidth = dpToPxSize(density, DEFAULT_TOUCH_TARGET_WIDTH_DP);
         int defaultThumbWidth = dpToPxSize(density, DEFAULT_THUMB_WIDTH_DP);
         int defaultThumbPressedWidth = dpToPxSize(density, DEFAULT_THUMB_PRESSED_WIDTH_DP);
+        int defaultPaddingTop = dpToPxSize(density, DEFAULT_PADDING_TOP_DP);
         if(attrs != null) {
             TypedArray a = context.getTheme().obtainStyledAttributes(attrs, R.styleable.VerticalSlider, 0, 0);
             try {
@@ -92,9 +95,10 @@ public class VerticalSlider extends View {
                     defaultTouchTargetWidth = Math.max(thumbDrawable.getMinimumWidth(), defaultTouchTargetWidth);
                 }
                 barWidth = a.getDimensionPixelSize(R.styleable.VerticalSlider_bar_width, defaultBarWidth);
-                touchTargetWidth = a.getDimensionPixelOffset(R.styleable.VerticalSlider_touch_target_width, defaultTouchTargetWidth);
-                thumbWidth = a.getDimensionPixelOffset(R.styleable.VerticalSlider_thumb_width, defaultThumbWidth);
-                thumbPressedWidth = a.getDimensionPixelOffset(R.styleable.VerticalSlider_thumb_pressed_width, defaultThumbPressedWidth);
+                touchTargetWidth = a.getDimensionPixelSize(R.styleable.VerticalSlider_touch_target_width, defaultTouchTargetWidth);
+                thumbWidth = a.getDimensionPixelSize(R.styleable.VerticalSlider_thumb_width, defaultThumbWidth);
+                thumbPressedWidth = a.getDimensionPixelSize(R.styleable.VerticalSlider_thumb_pressed_width, defaultThumbPressedWidth);
+                paddingTop = a.getDimensionPixelSize(R.styleable.VerticalSlider_paddingTop, defaultPaddingTop);
                 int backgroundColor = a.getColor(R.styleable.VerticalSlider_background_color, Color.BLACK);
                 int progressColor = a.getColor(R.styleable.VerticalSlider_progress_color, Color.WHITE);
                 int thumbColor = a.getColor(R.styleable.VerticalSlider_thumb_color, Color.WHITE);
@@ -112,8 +116,10 @@ public class VerticalSlider extends View {
             backgroundPaint.setColor(Color.BLACK);
             progressPaint.setColor(Color.WHITE);
             thumbPaint.setColor(Color.WHITE);
+            paddingTop = defaultPaddingTop;
         }
 
+        setPadding(0, paddingTop, 0, 0);
         if(thumbDrawable != null) {
             thumbPadding = (thumbDrawable.getMinimumWidth() + 1) / 2;
         } else {

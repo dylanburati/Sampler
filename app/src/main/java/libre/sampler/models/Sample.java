@@ -50,6 +50,7 @@ public class Sample {
 
         this.setSampleZone(-1, -1, 0, 127);
         this.sustain = 1.0f;
+        this.volume = 1.0f;
         this.displayFlags |= FIELD_MIN_PITCH | FIELD_MAX_PITCH;
     }
 

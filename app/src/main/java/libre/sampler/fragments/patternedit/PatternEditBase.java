@@ -69,7 +69,8 @@ public class PatternEditBase extends Fragment {
 
         final int[] buttonFragmentPairs = new int[]{R.id.open_snap_length, AppConstants.PATTERN_EDITOR_SNAP_LENGTH,
                 R.id.open_note_properties, AppConstants.PATTERN_EDITOR_NOTE_PROPERTIES,
-                R.id.open_pattern_length, AppConstants.PATTERN_EDITOR_PATTERN_LENGTH};
+                R.id.open_pattern_length, AppConstants.PATTERN_EDITOR_PATTERN_LENGTH,
+                R.id.open_copy_multiple, AppConstants.PATTERN_EDITOR_COPY_MULTIPLE};
 
         for(int i = 0; i < buttonFragmentPairs.length; i += 2) {
             final int fragmentConst = buttonFragmentPairs[i + 1];

@@ -400,16 +400,21 @@ public class ProjectInstrumentsFragment extends Fragment {
                 R.id.velocity_min, R.id.velocity_max,
                 R.id.position_start, R.id.position_end, R.id.position_resume};
 
-        int[] sliderTextPairInputs = new int[]{R.id.instrument_volume_slider, R.id.instrument_volume,
-                R.id.sample_volume_slider, R.id.sample_volume,
+        int[] sliderTextPairInputs = new int[]{R.id.sample_volume_slider, R.id.sample_volume,
                 R.id.sample_attack_slider, R.id.sample_attack,
                 R.id.sample_decay_slider, R.id.sample_decay,
                 R.id.sample_sustain_slider, R.id.sample_sustain,
                 R.id.sample_release_slider, R.id.sample_release};
 
+        final MyDecimalFormat fmt3 = new MyDecimalFormat(3, 6);
+
+        float iVol = viewModel.getKeyboardInstrument().getVolumeDecibels();
+        iVol = Math.max(-100, Math.min(0, iVol));
+        ((EditText) rootView.findViewById(R.id.instrument_volume)).setText(fmt3.format(iVol));
+        ((VerticalSlider) rootView.findViewById(R.id.instrument_volume_slider)).setProgress(SliderConverter.DECIBELS.toSlider(iVol));
+
         Sample editorSample = viewModel.getEditorSample();
         if(editorSample != null) {
-            final MyDecimalFormat fmt3 = new MyDecimalFormat(3, 6);
             for(int id : textOnlyInputs) {
                 EditText ed = ((EditText) rootView.findViewById(id));
                 switch(id) {
@@ -478,12 +483,6 @@ public class ProjectInstrumentsFragment extends Fragment {
                 VerticalSlider slider = (VerticalSlider) rootView.findViewById(sliderTextPairInputs[i]);
                 EditText ed = (EditText) rootView.findViewById(sliderTextPairInputs[i + 1]);
                 switch(sliderTextPairInputs[i + 1]) {
-                    case R.id.instrument_volume:
-                        float iVol = viewModel.getKeyboardInstrument().getVolumeDecibels();
-                        iVol = Math.max(-100, Math.min(0, iVol));
-                        ed.setText(fmt3.format(iVol));
-                        slider.setProgress(SliderConverter.DECIBELS.toSlider(iVol));
-                        break;
                     case R.id.sample_volume:
                         float sVol = editorSample.getVolumeDecibels();
                         sVol = Math.max(-100, Math.min(0, sVol));

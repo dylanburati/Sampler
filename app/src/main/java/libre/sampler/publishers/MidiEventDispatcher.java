@@ -15,6 +15,7 @@ import androidx.annotation.RequiresApi;
 import libre.sampler.models.NoteEvent;
 import libre.sampler.models.ProjectViewModel;
 import libre.sampler.utils.MidiConstants;
+import libre.sampler.utils.NoteId;
 
 @RequiresApi(api = Build.VERSION_CODES.M)
 public class MidiEventDispatcher implements MidiManager.OnDeviceOpenedListener {
@@ -53,13 +54,13 @@ public class MidiEventDispatcher implements MidiManager.OnDeviceOpenedListener {
                 if(command == MidiConstants.STATUS_NOTE_ON) {
                     int keyNum = data[commandIdx + 1] & 0xFF;
                     int velocity = data[commandIdx + 2] & 0xFF;
-                    Pair<Long, Integer> eventId = new Pair<>(-1L, keyNum);  // associate eventIndex with key
+                    Pair<Long, Integer> eventId = NoteId.createForMidi(keyNum);
                     NoteEvent event = new NoteEvent(NoteEvent.NOTE_ON, viewModel.getKeyboardInstrument(), keyNum, velocity, eventId);
                     viewModel.noteEventSource.dispatch(event);
                 } else if(command == MidiConstants.STATUS_NOTE_OFF) {
                     int keyNum = data[commandIdx + 1] & 0xFF;
                     int velocity = data[commandIdx + 2] & 0xFF;
-                    Pair<Long, Integer> eventId = new Pair<>(-1L, keyNum);  // associate eventIndex with key
+                    Pair<Long, Integer> eventId = NoteId.createForMidi(keyNum);
                     NoteEvent event = new NoteEvent(NoteEvent.NOTE_OFF, viewModel.getKeyboardInstrument(), keyNum, velocity, eventId);
                     viewModel.noteEventSource.dispatch(event);
                 } else if(command == MidiConstants.STATUS_CONTROL_CHANGE) {

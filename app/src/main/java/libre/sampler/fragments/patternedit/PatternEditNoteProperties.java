@@ -264,18 +264,10 @@ public class PatternEditNoteProperties extends Fragment {
         rootView.findViewById(R.id.note_start_label).setVisibility(visibility);
 
         if(selectedNotes.size() > 0) {
-            pickerBars.setVisibility(View.VISIBLE);
-            pickerSixteenths.setVisibility(View.VISIBLE);
-            pickerUserTicks.setVisibility(View.VISIBLE);
-
             inputNoteStart.setTicks(selectedNotes.iterator().next().startTicks);
             pickerBars.setValue(inputNoteStart.bars);
             pickerSixteenths.setValue(inputNoteStart.sixteenths);
             pickerUserTicks.setValue(inputNoteStart.userTicks);
-        } else {
-            pickerBars.setVisibility(View.GONE);
-            pickerSixteenths.setVisibility(View.GONE);
-            pickerUserTicks.setVisibility(View.GONE);
         }
     }
 
