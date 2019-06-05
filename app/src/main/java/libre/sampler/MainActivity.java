@@ -29,11 +29,12 @@ import libre.sampler.utils.AppConstants;
 import libre.sampler.utils.DatabaseConnectionManager;
 
 public class MainActivity extends AppCompatActivity implements ProjectCreateDialog.ProjectCreateDialogListener {
-    private RecyclerView data;
-    private ProjectListAdapter dataAdapter;
+    private RecyclerView projectListView;
+    private ProjectListAdapter projectListAdapter;
     private ProjectCreateDialog projectCreateDialog;
     private boolean isAdapterLoaded;
     private MainViewModel viewModel;
+    private boolean willShowDialogCreateProject;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -54,12 +55,13 @@ public class MainActivity extends AppCompatActivity implements ProjectCreateDial
                 }
             }
         });
+        isAdapterLoaded = false;
         updateAdapter(viewModel.getProjects());
     }
 
     private void initUI() {
-        this.data = (RecyclerView) findViewById(R.id.main_data);
-        this.dataAdapter = new ProjectListAdapter(new ArrayList<Project>(), new Consumer<Project>() {
+        this.projectListView = (RecyclerView) findViewById(R.id.main_data);
+        this.projectListAdapter = new ProjectListAdapter(new ArrayList<Project>(), new Consumer<Project>() {
             @Override
             public void accept(Project project) {
                 Intent intent = new Intent(MainActivity.this, ProjectActivity.class);
@@ -71,13 +73,12 @@ public class MainActivity extends AppCompatActivity implements ProjectCreateDial
                 }
             }
         });
-        data.setAdapter(this.dataAdapter);
+        projectListView.setAdapter(this.projectListAdapter);
     }
 
     private void updateAdapter(List<Project> projects) {
         if(!isAdapterLoaded && projects != null) {
-            dataAdapter.autoScrollOnInsert = true;
-            AdapterLoader.insertAll(dataAdapter, viewModel.getProjects());
+            AdapterLoader.insertAll(projectListAdapter, viewModel.getProjects());
             isAdapterLoaded = true;
         }
     }
@@ -86,8 +87,14 @@ public class MainActivity extends AppCompatActivity implements ProjectCreateDial
     protected void onResume() {
         super.onResume();
 
-        if(data == null) {
+        if(projectListView == null) {
             initUI();
+        }
+
+        if(willShowDialogCreateProject) {
+            willShowDialogCreateProject = false;
+            projectCreateDialog = new ProjectCreateDialog();
+            projectCreateDialog.show(getSupportFragmentManager(), "dialog_project_create");
         }
     }
 
@@ -111,10 +118,10 @@ public class MainActivity extends AppCompatActivity implements ProjectCreateDial
             return true;
         } else if(item.getItemId() == R.id.appbar_delete) {
             DatabaseConnectionManager.initialize(this);
-            DatabaseConnectionManager.runTask(new DeleteProjectsTask(dataAdapter.items, new Runnable() {
+            DatabaseConnectionManager.runTask(new DeleteProjectsTask(projectListAdapter.items, new Runnable() {
                 @Override
                 public void run() {
-                    AdapterLoader.clear(dataAdapter);
+                    AdapterLoader.clear(projectListAdapter);
                 }
             }));
             return true;
@@ -134,7 +141,7 @@ public class MainActivity extends AppCompatActivity implements ProjectCreateDial
                 toAdd.setProjectId(id);
             }
         }));
-        AdapterLoader.insertItem(this.dataAdapter, 0, toAdd);
+        AdapterLoader.insertItem(this.projectListAdapter, 0, toAdd);
     }
 
     @Override
@@ -142,8 +149,7 @@ public class MainActivity extends AppCompatActivity implements ProjectCreateDial
         switch(requestCode) {
             case AppConstants.PERM_REQUEST_READ_EXTERNAL_STORAGE:
                 if(grantResults.length >= 1 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    projectCreateDialog = new ProjectCreateDialog();
-                    projectCreateDialog.show(getSupportFragmentManager(), "dialog_project_create");
+                    willShowDialogCreateProject = true;
                 }
                 break;
             default:

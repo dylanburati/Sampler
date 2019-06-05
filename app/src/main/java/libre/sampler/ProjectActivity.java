@@ -15,6 +15,7 @@ import android.widget.Toast;
 import org.puredata.android.io.AudioParameters;
 import org.puredata.android.service.PdPreferences;
 import org.puredata.android.service.PdService;
+import org.puredata.android.utils.PdUiDispatcher;
 import org.puredata.core.PdBase;
 import org.puredata.core.PdReceiver;
 import org.puredata.core.utils.IoUtils;
@@ -30,7 +31,6 @@ import androidx.core.util.Consumer;
 import androidx.lifecycle.ViewModelProviders;
 import androidx.viewpager.widget.ViewPager;
 import libre.sampler.adapters.ProjectFragmentAdapter;
-import libre.sampler.models.Instrument;
 import libre.sampler.models.InstrumentEvent;
 import libre.sampler.models.NoteEvent;
 import libre.sampler.models.Pattern;
@@ -70,7 +70,6 @@ public class ProjectActivity extends AppCompatActivity {
 
     private VoiceBindingList pdVoiceBindings;
     private SampleBindingList pdSampleBindings;
-    private Instrument pdLoadingInstrument;
     private int pdPatchHandle;
 
     @Override
@@ -90,7 +89,7 @@ public class ProjectActivity extends AppCompatActivity {
         initUI();
         initPdService();
 
-        viewModel.getProject();
+        viewModel.tryGetProject();
 
         refreshMidiConnection();
     }
@@ -119,8 +118,7 @@ public class ProjectActivity extends AppCompatActivity {
                         event.action == InstrumentEvent.INSTRUMENT_PD_LOAD) {
 
                     if(pdService != null && pdService.isRunning()) {
-                        pdLoadingInstrument = event.instrument;
-                        for(Sample s : pdLoadingInstrument.getSamples()) {
+                        for(Sample s : event.instrument.getSamples()) {
                             if(pdSampleBindings.getBinding(s)) {
                                 PdBase.sendList("sample_file", s.sampleIndex, s.filename);
                             }
@@ -335,7 +333,7 @@ public class ProjectActivity extends AppCompatActivity {
         }
     }
 
-    private class MyPdReceiver implements PdReceiver {
+    private class MyPdReceiver extends PdUiDispatcher implements PdReceiver {
         @Override
         public void print(String s) {
             Log.d("pdReceiver", s);
@@ -366,11 +364,9 @@ public class ProjectActivity extends AppCompatActivity {
                 if(args.length >= 3) {
                     try {
                         int sampleIndex = (int)((float) args[0]);
-                        for(Sample s : pdLoadingInstrument.getSamples()) {
-                            if(s.sampleIndex == sampleIndex) {
-                                s.setSampleInfo((int)((float) args[args.length - 1]), (int)((float) args[2]));
-                            }
-                        }
+                        pdSampleBindings.setSampleInfo(sampleIndex,
+                                (int)((float) args[args.length - 1]), (int)((float) args[2]));
+
                         Log.d("pdReciever", String.format("sample_info index=%d length=%d rate=%d",
                                 sampleIndex, (int)((float) args[args.length - 1]), (int)((float) args[2])));
                     } catch(ClassCastException e) {

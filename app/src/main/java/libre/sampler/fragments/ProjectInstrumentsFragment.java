@@ -42,10 +42,10 @@ import libre.sampler.views.VerticalSlider;
 
 public class ProjectInstrumentsFragment extends Fragment {
     private View rootView;
-    private RecyclerView data;
+    private RecyclerView instrumentListView;
     private ProjectViewModel viewModel;
     private InstrumentEventSource instrumentEventSource;
-    private InstrumentListAdapter adapter;
+    private InstrumentListAdapter instrumentListAdapter;
 
     private boolean isAdapterLoaded;
 
@@ -59,7 +59,7 @@ public class ProjectInstrumentsFragment extends Fragment {
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         this.rootView = inflater.inflate(R.layout.fragment_project_instruments, container, false);
 
-        this.data = (RecyclerView) rootView.findViewById(R.id.instruments_select);
+        this.instrumentListView = (RecyclerView) rootView.findViewById(R.id.instruments_select);
 
         // if landscape and not tablet, put instrument editor on right instead of bottom
         if(getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE &&
@@ -79,9 +79,9 @@ public class ProjectInstrumentsFragment extends Fragment {
         }
 
         viewModel = ViewModelProviders.of(getActivity()).get(ProjectViewModel.class);
-        adapter = new InstrumentListAdapter(new ArrayList<Instrument>(),
+        instrumentListAdapter = new InstrumentListAdapter(new ArrayList<Instrument>(),
                 new InstrumentEditConsumer(), new InstrumentSelectConsumer(), new InstrumentCreateRunnable());
-        data.setAdapter(adapter);
+        instrumentListView.setAdapter(instrumentListAdapter);
         viewModel.projectEventSource.add("InstrumentsFragment", new Consumer<Project>() {
             @Override
             public void accept(Project project) {
@@ -92,19 +92,19 @@ public class ProjectInstrumentsFragment extends Fragment {
             @Override
             public void accept(InstrumentEvent event) {
                 if(event.action == InstrumentEvent.INSTRUMENT_CREATE) {
-                    AdapterLoader.insertItem(adapter, event.instrument);
+                    AdapterLoader.insertItem(instrumentListAdapter, event.instrument);
                 } else if(event.action == InstrumentEvent.INSTRUMENT_EDIT) {
-                    int changeIdx = adapter.items.indexOf(event.instrument);
+                    int changeIdx = instrumentListAdapter.items.indexOf(event.instrument);
                     if(changeIdx != -1) {
-                        adapter.notifyItemChanged(changeIdx);
+                        instrumentListAdapter.notifyItemChanged(changeIdx);
                     }
                     if(event.instrument == viewModel.getKeyboardInstrument()) {
-                        adapter.activateInstrument(event.instrument);
+                        instrumentListAdapter.activateInstrument(event.instrument);
                     }
                 } else if(event.action == InstrumentEvent.INSTRUMENT_DELETE) {
                     // accounts for offset due to 'New' instrument tile
-                    int removeIdx = adapter.items.indexOf(event.instrument) - 1;
-                    AdapterLoader.removeItem(adapter, event.instrument);
+                    int removeIdx = instrumentListAdapter.items.indexOf(event.instrument) - 1;
+                    AdapterLoader.removeItem(instrumentListAdapter, event.instrument);
                     if(event.instrument == viewModel.getKeyboardInstrument()) {
                         if(viewModel.getProject().getInstruments().size() > removeIdx) {
                             viewModel.setKeyboardInstrument(viewModel.getProject().getInstruments().get(removeIdx));
@@ -114,10 +114,10 @@ public class ProjectInstrumentsFragment extends Fragment {
                         } else {
                             viewModel.setKeyboardInstrument(null);
                         }
-                        data.postDelayed(new Runnable() {
+                        instrumentListView.postDelayed(new Runnable() {
                             @Override
                             public void run() {
-                                adapter.activateInstrument(viewModel.getKeyboardInstrument());
+                                instrumentListAdapter.activateInstrument(viewModel.getKeyboardInstrument());
                             }
                         }, 100);
                     }
@@ -142,10 +142,10 @@ public class ProjectInstrumentsFragment extends Fragment {
 
     private void loadAdapter() {
         if(!isAdapterLoaded) {
-            Project project = viewModel.getProject();
+            Project project = viewModel.tryGetProject();
             if(project != null && !project.getInstruments().isEmpty()) {
-                AdapterLoader.insertAll(adapter, viewModel.getProject().getInstruments());
-                adapter.activateInstrument(viewModel.getKeyboardInstrument());
+                AdapterLoader.insertAll(instrumentListAdapter, viewModel.getProject().getInstruments());
+                instrumentListAdapter.activateInstrument(viewModel.getKeyboardInstrument());
                 isAdapterLoaded = true;
             }
         }
@@ -570,7 +570,7 @@ public class ProjectInstrumentsFragment extends Fragment {
         @Override
         public void accept(Instrument instrument) {
             viewModel.setKeyboardInstrument(instrument);
-            adapter.activateInstrument(instrument);
+            instrumentListAdapter.activateInstrument(instrument);
         }
     }
 }

@@ -11,8 +11,10 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.core.util.Consumer;
 import androidx.lifecycle.AndroidViewModel;
 import libre.sampler.publishers.InstrumentEventSource;
@@ -57,7 +59,8 @@ public class ProjectViewModel extends AndroidViewModel {
         this.projectId = projectId;
     }
 
-    public Project getProject() {
+    @Nullable
+    public Project tryGetProject() {
         if(project == null && !isGetProjectTaskRunning) {
             if(projectId < 0) {
                 throw new AssertionError("Project ID not set");
@@ -103,6 +106,11 @@ public class ProjectViewModel extends AndroidViewModel {
         return project;
     }
 
+    @NonNull
+    public Project getProject() {
+        return Objects.requireNonNull(project);
+    }
+
     public Instrument getKeyboardInstrument() {
         return keyboardInstrument;
     }
@@ -144,6 +152,10 @@ public class ProjectViewModel extends AndroidViewModel {
     public MidiEventDispatcher getMidiEventDispatcher() {
         if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             MidiManager midiManager = (MidiManager) getApplication().getSystemService(Context.MIDI_SERVICE);
+            if(midiManager == null) {
+                return null;
+            }
+
             MidiDeviceInfo[] midiDeviceInfos = midiManager.getDevices();
             if(midiDeviceInfos.length > 0) {
                 if(midiEventDispatcher == null) {

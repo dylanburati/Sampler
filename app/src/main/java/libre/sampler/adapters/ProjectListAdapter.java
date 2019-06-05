@@ -19,7 +19,6 @@ import libre.sampler.utils.AdapterLoader;
 public class ProjectListAdapter extends RecyclerView.Adapter<ProjectListAdapter.ViewHolder> implements AdapterLoader.Loadable<Project> {
     public List<Project> items;
     private Consumer<Project> clickPostHook;
-    public boolean autoScrollOnInsert = false;  // todo
 
     @Override
     public List<Project> items() {
