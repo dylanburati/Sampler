@@ -17,7 +17,6 @@ import org.puredata.android.service.PdPreferences;
 import org.puredata.android.service.PdService;
 import org.puredata.android.utils.PdUiDispatcher;
 import org.puredata.core.PdBase;
-import org.puredata.core.PdReceiver;
 import org.puredata.core.utils.IoUtils;
 
 import java.io.File;
@@ -31,6 +30,8 @@ import androidx.core.util.Consumer;
 import androidx.lifecycle.ViewModelProviders;
 import androidx.viewpager.widget.ViewPager;
 import libre.sampler.adapters.ProjectFragmentAdapter;
+import libre.sampler.listeners.PdFloatListener;
+import libre.sampler.listeners.PdListListener;
 import libre.sampler.models.InstrumentEvent;
 import libre.sampler.models.NoteEvent;
 import libre.sampler.models.Pattern;
@@ -52,7 +53,7 @@ public class ProjectActivity extends AppCompatActivity {
     public PatternThread patternThread;
 
     private PdService pdService = null;
-    private PdReceiver pdReceiver = new MyPdReceiver();
+    private PdUiDispatcher pdReceiver;
     private final ServiceConnection pdConnection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
@@ -165,13 +166,13 @@ public class ProjectActivity extends AppCompatActivity {
     private void initPd() {
         pdVoiceBindings = new VoiceBindingList(AppConstants.PD_NUM_VOICES);
         pdSampleBindings = new SampleBindingList(AppConstants.PD_NUM_SAMPLES);
+        pdReceiver = new PdUiDispatcher();
 
         Resources res = getResources();
         File patchFile = null;
         try {
             PdBase.setReceiver(pdReceiver);
-            PdBase.subscribe("voice_free");
-            PdBase.subscribe("sample_info");
+            initPdReceiverListeners();
             InputStream in = res.openRawResource(R.raw.pd_test);
             if(!PdBase.exists("voices")) {
                 patchFile = IoUtils.extractResource(in, "test.pd", getCacheDir());
@@ -187,6 +188,33 @@ public class ProjectActivity extends AppCompatActivity {
         } finally {
             if(patchFile != null) patchFile.delete();
         }
+    }
+
+    private void initPdReceiverListeners() {
+        pdReceiver.addListener("voice_free", new PdFloatListener() {
+            @Override
+            public void receiveFloat(String source, float x) {
+                int indexToFree = (int) x;
+                pdVoiceBindings.voiceFree(indexToFree);
+            }
+        });
+        pdReceiver.addListener("sample_info", new PdListListener() {
+            @Override
+            public void receiveList(String source, Object... args) {
+                if(args.length >= 3) {
+                    try {
+                        int sampleIndex = (int)((float) args[0]);
+                        pdSampleBindings.setSampleInfo(sampleIndex,
+                                (int)((float) args[args.length - 1]), (int)((float) args[2]));
+
+                        Log.d("pdReciever", String.format("sample_info index=%d length=%d rate=%d",
+                                sampleIndex, (int)((float) args[args.length - 1]), (int)((float) args[2])));
+                    } catch(ClassCastException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        });
     }
 
     @Override
@@ -330,55 +358,6 @@ public class ProjectActivity extends AppCompatActivity {
             } else if(noteEvent.action != NoteEvent.NOTHING) {
                 Log.d("NoteEventConsumer", "Null instrument");
             }
-        }
-    }
-
-    private class MyPdReceiver extends PdUiDispatcher implements PdReceiver {
-        @Override
-        public void print(String s) {
-            Log.d("pdReceiver", s);
-        }
-
-        @Override
-        public void receiveBang(String source) {
-            Log.d("pdReceiver", source + ": bang");
-        }
-
-        @Override
-        public void receiveFloat(String source, float x) {
-            if("voice_free".equals(source)) {
-                int indexToFree = (int) x;
-                pdVoiceBindings.voiceFree(indexToFree);
-                // Log.d("pdReceiver", String.format("voice_free %d", indexToFree));
-            }
-        }
-
-        @Override
-        public void receiveSymbol(String source, String symbol) {
-            // Log.d("pdReceiver", source + String.format(": symbol %s", symbol));
-        }
-
-        @Override
-        public void receiveList(String source, Object... args) {
-            if("sample_info".equals(source)) {
-                if(args.length >= 3) {
-                    try {
-                        int sampleIndex = (int)((float) args[0]);
-                        pdSampleBindings.setSampleInfo(sampleIndex,
-                                (int)((float) args[args.length - 1]), (int)((float) args[2]));
-
-                        Log.d("pdReciever", String.format("sample_info index=%d length=%d rate=%d",
-                                sampleIndex, (int)((float) args[args.length - 1]), (int)((float) args[2])));
-                    } catch(ClassCastException e) {
-                        e.printStackTrace();
-                    }
-                }
-            }
-        }
-
-        @Override
-        public void receiveMessage(String source, String symbol, Object... args) {
-            // Log.d("pdReceiver", source + String.format(": message: symbol %s", symbol));
         }
     }
 }

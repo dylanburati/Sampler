@@ -101,7 +101,7 @@ public class ProjectKeyboardFragment extends Fragment {
                     if(eventAction == MotionEvent.ACTION_CANCEL || eventAction == MotionEvent.ACTION_UP
                             || (eventAction == MotionEvent.ACTION_POINTER_UP && e.getActionIndex() == i)) {
                         KeyData previous = noteQueue.get(eventId);
-                        if(previous != null) {
+                        if(previous != null && previous.keyNum != -1) {
                             NoteEvent prevEndEvent = new NoteEvent(NoteEvent.NOTE_OFF, null, previous.keyNum, 100, eventId);
                             viewModel.keyboardNoteSource.dispatch(prevEndEvent);
                             noteQueue.remove(eventId);
@@ -120,15 +120,20 @@ public class ProjectKeyboardFragment extends Fragment {
                     } else if(eventAction == MotionEvent.ACTION_MOVE) {
                         KeyData previous = noteQueue.get(eventId);
                         if(previous != null && previous.keyNum != keyData.keyNum) {
-                            NoteEvent prevEndEvent = new NoteEvent(NoteEvent.NOTE_OFF, null, previous.keyNum, 100, eventId);
-                            viewModel.keyboardNoteSource.dispatch(prevEndEvent);
-                            previous.keyView.setActivated(false);
+                            if(previous.keyNum != -1) {
+                                // moved off of a key
+                                NoteEvent prevEndEvent = new NoteEvent(NoteEvent.NOTE_OFF, null, previous.keyNum, 100, eventId);
+                                viewModel.keyboardNoteSource.dispatch(prevEndEvent);
+                                previous.keyView.setActivated(false);
+                            }
+
                             if(keyData.keyNum != -1) {
+                                // moved onto a key
                                 NoteEvent noteEvent = new NoteEvent(NoteEvent.NOTE_ON, null, keyData.keyNum, 100, eventId);
                                 viewModel.keyboardNoteSource.dispatch(noteEvent);
-                                noteQueue.put(eventId, keyData);
                                 keyData.keyView.setActivated(true);
                             }
+                            noteQueue.put(eventId, keyData);  // new location saved as last regardless
                         }
                     }
                 }
