@@ -1,47 +1,29 @@
 package libre.sampler.publishers;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import androidx.core.util.Consumer;
 import libre.sampler.models.PatternEvent;
-import libre.sampler.utils.EventSource;
 
-public class PatternEventSource implements EventSource<PatternEvent> {
+public class PatternEventSource extends MapEventSource<PatternEvent> {
     private final Object lock = new Object();
-
-    private Map<String, Consumer<PatternEvent>> listeners = new HashMap<>();
 
     @Override
     public void add(String tag, Consumer<PatternEvent> listener) {
         synchronized(lock) {
-            listeners.put(tag, listener);
+            super.add(tag, listener);
         }
     }
 
     @Override
     public void dispatch(PatternEvent patternEvent) {
         synchronized(lock) {
-            for(Consumer<PatternEvent> fn : listeners.values()) {
-                fn.accept(patternEvent);
-            }
-        }
-    }
-
-    @Override
-    public void dispatchTo(String tag, PatternEvent patternEvent) {
-        synchronized(lock) {
-            Consumer<PatternEvent> fn = listeners.get(tag);
-            if(fn != null) {
-                fn.accept(patternEvent);
-            }
+            super.dispatch(patternEvent);
         }
     }
 
     @Override
     public void remove(String tag) {
         synchronized(lock) {
-            listeners.remove(tag);
+            super.remove(tag);
         }
     }
 }
