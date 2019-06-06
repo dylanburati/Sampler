@@ -48,7 +48,7 @@ import libre.sampler.utils.VoiceBindingList;
 
 public class ProjectActivity extends AppCompatActivity {
     private ViewPager pager;
-    private ProjectFragmentAdapter adapter;
+    private ProjectFragmentAdapter fragmentAdapter;
 
     public PatternThread patternThread;
 
@@ -111,7 +111,7 @@ public class ProjectActivity extends AppCompatActivity {
             }
         });
 
-        viewModel.instrumentEventSource.add("keyboard", new Consumer<InstrumentEvent>() {
+        viewModel.instrumentEventSource.add("InstrumentLoader", new Consumer<InstrumentEvent>() {
             @Override
             public void accept(InstrumentEvent event) {
                 if(event.action == InstrumentEvent.INSTRUMENT_KEYBOARD_SELECT ||
@@ -119,11 +119,15 @@ public class ProjectActivity extends AppCompatActivity {
                         event.action == InstrumentEvent.INSTRUMENT_PD_LOAD) {
 
                     if(pdService != null && pdService.isRunning()) {
+                        Log.d("InstrumentLoader", "sync  " + event.instrument.name);
                         for(Sample s : event.instrument.getSamples()) {
                             if(pdSampleBindings.getBinding(s)) {
                                 PdBase.sendList("sample_file", s.sampleIndex, s.filename);
                             }
                         }
+                    } else {
+                        Log.d("InstrumentLoader", "async " + event.instrument.name);
+                        viewModel.instrumentEventSource.addToReplayQueue(InstrumentEvent.QUEUE_FOR_INIT_PD, event);
                     }
                 }
             }
@@ -151,8 +155,8 @@ public class ProjectActivity extends AppCompatActivity {
 
     private void initUI() {
         pager = findViewById(R.id.pager);
-        adapter = new ProjectFragmentAdapter(getSupportFragmentManager());
-        pager.setAdapter(adapter);
+        fragmentAdapter = new ProjectFragmentAdapter(getSupportFragmentManager());
+        pager.setAdapter(fragmentAdapter);
     }
 
     private void initPdService() {
@@ -173,16 +177,14 @@ public class ProjectActivity extends AppCompatActivity {
         try {
             PdBase.setReceiver(pdReceiver);
             initPdReceiverListeners();
-            InputStream in = res.openRawResource(R.raw.pd_test);
             if(!PdBase.exists("voices")) {
+                InputStream in = res.openRawResource(R.raw.pd_test);
                 patchFile = IoUtils.extractResource(in, "test.pd", getCacheDir());
                 pdPatchHandle = PdBase.openPatch(patchFile);
             }
             pdService.initAudio(AudioParameters.suggestSampleRate(), 0, 2, 8);
             pdService.startAudio();
-            if(viewModel.getKeyboardInstrument() != null) {
-                viewModel.instrumentEventSource.dispatch(new InstrumentEvent(InstrumentEvent.INSTRUMENT_PD_LOAD, viewModel.getKeyboardInstrument()));
-            }
+            viewModel.instrumentEventSource.runReplayQueue(InstrumentEvent.QUEUE_FOR_INIT_PD);
         } catch (IOException e) {
             finish();
         } finally {
@@ -196,6 +198,7 @@ public class ProjectActivity extends AppCompatActivity {
             public void receiveFloat(String source, float x) {
                 int indexToFree = (int) x;
                 pdVoiceBindings.voiceFree(indexToFree);
+                Log.d("PdUiDispatcher", "voice_free " + indexToFree);
             }
         });
         pdReceiver.addListener("sample_info", new PdListListener() {
@@ -207,7 +210,7 @@ public class ProjectActivity extends AppCompatActivity {
                         pdSampleBindings.setSampleInfo(sampleIndex,
                                 (int)((float) args[args.length - 1]), (int)((float) args[2]));
 
-                        Log.d("pdReciever", String.format("sample_info index=%d length=%d rate=%d",
+                        Log.d("PdUiDispatcher", String.format("sample_info index=%d length=%d rate=%d",
                                 sampleIndex, (int)((float) args[args.length - 1]), (int)((float) args[2])));
                     } catch(ClassCastException e) {
                         e.printStackTrace();
@@ -220,9 +223,8 @@ public class ProjectActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        attachEventListeners();
 
-        if(adapter == null) {
+        if(fragmentAdapter == null) {
             initUI();
         }
         if(pdService == null) {
@@ -324,6 +326,7 @@ public class ProjectActivity extends AppCompatActivity {
                         if(noteEvent.action == NoteEvent.NOTE_ON) {
                             float adjVelocity = (float) (Math.pow(noteEvent.velocity / 128.0, 2) *
                                     noteEvent.instrument.getVolume() * s.getVolume());
+                            Log.d("NoteEventConsumer", String.valueOf(adjVelocity));
                             int voiceIndex = pdVoiceBindings.getBinding(noteEvent, s.id);
                             if(voiceIndex == -1) {
                                 continue;

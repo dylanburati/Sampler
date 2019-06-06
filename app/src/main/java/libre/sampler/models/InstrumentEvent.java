@@ -8,6 +8,8 @@ public class InstrumentEvent {
     public static final int INSTRUMENT_PD_LOAD = 4;
     public static final int INSTRUMENT_PIANO_ROLL_SELECT = 5;
 
+    public static final String QUEUE_FOR_INIT_PD = "INIT_PD";
+
     public int action;
     public Instrument instrument;
 

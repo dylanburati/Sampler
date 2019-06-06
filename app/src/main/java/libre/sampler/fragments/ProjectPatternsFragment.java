@@ -71,7 +71,7 @@ public class ProjectPatternsFragment extends Fragment {
     private double tickWidth;
     private float keyHeight;
 
-    private MusicTime noteLength;
+    private MusicTime inputNoteLength;
     private MusicTime snap;
     private MusicTime inputLoopLength;
     private double inputTempo;
@@ -112,7 +112,7 @@ public class ProjectPatternsFragment extends Fragment {
         patternLoader = new PatternLoader(patternThread);
         this.keyHeight = getResources().getDimensionPixelOffset(R.dimen.piano_roll_colheight) / 12.0f;
         this.tickWidth = getResources().getDimensionPixelOffset(R.dimen.piano_roll_barwidth) / 1.0 / MusicTime.TICKS_PER_BAR;
-        this.noteLength = new MusicTime(0, 4, 0);
+        this.inputNoteLength = new MusicTime(0, 4, 0);
         this.snap = new MusicTime(0, 1, 0);
         this.velocity = 100;
         this.inputLoopLength = new MusicTime(viewModel.getPianoRollPattern().getLoopLengthTicks());
@@ -123,30 +123,7 @@ public class ProjectPatternsFragment extends Fragment {
         pianoRollAdapter = new PianoRollAdapter(this);
         pianoRollContainer.setAdapter(pianoRollAdapter);
 
-        viewModel.patternEventSource.add("PatternLoader", new Consumer<PatternEvent>() {
-            @Override
-            public void accept(PatternEvent event) {
-                if(event.action == PatternEvent.PATTERN_SELECT || event.action == PatternEvent.PATTERN_CREATE_SELECT) {
-                    patternDerivedData = viewModel.getPatternDerivedData(viewModel.getPianoRollPattern());
-                    for(Instrument t : patternDerivedData.getInstrumentList()) {
-                        viewModel.instrumentEventSource.dispatch(new InstrumentEvent(InstrumentEvent.INSTRUMENT_PD_LOAD, t));
-                    }
-                    // updatePatternLengthInputs();
-                    updateTempoInput();
-                }
-            }
-        });
-
-        viewModel.instrumentEventSource.add("PatternLoader", new Consumer<InstrumentEvent>() {
-            @Override
-            public void accept(InstrumentEvent event) {
-                if(event.action == InstrumentEvent.INSTRUMENT_PIANO_ROLL_SELECT) {
-                    selectedNotes.clear();
-                    updatePianoRollNotes();
-                    patternEditEventSource.dispatch(AppConstants.SELECTED_NOTES);
-                }
-            }
-        });
+        attachEventListeners();
 
         patternDerivedData = viewModel.getPatternDerivedData(viewModel.getPianoRollPattern());
         for(Instrument t : patternDerivedData.getInstrumentList()) {
@@ -218,6 +195,32 @@ public class ProjectPatternsFragment extends Fragment {
         return rootView;
     }
 
+    private void attachEventListeners() {
+        viewModel.patternEventSource.add("PatternLoader", new Consumer<PatternEvent>() {
+            @Override
+            public void accept(PatternEvent event) {
+                if(event.action == PatternEvent.PATTERN_SELECT || event.action == PatternEvent.PATTERN_CREATE_SELECT) {
+                    patternDerivedData = viewModel.getPatternDerivedData(viewModel.getPianoRollPattern());
+                    for(Instrument t : patternDerivedData.getInstrumentList()) {
+                        viewModel.instrumentEventSource.dispatch(new InstrumentEvent(InstrumentEvent.INSTRUMENT_PD_LOAD, t));
+                    }
+                    updateTempoInput();
+                }
+            }
+        });
+
+        viewModel.instrumentEventSource.add("PatternLoader", new Consumer<InstrumentEvent>() {
+            @Override
+            public void accept(InstrumentEvent event) {
+                if(event.action == InstrumentEvent.INSTRUMENT_PIANO_ROLL_SELECT) {
+                    selectedNotes.clear();
+                    updatePianoRollNotes();
+                    patternEditEventSource.dispatch(AppConstants.SELECTED_NOTES);
+                }
+            }
+        });
+    }
+
     public VisualNote onCreatePianoRollNote(int containerIndex, float x, float y) {
         VisualNote visualNote = new VisualNote(containerIndex);
         double tickWidth = getTickWidth();
@@ -227,7 +230,7 @@ public class ProjectPatternsFragment extends Fragment {
         long startTicks = Math.round(inputTicks / 1.0 / snapTicks - 0.3) * snapTicks;
 
         long maxTicks = viewModel.getPianoRollPattern().getLoopLengthTicks() - startTicks;
-        long noteLengthTicks = noteLength.getTicks();
+        long noteLengthTicks = inputNoteLength.getTicks();
         if(noteLengthTicks > maxTicks) {
             noteLengthTicks = (long) Math.floor(maxTicks / 1.0 / snapTicks) * snapTicks;
         }
@@ -261,6 +264,7 @@ public class ProjectPatternsFragment extends Fragment {
             return false;
         }
         selectedNotes.add(n);
+        setNoteLength(n.lengthTicks, false);
         patternEditEventSource.dispatch(AppConstants.SELECTED_NOTES);
         return true;
     }
@@ -289,14 +293,18 @@ public class ProjectPatternsFragment extends Fragment {
         this.snap = snapLength;
     }
 
-    public MusicTime getNoteLength() {
-        return noteLength;
+    public MusicTime getInputNoteLength() {
+        return inputNoteLength;
     }
 
     public void setNoteLength(MusicTime noteLength, boolean fromUser) {
-        this.noteLength = noteLength;
-        if(selectedNotes.size() > 0) {
-            long lengthenTicks = noteLength.getTicks() - selectedNotes.first().lengthTicks;
+        setNoteLength(noteLength.getTicks(), fromUser);
+    }
+
+    public void setNoteLength(long ticks, boolean fromUser) {
+        this.inputNoteLength.setTicks(ticks);
+        if(fromUser && selectedNotes.size() > 0) {
+            long lengthenTicks = inputNoteLength.getTicks() - selectedNotes.first().lengthTicks;
 
             for(VisualNote n : selectedNotes) {
                 patternLoader.removeFromPattern(viewModel.getPianoRollPattern(), n.eventOn, n.eventOff);

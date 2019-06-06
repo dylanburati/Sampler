@@ -24,7 +24,7 @@
         <activity
             android:name="libre.sampler.MainActivity"
             android:label="@string/app_name"
-            android:theme="@style/AppTheme.NoActionBar">
+            android:theme="@style/AppTheme">
 
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -36,6 +36,7 @@
         <activity
             android:name="libre.sampler.ProjectActivity"
             android:label=""
+            android:theme="@style/AppTheme"
             android:parentActivityName="libre.sampler.MainActivity">
 
             <intent-filter>

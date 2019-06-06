@@ -34,28 +34,24 @@
             android:id="@+id/open_snap_length"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginRight="@dimen/margin1"
             android:text="@string/set_snap_length" />
 
         <Button
             android:id="@+id/open_note_properties"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginRight="@dimen/margin1"
             android:text="@string/note_properties" />
 
         <Button
             android:id="@+id/open_pattern_length"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginRight="@dimen/margin1"
             android:text="@string/set_pattern_length" />
 
         <Button
             android:id="@+id/open_copy_multiple"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginRight="@dimen/margin1"
             android:text="@string/copy_multiple" />
     </com.google.android.flexbox.FlexboxLayout>
 </RelativeLayout>

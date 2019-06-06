@@ -36,6 +36,7 @@ public class ProjectViewModel extends AndroidViewModel {
     private Instrument keyboardInstrument;
     private Sample editorSample;
 
+    private Instrument pianoRollInstrument;
     private Pattern pianoRollPattern;
     private HashMap<Pattern, PatternDerivedData> patternDerivedDataCache = new HashMap<>();
 
@@ -49,7 +50,6 @@ public class ProjectViewModel extends AndroidViewModel {
     public final NoteEventSource noteEventSource = new NoteEventSource();
     public final InstrumentEventSource instrumentEventSource = new InstrumentEventSource();
     public final PatternEventSource patternEventSource = new PatternEventSource();
-    private Instrument pianoRollInstrument;
 
     public ProjectViewModel(@NonNull Application application) {
         super(application);

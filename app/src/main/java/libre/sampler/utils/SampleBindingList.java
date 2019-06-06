@@ -12,17 +12,18 @@ import java.util.Set;
 import libre.sampler.models.Sample;
 
 public class SampleBindingList {
-    private Map<String, SampleBindingData> bindings;
+    private Map<String, Binding> bindings;
     private SparseArray<String> filenameBindings;
     private List<Integer> remainingIndices;
 
-    private static class SampleBindingData {
+    private static class Binding {
         public int sampleIndex;
-        public Set<Sample> samples;
-        private Sample firstSample;
+        public final Sample firstSample;
+
+        private Set<Sample> samples;
         private boolean isInfoLoaded = false;
 
-        public SampleBindingData(int sampleIndex, Sample sample) {
+        public Binding(int sampleIndex, Sample sample) {
             this.sampleIndex = sampleIndex;
             this.firstSample = sample;
             sample.sampleIndex = sampleIndex;
@@ -59,7 +60,7 @@ public class SampleBindingList {
     // Returns false if the binding existed already or is invalid,
     // true if the binding was created and must be propagated to PdBase
     public boolean getBinding(Sample s) {
-        SampleBindingData b = bindings.get(s.filename);
+        Binding b = bindings.get(s.filename);
         if(b != null) {
             b.addSample(s);
             return false;  // already created
@@ -69,7 +70,7 @@ public class SampleBindingList {
             return false;  // can't create, full
         }
         int insertIdx = remainingIndices.remove(0);
-        b = new SampleBindingData(insertIdx, s);
+        b = new Binding(insertIdx, s);
         filenameBindings.put(insertIdx, s.filename);
         bindings.put(s.filename, b);
 
@@ -77,11 +78,12 @@ public class SampleBindingList {
     }
 
     public void clearBindings() {
+        filenameBindings.clear();
         bindings.clear();
     }
 
     public void setSampleInfo(int sampleIndex, int sampleLength, int sampleRate) {
-        SampleBindingData b = bindings.get(filenameBindings.get(sampleIndex));
+        Binding b = bindings.get(filenameBindings.get(sampleIndex));
         if(b != null) {
             b.setSampleInfo(sampleLength, sampleRate);
         }
