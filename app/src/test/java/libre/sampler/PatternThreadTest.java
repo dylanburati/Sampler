@@ -15,7 +15,7 @@ import libre.sampler.models.NoteEvent;
 import libre.sampler.models.Pattern;
 import libre.sampler.models.ScheduledNoteEvent;
 import libre.sampler.publishers.NoteEventSource;
-import libre.sampler.utils.PatternLoader;
+import libre.sampler.utils.EditablePatternThread;
 import libre.sampler.utils.PatternThread;
 
 import static libre.sampler.utils.AppConstants.NANOS_PER_MILLI;
@@ -150,11 +150,10 @@ public class PatternThreadTest {
             }
         });
 
-        PatternThread patternThread = new PatternThread(noteEventSource);
+        EditablePatternThread patternThread = new EditablePatternThread(noteEventSource);
         patternThread.start();
         Pattern pattern = Pattern.getEmptyPattern();
         pattern.setPatternId(0);
-        PatternLoader patternLoader = new PatternLoader(patternThread);
 
         Random rand = new Random();
         final long POSITIVE_MASK = (-1L >>> 1);
@@ -164,7 +163,7 @@ public class PatternThreadTest {
             notes[i].eventOn = new ScheduledNoteEvent(startTicks, NoteEvent.NOTE_ON, null, i, 0, i);
             long endTicks = startTicks + ((rand.nextLong() & POSITIVE_MASK) % (Pattern.DEFAULT_LOOP_LENGTH.getTicks() - startTicks));
             notes[i].eventOff = new ScheduledNoteEvent(endTicks, NoteEvent.NOTE_OFF, null, i, 0, i);
-            patternLoader.addToPattern(pattern, notes[i].eventOn, notes[i].eventOff);
+            patternThread.addToPattern(pattern, notes[i].eventOn, notes[i].eventOff);
         }
 
         patternThread.addPattern("test", pattern);
@@ -179,7 +178,7 @@ public class PatternThreadTest {
             }
 
             int j = rand.nextInt(NUM_NOTES);
-            patternLoader.removeFromPattern(pattern, notes[j].eventOn, notes[j].eventOff);
+            patternThread.removeFromPattern(pattern, notes[j].eventOn, notes[j].eventOff);
 
             waitMillis = rand.nextInt(Math.toIntExact(MAX_WAIT_MILLIS - MIN_WAIT_MILLIS + 1)) + MIN_WAIT_MILLIS;
             try {
@@ -191,7 +190,7 @@ public class PatternThreadTest {
             notes[j].eventOn.offsetTicks = startTicks;
             long endTicks = startTicks + ((rand.nextLong() & POSITIVE_MASK) % (Pattern.DEFAULT_LOOP_LENGTH.getTicks() - startTicks));
             notes[j].eventOff.offsetTicks = endTicks;
-            patternLoader.addToPattern(pattern, notes[j].eventOn, notes[j].eventOff);
+            patternThread.addToPattern(pattern, notes[j].eventOn, notes[j].eventOff);
         }
 
         try {

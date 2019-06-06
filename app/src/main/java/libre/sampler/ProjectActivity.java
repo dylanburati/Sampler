@@ -33,7 +33,6 @@ import libre.sampler.listeners.PdFloatListener;
 import libre.sampler.listeners.PdListListener;
 import libre.sampler.models.InstrumentEvent;
 import libre.sampler.models.NoteEvent;
-import libre.sampler.models.Pattern;
 import libre.sampler.models.PatternEvent;
 import libre.sampler.models.ProjectViewModel;
 import libre.sampler.models.Sample;
@@ -42,8 +41,7 @@ import libre.sampler.publishers.MyPdDispatcher;
 import libre.sampler.tasks.UpdateProjectTask;
 import libre.sampler.utils.AppConstants;
 import libre.sampler.utils.DatabaseConnectionManager;
-import libre.sampler.utils.PatternLoader;
-import libre.sampler.utils.PatternThread;
+import libre.sampler.utils.EditablePatternThread;
 import libre.sampler.utils.SampleBindingList;
 import libre.sampler.utils.VoiceBindingList;
 
@@ -51,8 +49,7 @@ public class ProjectActivity extends AppCompatActivity {
     private ViewPager pager;
     private ProjectFragmentAdapter fragmentAdapter;
 
-    private PatternThread patternThread;
-    private PatternLoader patternLoader;
+    private EditablePatternThread patternThread;
 
     private PdService pdService = null;
     private MyPdDispatcher pdReceiver;
@@ -142,6 +139,8 @@ public class ProjectActivity extends AppCompatActivity {
             @Override
             public void accept(PatternEvent event) {
                 if(event.action == PatternEvent.PATTERN_ON) {
+                    // Derived data must be complete before pattern starts playing
+                    viewModel.getPatternDerivedData(event.pattern);
                     patternThread.addPattern("test", event.pattern);
                 } else if(event.action == PatternEvent.PATTERN_OFF) {
                     closeNotes();
@@ -152,9 +151,8 @@ public class ProjectActivity extends AppCompatActivity {
     }
 
     private void initPatternThread() {
-        patternThread = new PatternThread(viewModel.noteEventSource);
+        patternThread = new EditablePatternThread(viewModel.noteEventSource);
         patternThread.start();
-        patternLoader = new PatternLoader(patternThread);
     }
 
     private void initUI() {
@@ -277,14 +275,7 @@ public class ProjectActivity extends AppCompatActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
         if(item.getItemId() == R.id.appbar_save) {
             viewModel.getProject().mtime = System.currentTimeMillis();
-            patternThread.lock.lock();
-            try {
-                for(Pattern p : viewModel.getProject().getPatterns()) {
-                    p.prepareEventsDeepCopy();
-                }
-            } finally {
-                patternThread.lock.unlock();
-            }
+            patternThread.savePatterns();
             DatabaseConnectionManager.runTask(new UpdateProjectTask(viewModel.getProject(), new Runnable() {
                 @Override
                 public void run() {
@@ -317,12 +308,8 @@ public class ProjectActivity extends AppCompatActivity {
         }
     }
 
-    public PatternThread getPatternThread() {
+    public EditablePatternThread getPatternThread() {
         return patternThread;
-    }
-
-    public PatternLoader getPatternLoader() {
-        return patternLoader;
     }
 
     public boolean isPatternThreadRunning() {

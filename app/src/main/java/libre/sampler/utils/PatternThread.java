@@ -20,7 +20,7 @@ public class PatternThread extends Thread {
 
     private static final int EVENT_GROUP_SIZE = 4;
 
-    public final Lock lock = new ReentrantLock();
+    final Lock lock = new ReentrantLock();
     private Condition patternsChangedTrigger = lock.newCondition();
     private Condition suspendTrigger = lock.newCondition();
     private boolean done = false;
@@ -42,6 +42,9 @@ public class PatternThread extends Thread {
     }
 
     public void clearPatterns() {
+        for(Pattern p : runningPatterns.values()) {
+            p.stop();
+        }
         runningPatterns.clear();
 
         notifyPatternsChanged();
@@ -169,6 +172,17 @@ public class PatternThread extends Thread {
             } else {
                 // Log.d("PatternThread", "Skipped");
             }
+        }
+    }
+
+    public void savePatterns() {
+        lock.lock();
+        try {
+            for(Pattern p : runningPatterns.values()) {
+                p.prepareEventsDeepCopy();
+            }
+        } finally {
+            lock.unlock();
         }
     }
 }

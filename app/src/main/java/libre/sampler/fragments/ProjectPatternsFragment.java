@@ -191,7 +191,7 @@ public class ProjectPatternsFragment extends Fragment {
     }
 
     private void attachEventListeners() {
-        viewModel.patternEventSource.add("PatternLoader", new Consumer<PatternEvent>() {
+        viewModel.patternEventSource.add("EditablePatternThread", new Consumer<PatternEvent>() {
             @Override
             public void accept(PatternEvent event) {
                 if(event.action == PatternEvent.PATTERN_SELECT || event.action == PatternEvent.PATTERN_CREATE_SELECT) {
@@ -204,7 +204,7 @@ public class ProjectPatternsFragment extends Fragment {
             }
         });
 
-        viewModel.instrumentEventSource.add("PatternLoader", new Consumer<InstrumentEvent>() {
+        viewModel.instrumentEventSource.add("EditablePatternThread", new Consumer<InstrumentEvent>() {
             @Override
             public void accept(InstrumentEvent event) {
                 if(event.action == InstrumentEvent.INSTRUMENT_PIANO_ROLL_SELECT) {
@@ -254,12 +254,12 @@ public class ProjectPatternsFragment extends Fragment {
     }
 
     private void addToPianoRollPattern(VisualNote visualNote) {
-        projectActivity.getPatternLoader().addToPattern(viewModel.getPianoRollPattern(),
+        projectActivity.getPatternThread().addToPattern(viewModel.getPianoRollPattern(),
                 visualNote.eventOn, visualNote.eventOff);
     }
 
     private void removeFromPianoRollPattern(VisualNote visualNote) {
-        projectActivity.getPatternLoader().removeFromPattern(viewModel.getPianoRollPattern(),
+        projectActivity.getPatternThread().removeFromPattern(viewModel.getPianoRollPattern(),
                 visualNote.eventOn, visualNote.eventOff);
     }
 
@@ -353,7 +353,7 @@ public class ProjectPatternsFragment extends Fragment {
                 @Override
                 public void run() {
                     if(noteRef.modificationCount == modCount) {
-                        projectActivity.getPatternLoader().addToPattern(viewModel.getPianoRollPattern(), noteRef.eventOn, noteRef.eventOff);
+                        addToPianoRollPattern(noteRef);
                         pianoRollAdapter.updateNote(noteRef);
                     }
                 }
@@ -362,7 +362,7 @@ public class ProjectPatternsFragment extends Fragment {
     }
 
     public void setPatternLength(MusicTime inputLoopLength) {
-        projectActivity.getPatternLoader().setLoopLength(viewModel.getPianoRollPattern(), inputLoopLength);
+        projectActivity.getPatternThread().setLoopLength(viewModel.getPianoRollPattern(), inputLoopLength);
         pianoRollAdapter.updateRollLength((int) (inputLoopLength.getTicks() * getTickWidth()));
     }
 
@@ -383,7 +383,7 @@ public class ProjectPatternsFragment extends Fragment {
                     baseId);
 
             note.calculateParams();
-            projectActivity.getPatternLoader().addToPattern(viewModel.getPianoRollPattern(), note.eventOn, note.eventOff);
+            addToPianoRollPattern(note);
             pianoRollAdapter.updateNote(note);
         }
     }
@@ -412,7 +412,7 @@ public class ProjectPatternsFragment extends Fragment {
             @Override
             public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
                 if(actionId == EditorInfo.IME_ACTION_DONE) {
-                    projectActivity.getPatternLoader().setTempo(viewModel.getPianoRollPattern(), inputTempo);
+                    projectActivity.getPatternThread().setTempo(viewModel.getPianoRollPattern(), inputTempo);
                 }
                 return false;
             }

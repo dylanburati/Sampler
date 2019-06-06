@@ -97,7 +97,9 @@ public class Pattern {
     }
 
     public void prepareEventsDeepCopy() {
-        eventsDeepCopy = events.toArray(new ScheduledNoteEvent[0]);
+        synchronized(schedulerLock) {
+            eventsDeepCopy = events.toArray(new ScheduledNoteEvent[0]);
+        }
     }
 
     public ScheduledNoteEvent[] getEventsDeepCopy() {
@@ -265,6 +267,10 @@ public class Pattern {
             isPaused = false;
             checkpointNanos = System.nanoTime();
         }
+    }
+
+    public void stop() {
+        isStarted = false;
     }
 
     private void cancelPending() {
