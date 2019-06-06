@@ -1,8 +1,5 @@
 package libre.sampler.utils;
 
-import java.util.Collections;
-import java.util.Comparator;
-
 import libre.sampler.models.NoteEvent;
 import libre.sampler.models.Pattern;
 import libre.sampler.models.ScheduledNoteEvent;
@@ -18,16 +15,7 @@ public class PatternLoader {
         patternThread.lock.lock();
         try {
             for(ScheduledNoteEvent noteEvent : noteEvents) {
-                int insertIdx = Collections.binarySearch(pattern.getEvents(), noteEvent, new Comparator<ScheduledNoteEvent>() {
-                    @Override
-                    public int compare(ScheduledNoteEvent o1, ScheduledNoteEvent o2) {
-                        return Long.compare(o1.offsetTicks, o2.offsetTicks);
-                    }
-                });
-                if(insertIdx < 0) {
-                    insertIdx = -insertIdx - 1;
-                }
-                pattern.addEvent(insertIdx, noteEvent);
+                pattern.addEvent(noteEvent);
             }
             patternThread.notifyPatternsChanged();
         } finally {
@@ -59,7 +47,6 @@ public class PatternLoader {
         } finally {
             patternThread.lock.unlock();
         }
-
     }
 
     public void setTempo(Pattern pattern, double bpm) {

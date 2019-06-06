@@ -6,7 +6,7 @@ import java.util.List;
 import libre.sampler.models.NoteEvent;
 
 public class VoiceBindingList {
-    public static class VoiceBindingData {
+    private static class VoiceBindingData {
         public NoteEvent event;
         public int sampleId;
         public boolean closed;
@@ -27,7 +27,7 @@ public class VoiceBindingList {
         }
     }
 
-    public int getBinding(NoteEvent openEvt, int sampleId) {
+    public synchronized int getBinding(NoteEvent openEvt, int sampleId) {
         int voiceIndex = 0;
         while(voiceIndex < bindings.size() && bindings.get(voiceIndex) != null) {
             voiceIndex++;
@@ -39,7 +39,7 @@ public class VoiceBindingList {
         return voiceIndex;
     }
 
-    public int releaseBinding(NoteEvent closeEvt, int sampleId) {
+    public synchronized int releaseBinding(NoteEvent closeEvt, int sampleId) {
         int voiceIndex = 0;
         while(voiceIndex < bindings.size()) {
             VoiceBindingData b = bindings.get(voiceIndex);
@@ -52,13 +52,13 @@ public class VoiceBindingList {
         return -1;
     }
 
-    public void voiceFree(int voiceIndex) {
+    public synchronized void voiceFree(int voiceIndex) {
         if(voiceIndex >= 0 && voiceIndex <= bindings.size()) {
             bindings.set(voiceIndex, null);
         }
     }
 
-    public List<NoteEvent> getCloseEvents() {
+    public synchronized List<NoteEvent> getCloseEvents() {
         List<NoteEvent> events = new ArrayList<>();
         for(VoiceBindingData b : bindings) {
             if(b != null) {
@@ -67,5 +67,11 @@ public class VoiceBindingList {
             }
         }
         return events;
+    }
+
+    public synchronized void clearBindings() {
+        for(int i = 0; i < bindings.size(); i++) {
+            bindings.set(i, null);
+        }
     }
 }

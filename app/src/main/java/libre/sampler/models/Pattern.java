@@ -3,6 +3,8 @@ package libre.sampler.models;
 import android.util.Log;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 import androidx.room.Entity;
@@ -154,18 +156,28 @@ public class Pattern {
         }
     }
 
-    public void addEvent(int insertIdx, ScheduledNoteEvent event) {
-        event.patternId = this.id;
-        event.id = nextEventId;
+    public void addEvent(ScheduledNoteEvent noteEvent) {
+        noteEvent.patternId = this.id;
+        noteEvent.id = nextEventId;
         nextEventId++;
 
         synchronized(schedulerLock) {
+            int insertIdx = Collections.binarySearch(events, noteEvent, new Comparator<ScheduledNoteEvent>() {
+                @Override
+                public int compare(ScheduledNoteEvent o1, ScheduledNoteEvent o2) {
+                    return Long.compare(o1.offsetTicks, o2.offsetTicks);
+                }
+            });
+            if(insertIdx < 0) {
+                insertIdx = -insertIdx - 1;
+            }
+
             cancelPending();
             Log.d("Pattern", "addEvent " + insertIdx);
             if(insertIdx <= schedulerEventIndex) {
                 schedulerEventIndex++;
             }
-            events.add(insertIdx, event);
+            events.add(insertIdx, noteEvent);
         }
 
         idStatus.require(IdStatus.SELF);

@@ -15,7 +15,6 @@ import android.widget.Toast;
 import org.puredata.android.io.AudioParameters;
 import org.puredata.android.service.PdPreferences;
 import org.puredata.android.service.PdService;
-import org.puredata.android.utils.PdUiDispatcher;
 import org.puredata.core.PdBase;
 import org.puredata.core.utils.IoUtils;
 
@@ -39,9 +38,11 @@ import libre.sampler.models.PatternEvent;
 import libre.sampler.models.ProjectViewModel;
 import libre.sampler.models.Sample;
 import libre.sampler.publishers.MidiEventDispatcher;
+import libre.sampler.publishers.MyPdDispatcher;
 import libre.sampler.tasks.UpdateProjectTask;
 import libre.sampler.utils.AppConstants;
 import libre.sampler.utils.DatabaseConnectionManager;
+import libre.sampler.utils.PatternLoader;
 import libre.sampler.utils.PatternThread;
 import libre.sampler.utils.SampleBindingList;
 import libre.sampler.utils.VoiceBindingList;
@@ -50,10 +51,13 @@ public class ProjectActivity extends AppCompatActivity {
     private ViewPager pager;
     private ProjectFragmentAdapter fragmentAdapter;
 
-    public PatternThread patternThread;
+    private PatternThread patternThread;
+    private PatternLoader patternLoader;
 
     private PdService pdService = null;
-    private PdUiDispatcher pdReceiver;
+    private MyPdDispatcher pdReceiver;
+    private PdFloatListener voiceFreeListener;
+    private PdListListener sampleInfoListener;
     private final ServiceConnection pdConnection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
@@ -88,7 +92,6 @@ public class ProjectActivity extends AppCompatActivity {
         attachEventListeners();
         initPatternThread();
         initUI();
-        initPdService();
 
         viewModel.tryGetProject();
 
@@ -107,7 +110,7 @@ public class ProjectActivity extends AppCompatActivity {
         viewModel.noteEventSource.add("logger", new Consumer<NoteEvent>() {
             @Override
             public void accept(NoteEvent noteEvent) {
-                Log.d("ProjectActivity", String.format("noteEvent: action=%d keynum=%d velocity=%d id=%d", noteEvent.action, noteEvent.keyNum, noteEvent.velocity, noteEvent.eventId.second));
+                // Log.d("ProjectActivity", String.format("noteEvent: action=%d keynum=%d velocity=%d id=%d", noteEvent.action, noteEvent.keyNum, noteEvent.velocity, noteEvent.eventId.second));
             }
         });
 
@@ -151,6 +154,7 @@ public class ProjectActivity extends AppCompatActivity {
     private void initPatternThread() {
         patternThread = new PatternThread(viewModel.noteEventSource);
         patternThread.start();
+        patternLoader = new PatternLoader(patternThread);
     }
 
     private void initUI() {
@@ -168,9 +172,9 @@ public class ProjectActivity extends AppCompatActivity {
     }
 
     private void initPd() {
-        pdVoiceBindings = new VoiceBindingList(AppConstants.PD_NUM_VOICES);
+        pdReceiver = new MyPdDispatcher();
         pdSampleBindings = new SampleBindingList(AppConstants.PD_NUM_SAMPLES);
-        pdReceiver = new PdUiDispatcher();
+        pdVoiceBindings = new VoiceBindingList(AppConstants.PD_NUM_VOICES);
 
         Resources res = getResources();
         File patchFile = null;
@@ -193,14 +197,17 @@ public class ProjectActivity extends AppCompatActivity {
     }
 
     private void initPdReceiverListeners() {
+        // PdBase.subscribe("voice_free");
         pdReceiver.addListener("voice_free", new PdFloatListener() {
             @Override
             public void receiveFloat(String source, float x) {
                 int indexToFree = (int) x;
                 pdVoiceBindings.voiceFree(indexToFree);
-                Log.d("PdUiDispatcher", "voice_free " + indexToFree);
+                Log.d("MyPdDispatcher", "voice_free " + indexToFree);
             }
         });
+
+        // PdBase.subscribe("sample_info");
         pdReceiver.addListener("sample_info", new PdListListener() {
             @Override
             public void receiveList(String source, Object... args) {
@@ -210,7 +217,7 @@ public class ProjectActivity extends AppCompatActivity {
                         pdSampleBindings.setSampleInfo(sampleIndex,
                                 (int)((float) args[args.length - 1]), (int)((float) args[2]));
 
-                        Log.d("PdUiDispatcher", String.format("sample_info index=%d length=%d rate=%d",
+                        Log.d("MyPdDispatcher", String.format("sample_info index=%d length=%d rate=%d",
                                 sampleIndex, (int)((float) args[args.length - 1]), (int)((float) args[2])));
                     } catch(ClassCastException e) {
                         e.printStackTrace();
@@ -224,11 +231,18 @@ public class ProjectActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
 
+        if(viewModel.getKeyboardInstrument() != null) {
+            viewModel.instrumentEventSource.dispatch(new InstrumentEvent(InstrumentEvent.INSTRUMENT_PD_LOAD,
+                    viewModel.getKeyboardInstrument()));
+        }
+        initPatternThread();
         if(fragmentAdapter == null) {
             initUI();
         }
         if(pdService == null) {
             initPdService();
+        } else {
+            initPd();
         }
     }
 
@@ -236,10 +250,11 @@ public class ProjectActivity extends AppCompatActivity {
     protected void onPause() {
         super.onPause();
         if(patternThread != null) {
-            patternThread.suspendLoop();
+            patternThread.finish();
         }
         if(pdService != null) {
             closeNotes();
+            PdBase.release();
             pdService.stopAudio();
         }
     }
@@ -248,9 +263,6 @@ public class ProjectActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        if(patternThread != null) {
-            patternThread.finish();
-        }
         unbindService(pdConnection);
     }
 
@@ -305,6 +317,22 @@ public class ProjectActivity extends AppCompatActivity {
         }
     }
 
+    public PatternThread getPatternThread() {
+        return patternThread;
+    }
+
+    public PatternLoader getPatternLoader() {
+        return patternLoader;
+    }
+
+    public boolean isPatternThreadRunning() {
+        return (patternThread.runningPatterns.size() > 0);
+    }
+
+    public boolean isPatternThreadPaused() {
+        return patternThread.isSuspended;
+    }
+
     private class NoteEventConsumer implements Consumer<NoteEvent> {
         @Override
         public void accept(NoteEvent noteEvent) {
@@ -326,11 +354,11 @@ public class ProjectActivity extends AppCompatActivity {
                         if(noteEvent.action == NoteEvent.NOTE_ON) {
                             float adjVelocity = (float) (Math.pow(noteEvent.velocity / 128.0, 2) *
                                     noteEvent.instrument.getVolume() * s.getVolume());
-                            Log.d("NoteEventConsumer", String.valueOf(adjVelocity));
                             int voiceIndex = pdVoiceBindings.getBinding(noteEvent, s.id);
                             if(voiceIndex == -1) {
                                 continue;
                             }
+                            Log.d("NoteEventConsumer", String.format("NOTE_ON : voiceIndex=%d id1=%x id2=%d", voiceIndex, noteEvent.eventId.first, noteEvent.eventId.second));
                             PdBase.sendList("note", voiceIndex, noteEvent.keyNum,
                                     /*velocity*/   adjVelocity,
                                     /*ADSR*/       s.attack, s.decay, s.sustain, s.release,
@@ -340,6 +368,7 @@ public class ProjectActivity extends AppCompatActivity {
                             if(voiceIndex == -1) {
                                 continue;
                             }
+                            Log.d("NoteEventConsumer", String.format("NOTE_OFF: voiceIndex=%d id1=%x id2=%d", voiceIndex, noteEvent.eventId.first, noteEvent.eventId.second));
                             PdBase.sendList("note", voiceIndex, noteEvent.keyNum,
                                     /*velocity*/   0,
                                     /*ADSR*/       s.attack, s.decay, s.sustain, s.release,
