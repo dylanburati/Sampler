@@ -12,31 +12,31 @@ import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProviders;
 import libre.sampler.R;
 import libre.sampler.fragments.ProjectPatternsFragment;
-import libre.sampler.listeners.StatefulScrollListener;
 import libre.sampler.models.ProjectViewModel;
 import libre.sampler.utils.AppConstants;
 import libre.sampler.utils.MusicTime;
+import libre.sampler.views.MusicTimePicker;
 
 public class PatternEditPatternLength extends Fragment {
     private static final int MAX_INPUT_BARS = 999;
     private ProjectPatternsFragment patternsFragment;
     private View rootView;
-    private MusicTime inputLoopLength;
+    private MusicTimePicker loopLengthPicker;
+    private ProjectViewModel viewModel;
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         patternsFragment = (ProjectPatternsFragment) getParentFragment();
         rootView = inflater.inflate(R.layout.fragment_pattern_edit_pattern_length, container, false);
-        ProjectViewModel viewModel = ViewModelProviders.of(getActivity()).get(ProjectViewModel.class);
+        viewModel = ViewModelProviders.of(getActivity()).get(ProjectViewModel.class);
 
-        inputLoopLength = new MusicTime(viewModel.getPianoRollPattern().getLoopLengthTicks());
-        initPickers();
+        initPicker();
 
         rootView.findViewById(R.id.submit_pattern_length).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                patternsFragment.setPatternLength(inputLoopLength);
+                patternsFragment.setPatternLength(loopLengthPicker.getValue());
             }
         });
 
@@ -50,47 +50,13 @@ public class PatternEditPatternLength extends Fragment {
         return rootView;
     }
 
-    private void initPickers() {
-        final NumberPicker pickerBars = rootView.findViewById(R.id.pattern_length_bars);
-        final NumberPicker pickerSixteenths = rootView.findViewById(R.id.pattern_length_sixteenths);
-
-        final StatefulScrollListener pickerSixteenthsScrolling = new StatefulScrollListener();
-        pickerSixteenths.setOnScrollListener(pickerSixteenthsScrolling);
-        pickerSixteenths.setMinValue(0);
-        pickerSixteenths.setMaxValue(MusicTime.SIXTEENTHS_PER_BAR - 1);
-        pickerSixteenths.setValue(inputLoopLength.sixteenths);
-        pickerSixteenths.setOnValueChangedListener(new NumberPicker.OnValueChangeListener() {
+    private void initPicker() {
+        loopLengthPicker = new MusicTimePicker((NumberPicker) rootView.findViewById(R.id.pattern_length_bars),
+                (NumberPicker) rootView.findViewById(R.id.pattern_length_sixteenths)) {
             @Override
-            public void onValueChange(NumberPicker picker, int oldVal, int newVal) {
-                inputLoopLength.sixteenths = newVal;
-                if(oldVal == picker.getMaxValue() && newVal == picker.getMinValue()) {
-                    // rollover +
-                    if(pickerSixteenthsScrolling.scrollState != NumberPicker.OnScrollListener.SCROLL_STATE_IDLE) {
-                        inputLoopLength.bars += 1;
-                        pickerBars.setValue(inputLoopLength.bars);
-                    }
-                } else if(oldVal == picker.getMinValue() && newVal == picker.getMaxValue()) {
-                    // rollover -
-                    if(pickerSixteenthsScrolling.scrollState != NumberPicker.OnScrollListener.SCROLL_STATE_IDLE &&
-                            pickerBars.getValue() > pickerBars.getMinValue()) {
-                        inputLoopLength.bars -= 1;
-                        pickerBars.setValue(inputLoopLength.bars);
-                    }
-                }
+            public void onValueChanged(MusicTime value) {
             }
-        });
-
-        pickerBars.setMinValue(0);
-        pickerBars.setMaxValue(MAX_INPUT_BARS);
-        pickerBars.setValue(inputLoopLength.bars);
-        pickerBars.setOnValueChangedListener(new NumberPicker.OnValueChangeListener() {
-            @Override
-            public void onValueChange(NumberPicker picker, int oldVal, int newVal) {
-                inputLoopLength.bars = newVal;
-            }
-        });
-
-        pickerSixteenths.setWrapSelectorWheel(true);
-        pickerBars.setWrapSelectorWheel(false);
+        };
+        loopLengthPicker.setTicks(viewModel.getPianoRollPattern().getLoopLengthTicks());
     }
 }

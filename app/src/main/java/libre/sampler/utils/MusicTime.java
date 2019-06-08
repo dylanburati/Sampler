@@ -51,4 +51,12 @@ public class MusicTime {
         tmpInstance.setTicks(ticks);
         return tmpInstance.toString();
     }
+
+    public void changeByTicks(long diffTicks) {
+        long ticks = getTicks() + diffTicks;
+        if(ticks < 0) {
+            ticks = 0;
+        }
+        setTicks(ticks);
+    }
 }

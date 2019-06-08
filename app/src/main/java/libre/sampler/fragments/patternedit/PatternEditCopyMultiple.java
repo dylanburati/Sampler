@@ -16,10 +16,10 @@ import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProviders;
 import libre.sampler.R;
 import libre.sampler.fragments.ProjectPatternsFragment;
-import libre.sampler.listeners.StatefulScrollListener;
 import libre.sampler.models.ProjectViewModel;
 import libre.sampler.utils.AppConstants;
 import libre.sampler.utils.MusicTime;
+import libre.sampler.views.MusicTimePicker;
 import libre.sampler.views.VisualNote;
 
 public class PatternEditCopyMultiple extends Fragment {
@@ -39,9 +39,9 @@ public class PatternEditCopyMultiple extends Fragment {
     };
     
     private View rootView;
-    private MusicTime inputInterval;
     private int inputCount;
     private boolean commonIntervalChosen = false;
+    private MusicTimePicker intervalPicker;
 
     @Nullable
     @Override
@@ -51,15 +51,14 @@ public class PatternEditCopyMultiple extends Fragment {
         viewModel = ViewModelProviders.of(getActivity()).get(ProjectViewModel.class);
         selectedNotes = patternsFragment.getSelectedNotes();
 
-        initIntervalPickers();
         initCountPicker();
+        initIntervalPicker();
 
         patternsFragment.patternEditEventSource.add("CopyMultiple", new Consumer<String>() {
             @Override
             public void accept(String eventName) {
                 if(eventName.equals(AppConstants.SELECTED_NOTES)) {
-                    updateStatus();
-                    updateIntervalPickers();
+                    updateIntervalPicker();
                     updateMaxCount();
                     updateStatus();
                 }
@@ -72,7 +71,7 @@ public class PatternEditCopyMultiple extends Fragment {
             public void onClick(View v) {
                 if(selectedNotes.size() > 0) {
                     for(VisualNote n : selectedNotes) {
-                        patternsFragment.insertMultiplePianoRollNotes(n, inputInterval, inputCount);
+                        patternsFragment.insertMultiplePianoRollNotes(n, intervalPicker.getValue(), inputCount);
                     }
                 }
             }
@@ -88,101 +87,26 @@ public class PatternEditCopyMultiple extends Fragment {
         return rootView;
     }
 
-    private void initIntervalPickers() {
+    private void initIntervalPicker() {
         int visibility = (selectedNotes.size() > 0) ? View.VISIBLE : View.GONE;
-        final NumberPicker pickerBars = rootView.findViewById(R.id.interval_bars);
-        final NumberPicker pickerSixteenths = rootView.findViewById(R.id.interval_sixteenths);
-        final NumberPicker pickerUserTicks = rootView.findViewById(R.id.interval_ticks);
-        pickerBars.setVisibility(visibility);
-        pickerSixteenths.setVisibility(visibility);
-        pickerUserTicks.setVisibility(visibility);
+        intervalPicker = new MusicTimePicker((NumberPicker) rootView.findViewById(R.id.interval_bars),
+                (NumberPicker) rootView.findViewById(R.id.interval_sixteenths),
+                (NumberPicker) rootView.findViewById(R.id.interval_ticks)) {
+            @Override
+            public void onValueChanged(MusicTime value) {
+                updateMaxCount();
+                updateStatus();
+            }
+        };
+        intervalPicker.setVisibility(visibility);
         rootView.findViewById(R.id.interval_label).setVisibility(visibility);
         rootView.findViewById(R.id.count_label).setVisibility(visibility);
         rootView.findViewById(R.id.count_picker).setVisibility(visibility);
 
-        inputInterval = new MusicTime(0L);
         if(selectedNotes.size() > 0) {
             chooseCommonInterval();
             commonIntervalChosen = true;
         }
-
-        final StatefulScrollListener pickerUserTicksScrolling = new StatefulScrollListener();
-        pickerUserTicks.setOnScrollListener(pickerUserTicksScrolling);
-        pickerUserTicks.setMinValue(0);
-        pickerUserTicks.setMaxValue(MusicTime.USER_TICKS_PER_SIXTEENTH - 1);
-        pickerUserTicks.setValue(inputInterval.userTicks);
-        pickerUserTicks.setFormatter(new NumberPicker.Formatter() {
-            @Override
-            public String format(int value) {
-                return String.format("%02d", value);
-            }
-        });
-        pickerUserTicks.setOnValueChangedListener(new NumberPicker.OnValueChangeListener() {
-            @Override
-            public void onValueChange(NumberPicker picker, int oldVal, int newVal) {
-                inputInterval.userTicks = newVal;
-                if(oldVal == picker.getMaxValue() && newVal == picker.getMinValue()) {
-                    // rollover +
-                    if(pickerUserTicksScrolling.scrollState != NumberPicker.OnScrollListener.SCROLL_STATE_IDLE) {
-                        inputInterval.sixteenths += 1;
-                        pickerSixteenths.setValue(inputInterval.sixteenths);
-                    }
-                } else if(oldVal == picker.getMinValue() && newVal == picker.getMaxValue()) {
-                    // rollover -
-                    if(pickerUserTicksScrolling.scrollState != NumberPicker.OnScrollListener.SCROLL_STATE_IDLE &&
-                            pickerSixteenths.getValue() > pickerSixteenths.getMinValue()) {
-                        inputInterval.sixteenths -= 1;
-                        pickerSixteenths.setValue(inputInterval.sixteenths);
-                    }
-                }
-                updateMaxCount();
-                updateStatus();
-            }
-        });
-
-        final StatefulScrollListener pickerSixteenthsScrolling = new StatefulScrollListener();
-        pickerSixteenths.setOnScrollListener(pickerSixteenthsScrolling);
-        pickerSixteenths.setMinValue(0);
-        pickerSixteenths.setMaxValue(MusicTime.SIXTEENTHS_PER_BAR - 1);
-        pickerSixteenths.setValue(inputInterval.sixteenths);
-        pickerSixteenths.setOnValueChangedListener(new NumberPicker.OnValueChangeListener() {
-            @Override
-            public void onValueChange(NumberPicker picker, int oldVal, int newVal) {
-                inputInterval.sixteenths = newVal;
-                if(oldVal == picker.getMaxValue() && newVal == picker.getMinValue()) {
-                    // rollover +
-                    if(pickerSixteenthsScrolling.scrollState != NumberPicker.OnScrollListener.SCROLL_STATE_IDLE) {
-                        inputInterval.bars += 1;
-                        pickerBars.setValue(inputInterval.bars);
-                    }
-                } else if(oldVal == picker.getMinValue() && newVal == picker.getMaxValue()) {
-                    // rollover -
-                    if(pickerSixteenthsScrolling.scrollState != NumberPicker.OnScrollListener.SCROLL_STATE_IDLE &&
-                            pickerBars.getValue() > pickerBars.getMinValue()) {
-                        inputInterval.bars -= 1;
-                        pickerBars.setValue(inputInterval.bars);
-                    }
-                }
-                updateMaxCount();
-                updateStatus();
-            }
-        });
-
-        pickerBars.setMinValue(0);
-        pickerBars.setMaxValue(MAX_INPUT_BARS);
-        pickerBars.setValue(inputInterval.bars);
-        pickerBars.setOnValueChangedListener(new NumberPicker.OnValueChangeListener() {
-            @Override
-            public void onValueChange(NumberPicker picker, int oldVal, int newVal) {
-                inputInterval.bars = newVal;
-                updateMaxCount();
-                updateStatus();
-            }
-        });
-
-        pickerUserTicks.setWrapSelectorWheel(true);
-        pickerSixteenths.setWrapSelectorWheel(true);
-        pickerBars.setWrapSelectorWheel(false);
     }
 
     private void chooseCommonInterval() {
@@ -193,7 +117,9 @@ public class PatternEditCopyMultiple extends Fragment {
                 break;
             }
         }
-        inputInterval.setTicks(COMMON_INTERVALS[commonSel].getTicks());
+        intervalPicker.setValue(COMMON_INTERVALS[commonSel]);
+        updateMaxCount();
+        updateStatus();
     }
 
     private long getSelectionStartTicks() {
@@ -240,14 +166,9 @@ public class PatternEditCopyMultiple extends Fragment {
         countPicker.setWrapSelectorWheel(false);
     }
 
-    private void updateIntervalPickers() {
+    private void updateIntervalPicker() {
         int visibility = (selectedNotes.size() > 0) ? View.VISIBLE : View.GONE;
-        final NumberPicker pickerBars = rootView.findViewById(R.id.interval_bars);
-        final NumberPicker pickerSixteenths = rootView.findViewById(R.id.interval_sixteenths);
-        final NumberPicker pickerUserTicks = rootView.findViewById(R.id.interval_ticks);
-        pickerBars.setVisibility(visibility);
-        pickerSixteenths.setVisibility(visibility);
-        pickerUserTicks.setVisibility(visibility);
+        intervalPicker.setVisibility(visibility);
         rootView.findViewById(R.id.interval_label).setVisibility(visibility);
         rootView.findViewById(R.id.count_label).setVisibility(visibility);
         rootView.findViewById(R.id.count_picker).setVisibility(visibility);
@@ -256,9 +177,6 @@ public class PatternEditCopyMultiple extends Fragment {
             if(!commonIntervalChosen) {
                 chooseCommonInterval();
                 commonIntervalChosen = true;
-                pickerBars.setValue(inputInterval.bars);
-                pickerSixteenths.setValue(inputInterval.sixteenths);
-                pickerUserTicks.setValue(inputInterval.userTicks);
             }
         }
     }
@@ -266,7 +184,7 @@ public class PatternEditCopyMultiple extends Fragment {
     private void updateMaxCount() {
         int maxCount = MAX_INPUT_BARS;
         if(selectedNotes.size() > 0) {
-            long intervalTicks = inputInterval.getTicks();
+            long intervalTicks = intervalPicker.getValue().getTicks();
             long maxTicks = viewModel.getPianoRollPattern().getLoopLengthTicks() - getSelectionStartTicks();
             maxCount = (int) (maxTicks / intervalTicks) - 1;
             long leftoverTicks = maxTicks - maxCount * intervalTicks;
@@ -275,6 +193,7 @@ public class PatternEditCopyMultiple extends Fragment {
             }
         }
 
+        maxCount = Math.max(0, maxCount);
         inputCount = Math.min(inputCount, maxCount);
         final NumberPicker countPicker = rootView.findViewById(R.id.count_picker);
         countPicker.setMaxValue(maxCount);
@@ -283,7 +202,7 @@ public class PatternEditCopyMultiple extends Fragment {
     private void updateStatus() {
         if(selectedNotes.size() > 0) {
             long startTicks = getSelectionStartTicks();
-            long endTicks = startTicks + inputInterval.getTicks() * (inputCount + 1);
+            long endTicks = startTicks + intervalPicker.getValue().getTicks() * (inputCount + 1);
             String status = getResources().getString(R.string.copy_multiple_status_range,
                     MusicTime.ticksToString(startTicks), MusicTime.ticksToString(endTicks));
             ((TextView) rootView.findViewById(R.id.copy_multiple_status)).setText(status);

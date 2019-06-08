@@ -151,7 +151,9 @@
             android:layout_toRightOf="@id/pattern_play"
             android:paddingLeft="@dimen/margin2_dense"
             android:paddingRight="@dimen/margin2_dense"
-            android:src="@drawable/respond_to_click_ic_stop" />
+            android:tintMode="src_in"
+            android:tint="@color/ic_background_tint"
+            android:src="@drawable/ic_stop" />
 
         <TextView
             android:id="@+id/piano_roll_position"

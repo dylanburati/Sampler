@@ -8,6 +8,6 @@
         </shape>
     </item>
     <item android:top="@dimen/border_width" android:right="@dimen/border_width" android:bottom="@dimen/border_width" android:left="@dimen/border_width">
-        <color android:color="#303030" />
+        <color android:color="@color/colorBackground" />
     </item>
 </layer-list>
