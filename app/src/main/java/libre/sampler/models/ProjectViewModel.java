@@ -184,13 +184,13 @@ public class ProjectViewModel extends AndroidViewModel {
         Map<Long, VisualNote> noteViews = new HashMap<>();
         for(ScheduledNoteEvent event : pattern.getEvents()) {
             if(event.action == NoteEvent.NOTE_ON) {
-                VisualNote v = new VisualNote(event);
+                VisualNote v = new VisualNote();
+                v.setEventOn(event);
                 noteViews.put(event.noteId, v);
             } else if(event.action == NoteEvent.NOTE_OFF) {
                 VisualNote v = noteViews.get(event.noteId);
                 if(v != null) {
-                    v.eventOff = event;
-                    v.calculateParams();
+                    v.setEventOff(event);
 
                     List<VisualNote> viewsForInstrument = derivedMap.get(event.instrument);
                     if(viewsForInstrument == null) {

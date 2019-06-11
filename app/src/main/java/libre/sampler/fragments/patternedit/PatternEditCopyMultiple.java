@@ -24,6 +24,7 @@ import libre.sampler.views.VisualNote;
 
 public class PatternEditCopyMultiple extends Fragment {
     private static final int MAX_INPUT_BARS = 999;
+    public static final String TAG = "CopyMultiple";
     private ProjectPatternsFragment patternsFragment;
     private TreeSet<VisualNote> selectedNotes;
     private ProjectViewModel viewModel;
@@ -54,7 +55,7 @@ public class PatternEditCopyMultiple extends Fragment {
         initCountPicker();
         initIntervalPicker();
 
-        patternsFragment.patternEditEventSource.add("CopyMultiple", new Consumer<String>() {
+        patternsFragment.patternEditEventSource.add(TAG, new Consumer<String>() {
             @Override
             public void accept(String eventName) {
                 if(eventName.equals(AppConstants.SELECTED_NOTES)) {
@@ -147,7 +148,7 @@ public class PatternEditCopyMultiple extends Fragment {
     @Override
     public void onDestroyView() {
         super.onDestroyView();
-        patternsFragment.patternEditEventSource.remove("CopyMultiple");
+        patternsFragment.patternEditEventSource.remove(TAG);
     }
 
     private void initCountPicker() {

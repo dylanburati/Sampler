@@ -12,19 +12,21 @@ import android.widget.RelativeLayout;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 import androidx.annotation.NonNull;
 import androidx.core.view.GestureDetectorCompat;
 import androidx.recyclerview.widget.RecyclerView;
 import libre.sampler.R;
 import libre.sampler.fragments.ProjectPatternsFragment;
+import libre.sampler.utils.AppConstants;
 import libre.sampler.utils.RepeatingBarDrawable;
 import libre.sampler.views.VisualNote;
 
 public class PianoRollAdapter extends RecyclerView.Adapter<PianoRollAdapter.ViewHolder> {
     public static final int SPAN_COUNT = 8;
 
-    public List<VisualNote> pianoRollNotes;
+    private List<VisualNote> pianoRollNotes;
     private ProjectPatternsFragment controller;
     private List<ViewHolder> viewHolderList;
     private int rollWidth;
@@ -70,7 +72,7 @@ public class PianoRollAdapter extends RecyclerView.Adapter<PianoRollAdapter.View
         holder.notePane.removeAllViews();
         for(VisualNote n : pianoRollNotes) {
             if(n.containerIndex == position) {
-                displayNote(holder, n);
+                displayNote(holder, n, controller.getSelectedNotes().contains(n));
             }
         }
 
@@ -89,7 +91,11 @@ public class PianoRollAdapter extends RecyclerView.Adapter<PianoRollAdapter.View
         return SPAN_COUNT;
     }
 
-    private void displayNote(ViewHolder holder, VisualNote note) {
+    public List<VisualNote> getPianoRollNotes() {
+        return pianoRollNotes;
+    }
+
+    private void displayNote(ViewHolder holder, VisualNote note, boolean isSelected) {
         double tickWidth = controller.getTickWidth();
         float keyHeight = controller.getKeyHeight();
         RelativeLayout.LayoutParams layoutParams = new RelativeLayout.LayoutParams(
@@ -100,16 +106,17 @@ public class PianoRollAdapter extends RecyclerView.Adapter<PianoRollAdapter.View
         view.setBackgroundColor(Color.WHITE);
         view.setBackgroundTintList(holder.notePane.getResources().getColorStateList(R.color.piano_roll_note));
         view.setTag(note.tag);
+        view.setActivated(isSelected);
 
         holder.notePane.addView(view, layoutParams);
     }
 
-    public void updateNote(VisualNote note) {
+    public void updateNote(VisualNote note, boolean isSelected) {
         ViewHolder holder = viewHolderList.get(note.containerIndex);
-        if(!pianoRollNotes.contains(note)) {
-            pianoRollNotes.add(note);
-            displayNote(holder, note);
-        } else {
+        if(holder == null) {
+            return;
+        }
+        if(pianoRollNotes.contains(note)) {
             View view = holder.notePane.findViewWithTag(note.tag);
             if(view != null) {
                 RelativeLayout.LayoutParams layoutParams = (RelativeLayout.LayoutParams) view.getLayoutParams();
@@ -117,13 +124,40 @@ public class PianoRollAdapter extends RecyclerView.Adapter<PianoRollAdapter.View
                 layoutParams.topMargin = (int) (note.keyIndex * controller.getKeyHeight());
                 layoutParams.width = (int) (note.lengthTicks * controller.getTickWidth());
                 view.setLayoutParams(layoutParams);
+                view.setActivated(isSelected);
             }
         }
+    }
+
+    public void removeNote(VisualNote note) {
+        ViewHolder holder = viewHolderList.get(note.containerIndex);
+        if(holder == null) {
+            return;
+        }
+        View view = holder.notePane.findViewWithTag(note.tag);
+        holder.notePane.removeView(view);
+        pianoRollNotes.remove(note);
+    }
+
+    public void addNote(VisualNote note, boolean isSelected) {
+        ViewHolder holder = viewHolderList.get(note.containerIndex);
+        if(holder == null) {
+            return;
+        }
+        pianoRollNotes.add(note);
+        displayNote(holder, note, isSelected);
     }
 
     public void setPianoRollNotes(List<VisualNote> notes) {
         pianoRollNotes = notes;
         notifyItemRangeChanged(0, getItemCount());
+    }
+
+    public void updateAllNotes() {
+        Set<VisualNote> selectedNotes = controller.getSelectedNotes();
+        for(VisualNote note : pianoRollNotes) {
+            updateNote(note, selectedNotes.contains(note));
+        }
     }
 
     public void updateRollLength(int width) {
@@ -160,12 +194,13 @@ public class PianoRollAdapter extends RecyclerView.Adapter<PianoRollAdapter.View
                     view.getLocalVisibleRect(r);
                     holder.notePane.offsetDescendantRectToMyCoords(view, r);
                     if(r.contains((int) e.getX(), (int) e.getY())) {
-                        boolean isSelected = controller.toggleSelect(n);
+                        boolean isSelected = controller.onAdapterSelectNote(n);
                         view.setActivated(isSelected);
                     }
                 }
             }
 
+            controller.dispatchPianoRollTap(containerIndex, e.getX(), e.getY());
             return false;
         }
 
@@ -181,16 +216,15 @@ public class PianoRollAdapter extends RecyclerView.Adapter<PianoRollAdapter.View
                     holder.notePane.offsetDescendantRectToMyCoords(view, r);
                     if(r.contains((int) e.getX(), (int) e.getY())) {
                         holder.notePane.removeView(view);
-                        controller.onRemovePianoRollNote(n);
+                        controller.onAdapterRemoveNote(n);
                         pianoRollNotes.remove(n);
+                        controller.patternEditEventSource.dispatch(AppConstants.PIANO_ROLL_NOTES);
                         return;
                     }
                 }
             }
 
-            VisualNote note = controller.onCreatePianoRollNote(containerIndex, e.getX(), e.getY());
-            pianoRollNotes.add(note);
-            displayNote(holder, note);
+            controller.onAdapterCreateNote(containerIndex, e.getX(), e.getY());
         }
     }
 

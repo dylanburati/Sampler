@@ -21,26 +21,62 @@
         android:layout_below="@id/instrument_label"
         android:minWidth="100sp" />
 
+    <com.google.android.material.button.MaterialButtonToggleGroup
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/note_select_controls"
+        android:orientation="horizontal"
+        android:layout_below="@id/instrument_spinner"
+        android:layout_marginTop="@dimen/margin2"
+        app:singleSelection="true">
+
+        <com.google.android.material.button.MaterialButton
+            style="@style/MaterialButton"
+            android:id="@+id/select_all"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/select_all" />
+
+        <com.google.android.material.button.MaterialButton
+            style="@style/MaterialButton"
+            android:id="@+id/select_none"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/select_none" />
+
+        <com.google.android.material.button.MaterialButton
+            style="@style/MaterialButton"
+            android:id="@+id/select_special"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/select_special" />
+    </com.google.android.material.button.MaterialButtonToggleGroup>
+
     <com.google.android.flexbox.FlexboxLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@id/instrument_spinner"
+        android:layout_below="@id/note_select_controls"
         android:layout_marginTop="@dimen/margin2"
         app:flexDirection="row"
-        app:flexWrap="wrap"
-        android:text="@string/set_snap_length">
+        app:flexWrap="wrap">
 
         <Button
-            android:id="@+id/open_snap_length"
+            android:id="@+id/delete_selected_notes"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/set_snap_length" />
+            android:text="@string/delete_selected" />
 
         <Button
             android:id="@+id/open_note_properties"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/note_properties" />
+
+        <Button
+            android:id="@+id/open_snap_length"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/set_snap_length" />
 
         <Button
             android:id="@+id/open_pattern_length"

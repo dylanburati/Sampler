@@ -13,15 +13,12 @@ public class VisualNote implements Comparable<VisualNote> {
     public int keyIndex;
     public int modificationCount;
 
-    public VisualNote(int containerIndex) {
-        this.containerIndex = containerIndex;
-    }
-
-    public VisualNote(ScheduledNoteEvent eventOn) {
+    public void setEventOn(ScheduledNoteEvent eventOn) {
         this.eventOn = eventOn;
     }
 
-    public void calculateParams() {
+    public void setEventOff(ScheduledNoteEvent eventOff) {
+        this.eventOff = eventOff;
         this.tag = eventOn.noteId;
         this.startTicks = eventOn.offsetTicks;
         this.lengthTicks = eventOff.offsetTicks - this.startTicks;

@@ -41,6 +41,14 @@ public class MusicTime {
         userTicks = (int) (ticks / TICKS_PER_USER_TICK);
     }
 
+    public void changeByTicks(long diffTicks) {
+        long ticks = getTicks() + diffTicks;
+        if(ticks < 0) {
+            ticks = 0;
+        }
+        setTicks(ticks);
+    }
+
     @NonNull
     @Override
     public String toString() {
@@ -52,11 +60,13 @@ public class MusicTime {
         return tmpInstance.toString();
     }
 
-    public void changeByTicks(long diffTicks) {
-        long ticks = getTicks() + diffTicks;
-        if(ticks < 0) {
-            ticks = 0;
-        }
-        setTicks(ticks);
+    public MusicTime copy() {
+        return new MusicTime(this.bars, this.sixteenths, this.userTicks);
+    }
+
+    public void set(MusicTime o) {
+        this.bars = o.bars;
+        this.sixteenths = o.sixteenths;
+        this.userTicks = o.userTicks;
     }
 }

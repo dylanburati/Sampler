@@ -49,4 +49,16 @@ public class MidiConstants {
             return 0;  // data byte
         }
     }
+
+    private static final String[] keyLetters = new String[]{
+            "C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"};
+
+    public static String getNoteName(int keyNum) {
+        int arrIndex = keyNum % 12;
+        if(keyNum < 0) {
+            return "";
+        }
+        int octave = keyNum / 12 - 1;
+        return keyLetters[arrIndex] + octave;
+    }
 }

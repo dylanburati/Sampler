@@ -1,6 +1,7 @@
 package libre.sampler.listeners;
 
 import android.graphics.Point;
+import android.graphics.Rect;
 import android.view.View;
 import android.view.ViewTreeObserver;
 
@@ -10,6 +11,7 @@ public class RecyclerViewScrollChangeDispatcher {
     private RecyclerView view;
     private ViewTreeObserver viewTreeObserver;
 
+    private Rect tmpRect = new Rect();
     private Point tmpOldLocation = new Point();
     private Point tmpLocation = new Point();
 
@@ -26,7 +28,9 @@ public class RecyclerViewScrollChangeDispatcher {
                 if(layoutManager != null && layoutManager.getChildCount() > 0) {
                     View child = layoutManager.getChildAt(0);
                     tmpLocation.x = -layoutManager.getDecoratedLeft(child);
-                    tmpLocation.y = -layoutManager.getDecoratedTop(child);
+
+                    view.getLocalVisibleRect(tmpRect);
+                    tmpLocation.y = tmpRect.top;
 
                     if(!tmpLocation.equals(tmpOldLocation)) {
                         listener.onScrollChange(tmpLocation.x, tmpLocation.y, tmpOldLocation.x, tmpOldLocation.y);

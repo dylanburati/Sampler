@@ -8,6 +8,8 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Spinner;
 
+import com.google.android.material.button.MaterialButtonToggleGroup;
+
 import java.util.List;
 
 import androidx.annotation.NonNull;
@@ -23,11 +25,15 @@ import libre.sampler.models.ProjectViewModel;
 import libre.sampler.utils.AppConstants;
 
 public class PatternEditBase extends Fragment {
+    public static final String TAG = "PatternEditBase";
+
     private ProjectPatternsFragment patternsFragment;
     private ProjectViewModel viewModel;
     private Spinner instrumentSpinner;
     private ArrayAdapter<String> instrumentSpinnerAdapter;
     private List<Instrument> instrumentSpinnerItems;
+    private MaterialButtonToggleGroup noteSelectControls;
+    private int noteSelectControlActiveCallCount;
 
     @Nullable
     @Override
@@ -53,7 +59,7 @@ public class PatternEditBase extends Fragment {
             }
         });
 
-        viewModel.instrumentEventSource.add("PatternEditBase", new Consumer<InstrumentEvent>() {
+        viewModel.instrumentEventSource.add(TAG, new Consumer<InstrumentEvent>() {
             @Override
             public void accept(InstrumentEvent event) {
                 if(event.action == InstrumentEvent.INSTRUMENT_DELETE ||
@@ -82,7 +88,71 @@ public class PatternEditBase extends Fragment {
             });
         }
 
+        noteSelectControls = (MaterialButtonToggleGroup) rootView.findViewById(R.id.note_select_controls);
+        noteSelectControls.addOnButtonCheckedListener(new MaterialButtonToggleGroup.OnButtonCheckedListener() {
+            @Override
+            public void onButtonChecked(MaterialButtonToggleGroup group, int checkedId, boolean isChecked) {
+                noteSelectControlActiveCallCount++;
+                try {
+                    if(!isChecked || checkedId == View.NO_ID) {
+                        return;
+                    }
+                    switch(checkedId) {
+                        case R.id.select_all:
+                            patternsFragment.selectAllNotes();
+                            break;
+                        case R.id.select_none:
+                            patternsFragment.clearSelectedNotes();
+                            break;
+                        case R.id.select_special:
+                            patternsFragment.setEditorFragment(AppConstants.PATTERN_EDITOR_SELECT_SPECIAL);
+                            break;
+                        default:
+                            break;
+                    }
+                } finally {
+                    noteSelectControlActiveCallCount--;
+                }
+            }
+        });
+
+        patternsFragment.patternEditEventSource.add(TAG, new Consumer<String>() {
+            @Override
+            public void accept(String eventName) {
+                if(noteSelectControlActiveCallCount > 0) {
+                    return;
+                }
+                if(eventName.equals(AppConstants.SELECTED_NOTES) || eventName.equals(AppConstants.PIANO_ROLL_NOTES)) {
+                    highlightNoteSelectControls();
+                }
+            }
+        });
+        highlightNoteSelectControls();
+
+        rootView.findViewById(R.id.delete_selected_notes).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                patternsFragment.deleteAllSelectedNotes();
+            }
+        });
+
         return rootView;
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        patternsFragment.patternEditEventSource.remove(TAG);
+    }
+
+    private void highlightNoteSelectControls() {
+        if(patternsFragment.getSelectedNotes().isEmpty()) {
+            noteSelectControls.check(R.id.select_none);
+        } else if(patternsFragment.isSelectedNotesComplete()) {
+            noteSelectControls.check(R.id.select_all);
+        } else {
+            noteSelectControls.clearChecked();
+        }
     }
 
     private void updateInstrumentSpinner() {

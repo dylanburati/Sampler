@@ -21,6 +21,7 @@ import libre.sampler.views.MusicTimePicker;
 import libre.sampler.views.VisualNote;
 
 public class PatternEditNoteProperties extends Fragment {
+    public static final String TAG = "NoteProperties";
     private static final int MAX_INPUT_BARS = 999;
     private ProjectPatternsFragment patternsFragment;
     private TreeSet<VisualNote> selectedNotes;
@@ -28,7 +29,6 @@ public class PatternEditNoteProperties extends Fragment {
     private View rootView;
     private MusicTimePicker noteStartPicker;
     private MusicTimePicker noteLengthPicker;
-    private MusicTime inputNoteStart;
 
     @Nullable
     @Override
@@ -40,7 +40,7 @@ public class PatternEditNoteProperties extends Fragment {
         initNoteStartPicker();
         initNoteLengthPicker();
 
-        patternsFragment.patternEditEventSource.add("NoteProperties", new Consumer<String>() {
+        patternsFragment.patternEditEventSource.add(TAG, new Consumer<String>() {
             @Override
             public void accept(String eventName) {
                 if(eventName.equals(AppConstants.SELECTED_NOTES)) {
@@ -80,7 +80,7 @@ public class PatternEditNoteProperties extends Fragment {
     @Override
     public void onDestroyView() {
         super.onDestroyView();
-        patternsFragment.patternEditEventSource.remove("NoteProperties");
+        patternsFragment.patternEditEventSource.remove(TAG);
     }
 
     private void initNoteLengthPicker() {

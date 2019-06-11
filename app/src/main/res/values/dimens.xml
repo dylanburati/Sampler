@@ -41,4 +41,5 @@
     <dimen name="instrument_editor_edittext_width">57sp</dimen>
     <dimen name="progressBarCornerRadius">0dp</dimen>
     <dimen name="volume_slider_width">5dp</dimen>
+    <dimen name="negative_button_margin">-4dp</dimen>
 </resources>
