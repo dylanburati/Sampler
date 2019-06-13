@@ -1,114 +1,120 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/pattern_edit_fragment_root"
-    android:paddingLeft="@dimen/margin3"
-    android:paddingTop="@dimen/margin3"
-    android:paddingRight="@dimen/margin3"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="200dp"
+    android:fillViewport="true">
 
-    <GridLayout
-        android:id="@+id/select_special_control"
+    <RelativeLayout
+        android:id="@+id/min_height_container"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:columnCount="3">
+        android:padding="@dimen/margin3">
 
-        <TextView
-            android:id="@+id/select_special_top"
-            android:layout_width="wrap_content"
+        <GridLayout
+            android:id="@+id/select_special_control"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_columnWeight="1"
-            android:layout_gravity="center_vertical"
-            android:text="@string/select_special_top" />
+            android:columnCount="3">
 
-        <TextView
-            android:id="@+id/select_special_left"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_columnWeight="1"
-            android:layout_gravity="center_vertical"
-            android:text="@string/select_special_left" />
-
-        <ImageButton
-            android:id="@+id/select_special_lock1"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_columnWeight="0"
-            android:src="@drawable/ic_lock_unlock"
-            android:tint="@color/activatable_text"
-            android:contentDescription="@string/ic_lock_open_description" />
-
-        <TextView
-            android:id="@+id/select_special_bottom"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_columnWeight="1"
-            android:layout_gravity="center_vertical"
-            android:text="@string/select_special_bottom" />
-
-        <TextView
-            android:id="@+id/select_special_right"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_columnWeight="1"
-            android:layout_gravity="center_vertical"
-            android:text="@string/select_special_right" />
-
-        <ImageButton
-            android:id="@+id/select_special_lock2"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_columnWeight="0"
-            android:src="@drawable/ic_lock_unlock"
-            android:tint="@color/activatable_text"
-            android:contentDescription="@string/ic_lock_open_description" />
-
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/margin1"
-            android:orientation="horizontal"
-            android:layout_columnWeight="1">
-
-            <Button
+            <TextView
+                android:id="@+id/select_special_top"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginLeft="@dimen/negative_button_margin"
-                android:id="@+id/select_special_expand_y"
-                android:text="@string/expand_y" />
-        </LinearLayout>
+                android:layout_columnWeight="1"
+                android:layout_gravity="center_vertical"
+                android:text="@string/select_special_top" />
 
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_marginTop="@dimen/margin1"
-            android:layout_columnWeight="1">
-
-            <Button
+            <TextView
+                android:id="@+id/select_special_left"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginLeft="@dimen/negative_button_margin"
-                android:id="@+id/select_special_expand_x"
-                android:text="@string/expand_x" />
-        </LinearLayout>
-    </GridLayout>
+                android:layout_columnWeight="1"
+                android:layout_gravity="center_vertical"
+                android:text="@string/select_special_left" />
 
-    <Button
-        android:id="@+id/submit_select_special"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/select_special_control"
-        android:layout_marginTop="@dimen/margin2"
-        android:layout_alignParentRight="true"
-        android:text="@string/select"/>
+            <ImageButton
+                android:id="@+id/select_special_lock1"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_columnWeight="0"
+                android:src="@drawable/ic_lock_unlock"
+                android:tint="@color/activatable_text"
+                android:contentDescription="@string/ic_lock_open_description" />
 
-    <Button
-        android:id="@+id/close_select_special"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:layout_alignParentRight="true"
-        style="@style/Base.Widget.AppCompat.Button.Borderless"
-        android:text="@string/done"/>
-</RelativeLayout>
+            <TextView
+                android:id="@+id/select_special_bottom"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_columnWeight="1"
+                android:layout_gravity="center_vertical"
+                android:text="@string/select_special_bottom" />
+
+            <TextView
+                android:id="@+id/select_special_right"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_columnWeight="1"
+                android:layout_gravity="center_vertical"
+                android:text="@string/select_special_right" />
+
+            <ImageButton
+                android:id="@+id/select_special_lock2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_columnWeight="0"
+                android:src="@drawable/ic_lock_unlock"
+                android:tint="@color/activatable_text"
+                android:contentDescription="@string/ic_lock_open_description" />
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/margin1"
+                android:orientation="horizontal"
+                android:layout_columnWeight="1">
+
+                <Button
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="@dimen/negative_button_margin"
+                    android:id="@+id/select_special_expand_y"
+                    android:text="@string/expand_y" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginTop="@dimen/margin1"
+                android:layout_columnWeight="1">
+
+                <Button
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="@dimen/negative_button_margin"
+                    android:id="@+id/select_special_expand_x"
+                    android:text="@string/expand_x" />
+            </LinearLayout>
+        </GridLayout>
+
+        <Button
+            android:id="@+id/submit_select_special"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/select_special_control"
+            android:layout_marginTop="@dimen/margin2"
+            android:layout_alignParentRight="true"
+            android:text="@string/select"/>
+
+        <Button
+            android:id="@+id/close_select_special"
+            android:layout_marginTop="@dimen/margin2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/submit_select_special"
+            android:layout_alignParentBottom="true"
+            android:layout_alignParentRight="true"
+            style="@style/Base.Widget.AppCompat.Button.Borderless"
+            android:text="@string/done"/>
+    </RelativeLayout>
+</ScrollView>

@@ -1,80 +1,85 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/pattern_edit_fragment_root"
-    android:paddingLeft="@dimen/margin3"
-    android:paddingTop="@dimen/margin3"
-    android:paddingRight="@dimen/margin3"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:fillViewport="true">
 
-    <TextView
-        android:id="@+id/interval_label"
-        android:layout_width="wrap_content"
+    <RelativeLayout
+        android:id="@+id/min_height_container"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="@string/interval_label" />
+        android:padding="@dimen/margin3">
 
-    <NumberPicker
-        android:id="@+id/interval_bars"
-        android:layout_width="wrap_content"
-        android:layout_height="60sp"
-        android:layout_below="@id/interval_label"
-        android:dividerPadding="0dp" />
+        <TextView
+            android:id="@+id/interval_label"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/interval_label" />
 
-    <NumberPicker
-        android:id="@+id/interval_sixteenths"
-        android:layout_width="wrap_content"
-        android:layout_height="60sp"
-        android:layout_alignTop="@id/interval_bars"
-        android:layout_toRightOf="@id/interval_bars"
-        android:dividerPadding="0dp" />
+        <NumberPicker
+            android:id="@+id/interval_bars"
+            android:layout_width="wrap_content"
+            android:layout_height="60sp"
+            android:layout_below="@id/interval_label"
+            android:dividerPadding="0dp" />
 
-    <NumberPicker
-        android:id="@+id/interval_ticks"
-        android:layout_width="wrap_content"
-        android:layout_height="60sp"
-        android:layout_alignTop="@id/interval_bars"
-        android:layout_toRightOf="@id/interval_sixteenths"
-        android:dividerPadding="0dp" />
+        <NumberPicker
+            android:id="@+id/interval_sixteenths"
+            android:layout_width="wrap_content"
+            android:layout_height="60sp"
+            android:layout_alignTop="@id/interval_bars"
+            android:layout_toRightOf="@id/interval_bars"
+            android:dividerPadding="0dp" />
 
-    <TextView
-        android:id="@+id/count_label"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="@dimen/margin2"
-        android:layout_below="@+id/interval_bars"
-        android:text="@string/number_of_copies" />
+        <NumberPicker
+            android:id="@+id/interval_ticks"
+            android:layout_width="wrap_content"
+            android:layout_height="60sp"
+            android:layout_alignTop="@id/interval_bars"
+            android:layout_toRightOf="@id/interval_sixteenths"
+            android:dividerPadding="0dp" />
 
-    <NumberPicker
-        android:id="@+id/count_picker"
-        android:layout_width="wrap_content"
-        android:layout_height="60sp"
-        android:layout_below="@id/count_label"
-        android:layout_marginBottom="@dimen/margin3"
-        android:dividerPadding="0dp" />
+        <TextView
+            android:id="@+id/count_label"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/margin2"
+            android:layout_below="@+id/interval_bars"
+            android:text="@string/number_of_copies" />
 
-    <TextView
-        android:id="@+id/copy_multiple_status"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/count_picker"
-        android:textSize="@dimen/subheading"
-        android:text="@string/nothing_selected" />
+        <NumberPicker
+            android:id="@+id/count_picker"
+            android:layout_width="wrap_content"
+            android:layout_height="60sp"
+            android:layout_below="@id/count_label"
+            android:layout_marginBottom="@dimen/margin3"
+            android:dividerPadding="0dp" />
 
-    <Button
-        android:id="@+id/submit_copy_multiple"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignBaseline="@id/copy_multiple_status"
-        android:layout_marginLeft="@dimen/margin3"
-        android:layout_toRightOf="@id/copy_multiple_status"
-        android:text="@string/copy" />
+        <TextView
+            android:id="@+id/copy_multiple_status"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/count_picker"
+            android:textSize="@dimen/subheading"
+            android:text="@string/nothing_selected" />
 
-    <Button
-        android:id="@+id/close_copy_multiple"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:layout_alignParentRight="true"
-        style="@style/Base.Widget.AppCompat.Button.Borderless"
-        android:text="@string/done"/>
-</RelativeLayout>
+        <Button
+            android:id="@+id/submit_copy_multiple"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignBaseline="@id/copy_multiple_status"
+            android:layout_marginLeft="@dimen/margin3"
+            android:layout_toRightOf="@id/copy_multiple_status"
+            android:text="@string/copy" />
+
+        <Button
+            android:id="@+id/close_copy_multiple"
+            android:layout_marginTop="@dimen/margin3"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:layout_alignParentRight="true"
+            style="@style/Base.Widget.AppCompat.Button.Borderless"
+            android:text="@string/done"/>
+    </RelativeLayout>
+</ScrollView>

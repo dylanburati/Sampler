@@ -1,93 +1,95 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:id="@+id/pattern_edit_fragment_root"
-    android:paddingLeft="@dimen/margin3"
-    android:paddingTop="@dimen/margin3"
-    android:paddingRight="@dimen/margin3"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <TextView
-        android:id="@+id/instrument_label"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/select_instrument" />
-
-    <Spinner
-        android:id="@+id/instrument_spinner"
-        android:layout_width="wrap_content"
-        android:layout_height="40dp"
-        android:layout_below="@id/instrument_label"
-        android:minWidth="100sp" />
-
-    <com.google.android.material.button.MaterialButtonToggleGroup
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:id="@+id/note_select_controls"
-        android:orientation="horizontal"
-        android:layout_below="@id/instrument_spinner"
-        android:layout_marginTop="@dimen/margin2"
-        app:singleSelection="true">
-
-        <com.google.android.material.button.MaterialButton
-            style="@style/MaterialButton"
-            android:id="@+id/select_all"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/select_all" />
-
-        <com.google.android.material.button.MaterialButton
-            style="@style/MaterialButton"
-            android:id="@+id/select_none"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/select_none" />
-
-        <com.google.android.material.button.MaterialButton
-            style="@style/MaterialButton"
-            android:id="@+id/select_special"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/select_special" />
-    </com.google.android.material.button.MaterialButtonToggleGroup>
-
-    <com.google.android.flexbox.FlexboxLayout
+    <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@id/note_select_controls"
-        android:layout_marginTop="@dimen/margin2"
-        app:flexDirection="row"
-        app:flexWrap="wrap">
+        android:padding="@dimen/margin3">
 
-        <Button
-            android:id="@+id/delete_selected_notes"
+        <TextView
+            android:id="@+id/instrument_label"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/delete_selected" />
+            android:text="@string/select_instrument" />
 
-        <Button
-            android:id="@+id/open_note_properties"
+        <Spinner
+            android:id="@+id/instrument_spinner"
+            android:layout_width="wrap_content"
+            android:layout_height="40dp"
+            android:layout_below="@id/instrument_label"
+            android:minWidth="100sp" />
+
+        <com.google.android.material.button.MaterialButtonToggleGroup
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/note_properties" />
+            android:id="@+id/note_select_controls"
+            android:orientation="horizontal"
+            android:layout_below="@id/instrument_spinner"
+            android:layout_marginTop="@dimen/margin2"
+            app:singleSelection="true">
 
-        <Button
-            android:id="@+id/open_snap_length"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/set_snap_length" />
+            <com.google.android.material.button.MaterialButton
+                style="@style/MaterialButton"
+                android:id="@+id/select_all"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/select_all" />
 
-        <Button
-            android:id="@+id/open_pattern_length"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/set_pattern_length" />
+            <com.google.android.material.button.MaterialButton
+                style="@style/MaterialButton"
+                android:id="@+id/select_none"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/select_none" />
 
-        <Button
-            android:id="@+id/open_copy_multiple"
-            android:layout_width="wrap_content"
+            <com.google.android.material.button.MaterialButton
+                style="@style/MaterialButton"
+                android:id="@+id/select_special"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/select_special" />
+        </com.google.android.material.button.MaterialButtonToggleGroup>
+
+        <com.google.android.flexbox.FlexboxLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/copy_multiple" />
-    </com.google.android.flexbox.FlexboxLayout>
-</RelativeLayout>
+            android:layout_below="@id/note_select_controls"
+            android:layout_marginTop="@dimen/margin2"
+            app:flexDirection="row"
+            app:flexWrap="wrap">
+
+            <Button
+                android:id="@+id/delete_selected_notes"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/delete_selected" />
+
+            <Button
+                android:id="@+id/open_note_properties"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/note_properties" />
+
+            <Button
+                android:id="@+id/open_snap_length"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/set_snap_length" />
+
+            <Button
+                android:id="@+id/open_pattern_length"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/set_pattern_length" />
+
+            <Button
+                android:id="@+id/open_copy_multiple"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/copy_multiple" />
+        </com.google.android.flexbox.FlexboxLayout>
+    </RelativeLayout>
+</ScrollView>

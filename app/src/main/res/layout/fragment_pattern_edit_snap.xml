@@ -1,31 +1,37 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/pattern_edit_fragment_root"
-    android:paddingLeft="@dimen/margin3"
-    android:paddingTop="@dimen/margin3"
-    android:paddingRight="@dimen/margin3"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:fillViewport="true">
 
-    <TextView
-        android:id="@+id/snap_length_label"
-        android:layout_width="wrap_content"
+    <RelativeLayout
+        android:id="@+id/min_height_container"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="@string/snap_length_label" />
+        android:padding="@dimen/margin3">
 
-    <Spinner
-        android:id="@+id/snap_length_spinner"
-        android:layout_width="wrap_content"
-        android:layout_height="40dp"
-        android:layout_below="@id/snap_length_label"
-        android:minWidth="100sp" />
-    
-    <Button
-        android:id="@+id/close_snap_length"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:layout_alignParentRight="true"
-        style="@style/Base.Widget.AppCompat.Button.Borderless"
-        android:text="@string/done"/>
-</RelativeLayout>
+        <TextView
+            android:id="@+id/snap_length_label"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/snap_length_label" />
+
+        <Spinner
+            android:id="@+id/snap_length_spinner"
+            android:layout_width="wrap_content"
+            android:layout_height="40dp"
+            android:layout_below="@id/snap_length_label"
+            android:minWidth="100sp" />
+        
+        <Button
+            android:id="@+id/close_snap_length"
+            android:layout_marginTop="@dimen/margin3"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:layout_alignParentRight="true"
+            style="@style/Base.Widget.AppCompat.Button.Borderless"
+            android:text="@string/done"/>
+    </RelativeLayout>
+</ScrollView>

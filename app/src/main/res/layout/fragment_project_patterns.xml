@@ -176,7 +176,6 @@
             android:gravity="bottom"
             android:paddingBottom="@dimen/margin2"
             android:layout_marginRight="@dimen/margin1"
-            android:textSize="@dimen/caption"
             android:fontFamily="sans-serif-medium"
             android:text="@string/tempo_label" />
 

@@ -1,48 +1,53 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/pattern_edit_fragment_root"
-    android:paddingLeft="@dimen/margin3"
-    android:paddingTop="@dimen/margin3"
-    android:paddingRight="@dimen/margin3"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:fillViewport="true">
 
-    <TextView
-        android:id="@+id/pattern_length_label"
-        android:layout_width="wrap_content"
+    <RelativeLayout
+        android:id="@+id/min_height_container"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="@string/pattern_length_label" />
+        android:padding="@dimen/margin3">
 
-    <NumberPicker
-        android:id="@+id/pattern_length_bars"
-        android:layout_width="wrap_content"
-        android:layout_height="60sp"
-        android:layout_below="@id/pattern_length_label"
-        android:dividerPadding="0dp" />
+        <TextView
+            android:id="@+id/pattern_length_label"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/pattern_length_label" />
 
-    <NumberPicker
-        android:id="@+id/pattern_length_sixteenths"
-        android:layout_width="wrap_content"
-        android:layout_height="60sp"
-        android:layout_alignTop="@id/pattern_length_bars"
-        android:layout_toRightOf="@id/pattern_length_bars"
-        android:dividerPadding="0dp" />
+        <NumberPicker
+            android:id="@+id/pattern_length_bars"
+            android:layout_width="wrap_content"
+            android:layout_height="60sp"
+            android:layout_below="@id/pattern_length_label"
+            android:dividerPadding="0dp" />
 
-    <Button
-        android:id="@+id/submit_pattern_length"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignBottom="@id/pattern_length_bars"
-        android:layout_marginLeft="@dimen/margin3"
-        android:layout_toRightOf="@id/pattern_length_sixteenths"
-        android:text="@string/change" />
+        <NumberPicker
+            android:id="@+id/pattern_length_sixteenths"
+            android:layout_width="wrap_content"
+            android:layout_height="60sp"
+            android:layout_alignTop="@id/pattern_length_bars"
+            android:layout_toRightOf="@id/pattern_length_bars"
+            android:dividerPadding="0dp" />
 
-    <Button
-        android:id="@+id/close_pattern_length"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:layout_alignParentRight="true"
-        style="@style/Base.Widget.AppCompat.Button.Borderless"
-        android:text="@string/done"/>
-</RelativeLayout>
+        <Button
+            android:id="@+id/submit_pattern_length"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignBottom="@id/pattern_length_bars"
+            android:layout_marginLeft="@dimen/margin3"
+            android:layout_toRightOf="@id/pattern_length_sixteenths"
+            android:text="@string/change" />
+
+        <Button
+            android:id="@+id/close_pattern_length"
+            android:layout_marginTop="@dimen/margin3"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:layout_alignParentRight="true"
+            style="@style/Base.Widget.AppCompat.Button.Borderless"
+            android:text="@string/done"/>
+    </RelativeLayout>
+</ScrollView>
