@@ -6,6 +6,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 
+import androidx.annotation.NonNull;
 import libre.sampler.views.VisualNote;
 
 public class PatternDerivedData {
@@ -23,11 +24,7 @@ public class PatternDerivedData {
         });
     }
 
-    public List<VisualNote> getNotesForInstrument(Instrument t) {
-        if(t == null) {
-            return null;
-        }
-
+    public List<VisualNote> getNotesForInstrument(@NonNull Instrument t) {
         List<VisualNote> list = noteMap.get(t);
         if(list == null) {
             list = new ArrayList<>();

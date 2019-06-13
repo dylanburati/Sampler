@@ -1,6 +1,5 @@
 package libre.sampler;
 
-import android.util.Log;
 import android.util.Pair;
 
 import org.junit.Test;
@@ -126,7 +125,6 @@ public class PatternThreadTest {
 
     @Test
     public void patternThread_correctAdditionAndRemoval() {
-        Log.setEnabled(true);
         final int NUM_NOTES = 10;
         final int NUM_CHANGES = 100;
         final TestVisualNote[] notes = new TestVisualNote[NUM_NOTES];
@@ -179,7 +177,6 @@ public class PatternThreadTest {
 
             int j = rand.nextInt(NUM_NOTES);
             patternThread.removeFromPattern(pattern, notes[j].eventOn, notes[j].eventOff);
-
             waitMillis = rand.nextInt(Math.toIntExact(MAX_WAIT_MILLIS - MIN_WAIT_MILLIS + 1)) + MIN_WAIT_MILLIS;
             try {
                 Thread.sleep(waitMillis);

@@ -348,6 +348,7 @@ public class ProjectPatternsFragment extends Fragment {
             return false;
         }
         selectedNotes.add(n);
+        inputNoteLength.setTicks(n.lengthTicks);
         patternEditEventSource.dispatch(AppConstants.SELECTED_NOTES);
         return true;
     }

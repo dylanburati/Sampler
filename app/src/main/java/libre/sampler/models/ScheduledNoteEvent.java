@@ -42,6 +42,10 @@ public class ScheduledNoteEvent {
         this.noteId = noteId;
     }
 
+    public static ScheduledNoteEvent getPlaceholder() {
+        return new ScheduledNoteEvent(0L, NoteEvent.NOTHING, null, 0, 0, 0);
+    }
+
     public NoteEvent getNoteEvent(int loopIndex) {
         return new NoteEvent(action, instrument, keyNum, velocity, new Pair<>(noteId, loopIndex));
     }

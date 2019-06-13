@@ -11,6 +11,7 @@ import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
@@ -26,10 +27,11 @@ import libre.sampler.views.VisualNote;
 public class PianoRollAdapter extends RecyclerView.Adapter<PianoRollAdapter.ViewHolder> {
     public static final int SPAN_COUNT = 8;
 
-    private List<VisualNote> pianoRollNotes;
+    private List<VisualNote> pianoRollNotes = Collections.emptyList();
     private ProjectPatternsFragment controller;
     private List<ViewHolder> viewHolderList;
     private int rollWidth;
+    private boolean enabled;
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
         private LinearLayout rootView;
@@ -44,11 +46,11 @@ public class PianoRollAdapter extends RecyclerView.Adapter<PianoRollAdapter.View
 
     public PianoRollAdapter(ProjectPatternsFragment controller) {
         this.controller = controller;
-        this.pianoRollNotes = new ArrayList<>();
         this.viewHolderList = new ArrayList<>(SPAN_COUNT);
         for(int i = 0; i < SPAN_COUNT; i++) {
             viewHolderList.add(null);
         }
+        enabled = false;
     }
 
     @NonNull
@@ -150,6 +152,7 @@ public class PianoRollAdapter extends RecyclerView.Adapter<PianoRollAdapter.View
 
     public void setPianoRollNotes(List<VisualNote> notes) {
         pianoRollNotes = notes;
+        enabled = true;
         notifyItemRangeChanged(0, getItemCount());
     }
 
@@ -185,6 +188,9 @@ public class PianoRollAdapter extends RecyclerView.Adapter<PianoRollAdapter.View
 
         @Override
         public boolean onSingleTapUp(MotionEvent e) {
+            if(!enabled) {
+                return false;
+            }
             int containerIndex = holder.getAdapterPosition();
 
             Rect r = new Rect();
@@ -206,6 +212,9 @@ public class PianoRollAdapter extends RecyclerView.Adapter<PianoRollAdapter.View
 
         @Override
         public void onLongPress(MotionEvent e) {
+            if(!enabled) {
+                return;
+            }
             int containerIndex = holder.getAdapterPosition();
 
             Rect r = new Rect();
