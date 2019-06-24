@@ -5,27 +5,33 @@
     android:layout_height="wrap_content"
     android:background="@color/colorBackground"
     android:layout_marginBottom="1dp"
-    android:paddingLeft="@dimen/margin4"
-    android:paddingRight="@dimen/margin4"
-    android:foreground="?attr/selectableItemBackground"
     android:clickable="true"
     android:focusable="true">
 
-    <View
-        android:layout_width="24dp"
-        android:layout_height="24dp"
-        android:id="@+id/icon_add"
-        android:layout_gravity="center_vertical"
-        android:layout_marginRight="@dimen/margin2"
-        android:background="@drawable/ic_add"
-        android:visibility="gone" />
-
     <TextView
+        android:id="@+id/text"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:id="@+id/text"
-        android:textColor="@color/activatable_text"
         android:layout_weight="1"
-        android:layout_marginTop="@dimen/margin3"
-        android:layout_marginBottom="@dimen/margin3" />
+        android:foreground="?attr/selectableItemBackground"
+        android:paddingLeft="@dimen/margin4"
+        android:paddingTop="@dimen/margin3"
+        android:paddingBottom="@dimen/margin3"
+        android:textColor="@color/activatable_text" />
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:id="@+id/more_vert_menu"
+        android:foreground="?attr/selectableItemBackground">
+
+        <View
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_gravity="center_vertical"
+            android:layout_marginLeft="@dimen/margin3_dense"
+            android:layout_marginRight="@dimen/margin3_dense"
+            android:background="@drawable/ic_more_vert" />
+
+    </LinearLayout>
 </LinearLayout>

@@ -80,7 +80,7 @@ public class ProjectInstrumentsFragment extends Fragment {
 
         viewModel = ViewModelProviders.of(getActivity()).get(ProjectViewModel.class);
         instrumentListAdapter = new InstrumentListAdapter(new ArrayList<Instrument>(),
-                new InstrumentEditConsumer(), new InstrumentSelectConsumer(), new InstrumentCreateRunnable());
+                new MyInstrumentActionConsumer());
         instrumentListView.setAdapter(instrumentListAdapter);
         viewModel.projectEventSource.add("InstrumentsFragment", new Consumer<Project>() {
             @Override
@@ -534,27 +534,9 @@ public class ProjectInstrumentsFragment extends Fragment {
         }
     }
 
-    private class InstrumentEditConsumer implements Consumer<Instrument> {
-        public InstrumentEditConsumer() {
-        }
-
+    private class MyInstrumentActionConsumer implements InstrumentListAdapter.InstrumentActionConsumer {
         @Override
-        public void accept(Instrument instrument) {
-            FragmentManager fm = ProjectInstrumentsFragment.this.getFragmentManager();
-            if(fm != null) {
-                InstrumentEditDialog dialog = new InstrumentEditDialog();
-                viewModel.setEditDialogInstrument(instrument);
-                dialog.show(fm, "dialog_instrument_edit");
-            }
-        }
-    }
-
-    private class InstrumentCreateRunnable implements Runnable {
-        public InstrumentCreateRunnable() {
-        }
-
-        @Override
-        public void run() {
+        public void startCreate() {
             FragmentManager fm = ProjectInstrumentsFragment.this.getFragmentManager();
             if(fm != null) {
                 InstrumentCreateDialog dialog = new InstrumentCreateDialog();
@@ -564,11 +546,24 @@ public class ProjectInstrumentsFragment extends Fragment {
                 dialog.show(fm, "dialog_instrument_create");
             }
         }
-    }
 
-    private class InstrumentSelectConsumer implements Consumer<Instrument> {
         @Override
-        public void accept(Instrument instrument) {
+        public void startRename(Instrument instrument) {
+            FragmentManager fm = ProjectInstrumentsFragment.this.getFragmentManager();
+            if(fm != null) {
+                InstrumentEditDialog dialog = new InstrumentEditDialog();
+                viewModel.setEditDialogInstrument(instrument);
+                dialog.show(fm, "dialog_instrument_edit");
+            }
+        }
+
+        @Override
+        public void startExport(Instrument instrument) {
+
+        }
+
+        @Override
+        public void select(Instrument instrument) {
             viewModel.setKeyboardInstrument(instrument);
             instrumentListAdapter.activateInstrument(instrument);
         }

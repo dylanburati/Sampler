@@ -51,7 +51,7 @@ public class Pattern {
         this.events = new ArrayList<>();
         // Placeholder event so scheduler loopIndex is always incremented
         this.events.add(ScheduledNoteEvent.getPlaceholder());
-        this.scheduler = new LoopScheduler(this.events, loopLengthTicks);
+        this.scheduler = new LoopScheduler(this.events, this);
         this.nextEventId = 1;
     }
 
@@ -80,7 +80,7 @@ public class Pattern {
                 nextEventId = e.id + 1;
             }
         }
-        this.scheduler = new LoopScheduler(this.events, this.loopLengthTicks);
+        this.scheduler = new LoopScheduler(this.events, this);
 
         idStatus.require(IdStatus.SELF);
         idStatus.set(IdStatus.CHILDREN_DB);
@@ -115,9 +115,6 @@ public class Pattern {
             checkpointNanos = now;
         }
         this.loopLengthTicks = ticks;
-        if(scheduler != null) {
-            scheduler.loopLengthTicks = ticks;
-        }
     }
 
     public void setTempo(double bpm) {
@@ -142,10 +139,8 @@ public class Pattern {
             checkpointTicks = getTicksAtTime(now);
             checkpointNanos = now;
             scheduler.cancelPending();
-            nanosPerTick = updatedNanosPerTick;
-        } else {
-            nanosPerTick = updatedNanosPerTick;
         }
+        nanosPerTick = updatedNanosPerTick;
     }
 
     public void addEvent(ScheduledNoteEvent noteEvent) {

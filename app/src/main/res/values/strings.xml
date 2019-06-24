@@ -79,6 +79,7 @@
     <string name="expand_y">Expand</string>
     <string name="expand_x">Expand</string>
     <string name="delete_selected">Delete Selected</string>
+    <string name="action_rename">Rename</string>
     <plurals name="selected_notes_label">
         <item quantity="one">%d note selected</item>
         <item quantity="other">%d notes selected</item>

@@ -2,6 +2,7 @@ package libre.sampler.adapters;
 
 import android.content.res.Resources;
 import android.view.LayoutInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
@@ -12,11 +13,9 @@ import java.util.List;
 import java.util.Set;
 
 import androidx.annotation.NonNull;
-import androidx.core.util.Consumer;
+import androidx.appcompat.widget.PopupMenu;
 import androidx.recyclerview.widget.RecyclerView;
 import libre.sampler.R;
-import libre.sampler.listeners.StatefulClickListener;
-import libre.sampler.listeners.StatefulLongClickListener;
 import libre.sampler.models.Instrument;
 import libre.sampler.utils.AdapterLoader;
 
@@ -24,10 +23,7 @@ public class InstrumentListAdapter extends RecyclerView.Adapter<InstrumentListAd
     public List<Instrument> items;
     private final Set<ViewHolder> viewHolderSet;
 
-    private Consumer<Instrument> editPostHook;
-    private Consumer<Instrument> selectPostHook;
-    private Runnable createPostHook;
-    public boolean autoScrollOnInsert = false;  // todo
+    private final InstrumentActionConsumer instrumentActionConsumer;
 
     private Instrument activateOnBind;
 
@@ -38,73 +34,107 @@ public class InstrumentListAdapter extends RecyclerView.Adapter<InstrumentListAd
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
         private LinearLayout rootView;
-        private View iconAddView;
         private TextView nameTextView;
-        private Instrument instrument;
+        public int viewType;
 
-        public ViewHolder(LinearLayout v) {
+        private Instrument instrument;
+        private PopupMenu popupMenu;
+
+        public ViewHolder(LinearLayout v, int viewType) {
             super(v);
             rootView = v;
-            iconAddView = v.findViewById(R.id.icon_add);
+            this.viewType = viewType;
             nameTextView = (TextView) v.findViewById(R.id.text);
+        }
+
+        public void setPopupMenu(PopupMenu menu) {
+            this.popupMenu = menu;
+        }
+
+        public PopupMenu getPopupMenu() {
+            return this.popupMenu;
         }
     }
 
-    public InstrumentListAdapter(List<Instrument> items, Consumer<Instrument> editPostHook,
-                                 Consumer<Instrument> selectPostHook, Runnable createPostHook) {
+    public InstrumentListAdapter(List<Instrument> items, InstrumentActionConsumer instrumentActionConsumer) {
         items.add(0, null);
         this.items = items;
-        this.editPostHook = editPostHook;
-        this.selectPostHook = selectPostHook;
-        this.createPostHook = createPostHook;
+        this.instrumentActionConsumer = instrumentActionConsumer;
 
         this.viewHolderSet = new HashSet<>();
+    }
+
+    @Override
+    public int getItemViewType(int position) {
+        if(position == 0) {
+            return 0;
+        }
+        return 1;
     }
 
     @NonNull
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        LinearLayout v = (LinearLayout) LayoutInflater.from(parent.getContext())
-                .inflate(R.layout.component_instrument_list_tile, parent, false);
-        return new ViewHolder(v);
+        LinearLayout v;
+        if(viewType == 0) {
+            v = (LinearLayout) LayoutInflater.from(parent.getContext())
+                    .inflate(R.layout.component_new_instrument_list_tile, parent, false);
+        } else {
+            v = (LinearLayout) LayoutInflater.from(parent.getContext())
+                    .inflate(R.layout.component_instrument_list_tile, parent, false);
+        }
+        return new ViewHolder(v, viewType);
     }
 
     @Override
-    public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
+    public void onBindViewHolder(@NonNull final ViewHolder holder, int position) {
         viewHolderSet.add(holder);
         Resources res = holder.rootView.getResources();
-        if(position == 0) {
-            holder.iconAddView.setVisibility(View.VISIBLE);
-            holder.rootView.setPadding((int) res.getDimension(R.dimen.margin3), holder.rootView.getPaddingTop(),
-                    (int) res.getDimension(R.dimen.margin3), holder.rootView.getPaddingBottom());
-            holder.nameTextView.setText(R.string.instrument_create);
+        if(holder.viewType == 0) {
             holder.rootView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    createPostHook.run();
+                    instrumentActionConsumer.startCreate();
                 }
             });
         } else {
             holder.instrument = items.get(position);
-            holder.iconAddView.setVisibility(View.GONE);
-            holder.rootView.setPadding((int) res.getDimension(R.dimen.margin4), holder.rootView.getPaddingTop(),
-                    (int) res.getDimension(R.dimen.margin4), holder.rootView.getPaddingBottom());
-            holder.rootView.setOnClickListener(new StatefulClickListener<Instrument>(holder.instrument) {
+            holder.nameTextView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    selectPostHook.accept(this.data);
+                    instrumentActionConsumer.select(holder.instrument);
                 }
             });
-            holder.rootView.setOnLongClickListener(new StatefulLongClickListener<Instrument>(holder.instrument) {
+            PopupMenu menu = new PopupMenu(holder.rootView.getContext(), holder.rootView.findViewById(R.id.more_vert_menu));
+            menu.inflate(R.menu.menu_instrument);
+            menu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
                 @Override
-                public boolean onLongClick(View v) {
-                    editPostHook.accept(this.data);
+                public boolean onMenuItemClick(MenuItem item) {
+                    if(item.getItemId() == R.id.instrument_rename) {
+                        instrumentActionConsumer.startRename(holder.instrument);
+                    } else if(item.getItemId() == R.id.instrument_export) {
+                        instrumentActionConsumer.startExport(holder.instrument);
+                    }
                     return true;
                 }
             });
+            holder.setPopupMenu(menu);
+            holder.rootView.findViewById(R.id.more_vert_menu).setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    holder.getPopupMenu().show();
+                }
+            });
+            // holder.rootView.setOnLongClickListener(new StatefulLongClickListener<Instrument>(holder.instrument) {
+            //     @Override
+            //     public boolean onLongClick(View v) {
+            //         editPostHook.accept(this.data);
+            //         return true;
+            //     }
+            // });
             holder.nameTextView.setText(holder.instrument.name);
             if(holder.instrument == this.activateOnBind) {
-                activateInstrument(holder.instrument);
+                activateItem(holder);
             }
         }
     }
@@ -122,12 +152,23 @@ public class InstrumentListAdapter extends RecyclerView.Adapter<InstrumentListAd
         for(ViewHolder vh : viewHolderSet) {
             if(vh != null) {
                 if(instrument == vh.instrument) {
-                    vh.nameTextView.setActivated(true);
-                    this.activateOnBind = null;
+                    activateItem(vh);
                 } else {
                     vh.nameTextView.setActivated(false);
                 }
             }
         }
+    }
+
+    private void activateItem(ViewHolder vh) {
+        vh.nameTextView.setActivated(true);
+        this.activateOnBind = null;
+    }
+
+    public interface InstrumentActionConsumer {
+        public void startCreate();
+        public void startRename(Instrument instrument);
+        public void startExport(Instrument instrument);
+        public void select(Instrument instrument);
     }
 }

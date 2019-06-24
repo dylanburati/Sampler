@@ -5,9 +5,11 @@ import android.util.Log;
 import java.util.List;
 
 import libre.sampler.models.NoteEvent;
+import libre.sampler.models.Pattern;
 import libre.sampler.models.ScheduledNoteEvent;
 
 public class LoopScheduler {
+    private Pattern pattern;
     private List<ScheduledNoteEvent> events;
     private int loopIndex;
     private int eventIndex;
@@ -18,11 +20,9 @@ public class LoopScheduler {
     private int pendingEventIndex;
     private int pendingLoopIndex;
 
-    public long loopLengthTicks;
-
-    public LoopScheduler(List<ScheduledNoteEvent> events, long loopLengthTicks) {
+    public LoopScheduler(List<ScheduledNoteEvent> events, Pattern pattern) {
         this.events = events;
-        this.loopLengthTicks = loopLengthTicks;
+        this.pattern = pattern;
         if(events.size() == 0) {
             throw new AssertionError("LoopScheduler initialized with empty event loop");
         }
@@ -61,7 +61,7 @@ public class LoopScheduler {
     }
 
     public synchronized long getEventTicks(ScheduledNoteEvent n) {
-        return n.offsetTicks + loopIndex * loopLengthTicks;
+        return n.offsetTicks + loopIndex * pattern.getLoopLengthTicks();
     }
 
     public synchronized void cancelPending() {
@@ -81,8 +81,8 @@ public class LoopScheduler {
         if(pendingEventIndex >= insertIdx) {
             pendingEventIndex++;
         }
-        int insertedLoopIndex = (int) (ticksNow / loopLengthTicks);
-        long insertedEventTicks = evt.offsetTicks + insertedLoopIndex * loopLengthTicks;
+        int insertedLoopIndex = (int) (ticksNow / pattern.getLoopLengthTicks());
+        long insertedEventTicks = evt.offsetTicks + insertedLoopIndex * pattern.getLoopLengthTicks();
 
         if(insertedEventTicks > ticksNow) {
             if(insertedLoopIndex < pendingLoopIndex ||

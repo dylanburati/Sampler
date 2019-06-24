@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@color/colorBackground"
+    android:layout_marginBottom="1dp"
+    android:paddingLeft="@dimen/margin3"
+    android:paddingRight="@dimen/margin3"
+    android:foreground="?attr/selectableItemBackground"
+    android:clickable="true"
+    android:focusable="true">
+
+    <View
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:id="@+id/icon_add"
+        android:layout_gravity="center_vertical"
+        android:layout_marginRight="@dimen/margin2"
+        android:background="@drawable/ic_add" />
+
+    <TextView
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:id="@+id/text"
+        android:textColor="@color/activatable_text"
+        android:layout_weight="1"
+        android:layout_marginTop="@dimen/margin3"
+        android:layout_marginBottom="@dimen/margin3"
+        android:text="@string/instrument_create" />
+</LinearLayout>
