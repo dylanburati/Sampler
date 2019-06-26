@@ -1,28 +1,59 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<GridLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
+    android:columnCount="2"
     android:paddingTop="@dimen/margin3"
     android:paddingLeft="@dimen/margin3"
     android:paddingRight="@dimen/margin3">
 
+    <com.google.android.material.textfield.TextInputLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_column="0"
+        android:layout_columnSpan="2"
+        android:layout_marginBottom="@dimen/margin3"
+        android:hint="@string/default_sample_path">
+
+        <EditText
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/pref_default_sample_path"
+            android:inputType="textUri"
+            android:imeOptions="actionDone" />
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_column="0"
+        android:layout_columnSpan="2"
+        android:layout_marginBottom="@dimen/margin3"
+        android:hint="@string/default_instrument_export_path">
+
+        <EditText
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/pref_default_instrument_export_path"
+            android:inputType="textUri"
+            android:imeOptions="actionDone" />
+    </com.google.android.material.textfield.TextInputLayout>
+
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:id="@+id/label_default_sample_path"
-        android:text="@string/default_sample_path" />
+        android:id="@+id/label_placeholder_bool"
+        android:layout_column="0"
+        android:layout_columnWeight="1"
+        android:visibility="gone"
+        android:text="@string/default_instrument_export_path" />
 
-    <EditText
-        android:layout_width="match_parent"
+    <Switch
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:id="@+id/pref_default_sample_path"
-        android:ems="10"
-        android:inputType="textUri"
-        android:layout_below="@id/label_default_sample_path"
-        android:layout_alignLeft="@id/label_default_sample_path"
-        android:imeOptions="actionDone"
-        android:hint="" />
-</RelativeLayout>
+        android:id="@+id/pref_placeholder_bool"
+        android:visibility="gone"
+        android:layout_column="1" />
+</GridLayout>

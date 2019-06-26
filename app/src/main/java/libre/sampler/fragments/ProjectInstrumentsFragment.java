@@ -27,6 +27,7 @@ import libre.sampler.R;
 import libre.sampler.adapters.InstrumentListAdapter;
 import libre.sampler.dialogs.InstrumentCreateDialog;
 import libre.sampler.dialogs.InstrumentEditDialog;
+import libre.sampler.dialogs.InstrumentExportDialog;
 import libre.sampler.listeners.StatefulTextWatcher;
 import libre.sampler.listeners.StatefulVerticalSliderChangeListener;
 import libre.sampler.models.Instrument;
@@ -541,7 +542,7 @@ public class ProjectInstrumentsFragment extends Fragment {
             if(fm != null) {
                 InstrumentCreateDialog dialog = new InstrumentCreateDialog();
                 Instrument toCreate = new Instrument(null);
-                viewModel.setCreateDialogInstrument(toCreate);
+                viewModel.setDialogInstrument(toCreate);
                 viewModel.getProject().registerInstrument(toCreate);
                 dialog.show(fm, "dialog_instrument_create");
             }
@@ -552,14 +553,19 @@ public class ProjectInstrumentsFragment extends Fragment {
             FragmentManager fm = ProjectInstrumentsFragment.this.getFragmentManager();
             if(fm != null) {
                 InstrumentEditDialog dialog = new InstrumentEditDialog();
-                viewModel.setEditDialogInstrument(instrument);
+                viewModel.setDialogInstrument(instrument);
                 dialog.show(fm, "dialog_instrument_edit");
             }
         }
 
         @Override
         public void startExport(Instrument instrument) {
-
+            FragmentManager fm = ProjectInstrumentsFragment.this.getFragmentManager();
+            if(fm != null) {
+                InstrumentExportDialog dialog = new InstrumentExportDialog();
+                viewModel.setDialogInstrument(instrument);
+                dialog.show(fm, "dialog_instrument_edit");
+            }
         }
 
         @Override

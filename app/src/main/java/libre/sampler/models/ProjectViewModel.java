@@ -41,7 +41,7 @@ public class ProjectViewModel extends AndroidViewModel {
     private HashMap<Pattern, PatternDerivedData> patternDerivedDataCache = new HashMap<>();
 
     private Instrument createDialogInstrument;
-    private Instrument editDialogInstrument;
+    private Instrument dialogInstrument;
 
     private MidiEventDispatcher midiEventDispatcher;
 
@@ -133,22 +133,6 @@ public class ProjectViewModel extends AndroidViewModel {
         patternEventSource.dispatch(new PatternEvent(PatternEvent.PATTERN_SELECT, pianoRollPattern));
     }
 
-    public Instrument getCreateDialogInstrument() {
-        return createDialogInstrument;
-    }
-
-    public void setCreateDialogInstrument(Instrument createDialogInstrument) {
-        this.createDialogInstrument = createDialogInstrument;
-    }
-
-    public Instrument getEditDialogInstrument() {
-        return editDialogInstrument;
-    }
-
-    public void setEditDialogInstrument(Instrument editDialogInstrument) {
-        this.editDialogInstrument = editDialogInstrument;
-    }
-
     public MidiEventDispatcher getMidiEventDispatcher() {
         if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             MidiManager midiManager = (MidiManager) getApplication().getSystemService(Context.MIDI_SERVICE);
@@ -232,5 +216,13 @@ public class ProjectViewModel extends AndroidViewModel {
                         InstrumentEvent.INSTRUMENT_PIANO_ROLL_SELECT, pianoRollInstrument));
             }
         }
+    }
+
+    public Instrument getDialogInstrument() {
+        return this.dialogInstrument;
+    }
+
+    public void setDialogInstrument(Instrument instrument) {
+        this.dialogInstrument = instrument;
     }
 }

@@ -4,7 +4,7 @@
     <string name="appbar_create">Create</string>
     <string name="dialog_project_create_title">New project</string>
     <string name="name_hint">Name</string>
-    <string name="dialog_project_create_cancel">Cancel</string>
+    <string name="cancel">Cancel</string>
     <string name="dialog_project_create_submit">Create</string>
     <string name="title_activity_project2">ProjectActivity2</string>
     <string name="action_settings">Settings</string>
@@ -80,6 +80,10 @@
     <string name="expand_x">Expand</string>
     <string name="delete_selected">Delete Selected</string>
     <string name="action_rename">Rename</string>
+    <string name="dialog_instrument_export_title">Export to .zip</string>
+    <string name="default_instrument_export_path">Default Export Directory</string>
+    <string name="export_path_hint">Export path</string>
+    <string name="dialog_project_export_submit">Export</string>
     <plurals name="selected_notes_label">
         <item quantity="one">%d note selected</item>
         <item quantity="other">%d notes selected</item>

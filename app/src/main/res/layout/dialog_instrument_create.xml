@@ -21,11 +21,16 @@
         app:fontFamily="sans-serif-medium"
         android:layout_marginStart="@dimen/margin1" />
 
-    <EditText
-        android:id="@+id/input_name"
+    <com.google.android.material.textfield.TextInputLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:ems="10"
-        android:inputType="textPersonName"
-        android:hint="@string/name_hint" />
+        android:layout_marginRight="@dimen/margin2"
+        android:hint="@string/name_hint">
+
+        <EditText
+            android:id="@+id/input_name"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="textPersonName" />
+    </com.google.android.material.textfield.TextInputLayout>
 </LinearLayout>

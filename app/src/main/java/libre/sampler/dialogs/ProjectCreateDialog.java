@@ -43,7 +43,7 @@ public class ProjectCreateDialog extends DialogFragment {
                         dialog.dismiss();
                     }
                 })
-                .setNegativeButton(R.string.dialog_project_create_cancel, new DialogInterface.OnClickListener() {
+                .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         dialog.cancel();

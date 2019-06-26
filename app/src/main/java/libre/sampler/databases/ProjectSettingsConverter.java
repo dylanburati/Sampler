@@ -26,6 +26,11 @@ public class ProjectSettingsConverter {
                 writer.name(AppConstants.PREF_DEFAULT_SAMPLE_PATH).value((String) defaultSamplePath);
             }
 
+            Object defaultExportPath = map.get(AppConstants.PREF_DEFAULT_INSTRUMENT_EXPORT_PATH);
+            if(defaultExportPath instanceof String) {
+                writer.name(AppConstants.PREF_DEFAULT_INSTRUMENT_EXPORT_PATH).value((String) defaultExportPath);
+            }
+
             writer.endObject();
             writer.close();
             return out.toString("UTF-8");
@@ -43,8 +48,11 @@ public class ProjectSettingsConverter {
             reader.beginObject();
 
             while(reader.hasNext()) {
-                if(reader.nextName().equals(AppConstants.PREF_DEFAULT_SAMPLE_PATH)) {
+                String nextName = reader.nextName();
+                if(nextName.equals(AppConstants.PREF_DEFAULT_SAMPLE_PATH)) {
                     map.put(AppConstants.PREF_DEFAULT_SAMPLE_PATH, reader.nextString());
+                } else if(nextName.equals(AppConstants.PREF_DEFAULT_INSTRUMENT_EXPORT_PATH)) {
+                    map.put(AppConstants.PREF_DEFAULT_INSTRUMENT_EXPORT_PATH, reader.nextString());
                 } else {
                     reader.skipValue();
                 }

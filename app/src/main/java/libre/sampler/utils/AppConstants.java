@@ -4,9 +4,12 @@ public class AppConstants {
     public static final String TAG_EXTRA_PROJECT_ID = "libre.sampler.tags.EXTRA_PROJECT_ID";
     public static final String TAG_SHARED_PREFS = "libre.sampler.tags.SHARED_PREFS";
     public static final String PREF_DEFAULT_SAMPLE_PATH = "default_sample_path";
+    public static final String PREF_DEFAULT_INSTRUMENT_EXPORT_PATH = "default_instrument_export_path";
 
     public static final String TAG_SAVED_STATE_INSTRUMENT_CREATE_NAME = "libre.sampler.tags.SAVED_STATE_INSTRUMENT_CREATE_NAME";
     public static final String TAG_SAVED_STATE_INSTRUMENT_EDIT_NAME = "libre.sampler.tags.SAVED_STATE_INSTRUMENT_EDIT_NAME";
+    public static final String TAG_SAVED_STATE_INSTRUMENT_EXPORT_NAME = "libre.sampler.tags.SAVED_STATE_INSTRUMENT_EXPORT_NAME";
+    public static final String TAG_SAVED_STATE_INSTRUMENT_EXPORT_PATH = "libre.sampler.tags.SAVED_STATE_INSTRUMENT_EXPORT_PATH";
 
     public static final int MAX_INSTRUMENTS_PER_PROJECT = 65536;
     public static final int MAX_PATTERNS_PER_PROJECT = 65536;

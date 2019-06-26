@@ -48,16 +48,16 @@ public class InstrumentCreateDialog extends DialogFragment {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         String name = nameInputView.getText().toString();
-                        Instrument toCreate = viewModel.getCreateDialogInstrument();
+                        Instrument toCreate = viewModel.getDialogInstrument();
                         toCreate.name = name;
 
                         viewModel.getProject().addInstrument(toCreate);
                         viewModel.instrumentEventSource.dispatch(new InstrumentEvent(InstrumentEvent.INSTRUMENT_CREATE, toCreate));
-                        viewModel.setCreateDialogInstrument(null);
+                        viewModel.setDialogInstrument(null);
                         dialog.dismiss();
                     }
                 })
-                .setNegativeButton(R.string.dialog_project_create_cancel, new DialogInterface.OnClickListener() {
+                .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         dialog.cancel();

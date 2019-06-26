@@ -173,6 +173,19 @@ public class Project {
         settings.put(AppConstants.PREF_DEFAULT_SAMPLE_PATH, s);
     }
 
+
+    public String getDefaultExportPath() {
+        String s = (String) settings.get(AppConstants.PREF_DEFAULT_INSTRUMENT_EXPORT_PATH);
+        if(s == null) {
+            return "";
+        }
+        return s;
+    }
+
+    public void setDefaultExportPath(String s) {
+        settings.put(AppConstants.PREF_DEFAULT_INSTRUMENT_EXPORT_PATH, s);
+    }
+
     public String getRelativeTime() {
         Date then = new Date(mtime);
         Date now = new Date();
@@ -202,5 +215,4 @@ public class Project {
         }
         return true;
     }
-
 }

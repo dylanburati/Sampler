@@ -44,18 +44,18 @@ public class InstrumentEditDialog extends DialogFragment {
         viewModel = ViewModelProviders.of(getActivity()).get(ProjectViewModel.class);
 
         if(savedInstanceState != null) {
-            nameInputView.setText(savedInstanceState.getString(AppConstants.TAG_SAVED_STATE_INSTRUMENT_CREATE_NAME));
+            nameInputView.setText(savedInstanceState.getString(AppConstants.TAG_SAVED_STATE_INSTRUMENT_EDIT_NAME));
         } else {
-            nameInputView.setText(viewModel.getEditDialogInstrument().name);
+            nameInputView.setText(viewModel.getDialogInstrument().name);
         }
 
         instrumentDeleteButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Instrument toRemove = viewModel.getEditDialogInstrument();
+                Instrument toRemove = viewModel.getDialogInstrument();
                 viewModel.getProject().removeInstrument(toRemove);
                 viewModel.instrumentEventSource.dispatch(new InstrumentEvent(InstrumentEvent.INSTRUMENT_DELETE, toRemove));
-                viewModel.setEditDialogInstrument(null);
+                viewModel.setDialogInstrument(null);
                 getDialog().cancel();
             }
         });
@@ -65,11 +65,11 @@ public class InstrumentEditDialog extends DialogFragment {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         String name = nameInputView.getText().toString();
-                        viewModel.getEditDialogInstrument().name = name;
+                        viewModel.getDialogInstrument().name = name;
 
-                        Instrument toEdit = viewModel.getEditDialogInstrument();
+                        Instrument toEdit = viewModel.getDialogInstrument();
                         viewModel.instrumentEventSource.dispatch(new InstrumentEvent(InstrumentEvent.INSTRUMENT_EDIT, toEdit));
-                        viewModel.setEditDialogInstrument(null);
+                        viewModel.setDialogInstrument(null);
                         dialog.dismiss();
                     }
                 });
@@ -79,6 +79,6 @@ public class InstrumentEditDialog extends DialogFragment {
 
     @Override
     public void onSaveInstanceState(@NonNull Bundle outState) {
-        outState.putString(AppConstants.TAG_SAVED_STATE_INSTRUMENT_CREATE_NAME, nameInputView.getText().toString());
+        outState.putString(AppConstants.TAG_SAVED_STATE_INSTRUMENT_EDIT_NAME, nameInputView.getText().toString());
     }
 }
