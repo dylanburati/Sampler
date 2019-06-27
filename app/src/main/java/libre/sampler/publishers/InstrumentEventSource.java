@@ -29,4 +29,11 @@ public class InstrumentEventSource extends MapEventSource<InstrumentEvent> {
             list.clear();
         }
     }
+
+    public void clearReplayQueue(String queueTag) {
+        List<InstrumentEvent> list = replayQueues.get(queueTag);
+        if(list != null) {
+            list.clear();
+        }
+    }
 }

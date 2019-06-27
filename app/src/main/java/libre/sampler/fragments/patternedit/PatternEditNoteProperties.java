@@ -21,7 +21,7 @@ import libre.sampler.views.MusicTimePicker;
 import libre.sampler.views.VisualNote;
 
 public class PatternEditNoteProperties extends Fragment {
-    public static final String TAG = "NoteProperties";
+    public static final String TAG = "PatternEditNoteProperties";
     private static final int MAX_INPUT_BARS = 999;
     private ProjectPatternsFragment patternsFragment;
     private TreeSet<VisualNote> selectedNotes;

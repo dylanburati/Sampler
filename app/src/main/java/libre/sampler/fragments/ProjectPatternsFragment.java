@@ -59,6 +59,7 @@ import libre.sampler.utils.NoteId;
 import libre.sampler.views.VisualNote;
 
 public class ProjectPatternsFragment extends Fragment {
+    public static final String TAG = "ProjectPatternsFragment";
     private ProjectViewModel viewModel;
     private ProjectActivity projectActivity;
     private PatternDerivedData patternDerivedData;
@@ -223,8 +224,15 @@ public class ProjectPatternsFragment extends Fragment {
         super.onResume();
     }
 
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        viewModel.patternEventSource.remove(TAG);
+        viewModel.instrumentEventSource.remove(TAG);
+    }
+
     private void attachEventListeners() {
-        viewModel.patternEventSource.add("EditablePatternThread", new Consumer<PatternEvent>() {
+        viewModel.patternEventSource.add(TAG, new Consumer<PatternEvent>() {
             @Override
             public void accept(PatternEvent event) {
                 if(event.action == PatternEvent.PATTERN_SELECT || event.action == PatternEvent.PATTERN_CREATE_SELECT) {
@@ -237,7 +245,7 @@ public class ProjectPatternsFragment extends Fragment {
             }
         });
 
-        viewModel.instrumentEventSource.add("EditablePatternThread", new Consumer<InstrumentEvent>() {
+        viewModel.instrumentEventSource.add(TAG, new Consumer<InstrumentEvent>() {
             @Override
             public void accept(InstrumentEvent event) {
                 if(event.action == InstrumentEvent.INSTRUMENT_PIANO_ROLL_SELECT) {

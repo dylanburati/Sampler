@@ -35,17 +35,16 @@ import libre.sampler.models.InstrumentEvent;
 import libre.sampler.models.Project;
 import libre.sampler.models.ProjectViewModel;
 import libre.sampler.models.Sample;
-import libre.sampler.publishers.InstrumentEventSource;
 import libre.sampler.utils.AdapterLoader;
 import libre.sampler.utils.MyDecimalFormat;
 import libre.sampler.utils.SliderConverter;
 import libre.sampler.views.VerticalSlider;
 
 public class ProjectInstrumentsFragment extends Fragment {
+    public static final String TAG = "ProjectInstrumentsFragment";
     private View rootView;
     private RecyclerView instrumentListView;
     private ProjectViewModel viewModel;
-    private InstrumentEventSource instrumentEventSource;
     private InstrumentListAdapter instrumentListAdapter;
 
     private boolean isAdapterLoaded;
@@ -83,13 +82,13 @@ public class ProjectInstrumentsFragment extends Fragment {
         instrumentListAdapter = new InstrumentListAdapter(new ArrayList<Instrument>(),
                 new MyInstrumentActionConsumer());
         instrumentListView.setAdapter(instrumentListAdapter);
-        viewModel.projectEventSource.add("InstrumentsFragment", new Consumer<Project>() {
+        viewModel.projectEventSource.add(TAG, new Consumer<Project>() {
             @Override
             public void accept(Project project) {
                 loadAdapter();
             }
         });
-        viewModel.instrumentEventSource.add("InstrumentsFragment", new Consumer<InstrumentEvent>() {
+        viewModel.instrumentEventSource.add(TAG, new Consumer<InstrumentEvent>() {
             @Override
             public void accept(InstrumentEvent event) {
                 if(event.action == InstrumentEvent.INSTRUMENT_CREATE) {
@@ -139,6 +138,13 @@ public class ProjectInstrumentsFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        viewModel.projectEventSource.remove(TAG);
+        viewModel.instrumentEventSource.remove(TAG);
     }
 
     private void loadAdapter() {

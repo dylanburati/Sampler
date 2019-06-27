@@ -102,8 +102,8 @@ public class ProjectKeyboardFragment extends Fragment {
                             || (eventAction == MotionEvent.ACTION_POINTER_UP && e.getActionIndex() == i)) {
                         KeyData previous = noteQueue.get(eventId);
                         if(previous != null && previous.keyNum != -1) {
-                            NoteEvent prevEndEvent = new NoteEvent(NoteEvent.NOTE_OFF, null, previous.keyNum, 100, eventId);
-                            viewModel.keyboardNoteSource.dispatch(prevEndEvent);
+                            NoteEvent prevEndEvent = new NoteEvent(NoteEvent.NOTE_OFF, viewModel.getKeyboardInstrument(), previous.keyNum, 100, eventId);
+                            viewModel.noteEventSource.dispatch(prevEndEvent);
                             noteQueue.remove(eventId);
                             previous.keyView.setActivated(false);
                         }
@@ -112,8 +112,8 @@ public class ProjectKeyboardFragment extends Fragment {
 
                     if(eventAction == MotionEvent.ACTION_DOWN || eventAction == MotionEvent.ACTION_POINTER_DOWN) {
                         if(keyData.keyNum != -1 && !noteQueue.containsKey(eventId)) {
-                            NoteEvent noteEvent = new NoteEvent(NoteEvent.NOTE_ON, null, keyData.keyNum, 100, eventId);
-                            viewModel.keyboardNoteSource.dispatch(noteEvent);
+                            NoteEvent noteEvent = new NoteEvent(NoteEvent.NOTE_ON, viewModel.getKeyboardInstrument(), keyData.keyNum, 100, eventId);
+                            viewModel.noteEventSource.dispatch(noteEvent);
                             noteQueue.put(eventId, keyData);
                             keyData.keyView.setActivated(true);
                         }
@@ -122,15 +122,15 @@ public class ProjectKeyboardFragment extends Fragment {
                         if(previous != null && previous.keyNum != keyData.keyNum) {
                             if(previous.keyNum != -1) {
                                 // moved off of a key
-                                NoteEvent prevEndEvent = new NoteEvent(NoteEvent.NOTE_OFF, null, previous.keyNum, 100, eventId);
-                                viewModel.keyboardNoteSource.dispatch(prevEndEvent);
+                                NoteEvent prevEndEvent = new NoteEvent(NoteEvent.NOTE_OFF, viewModel.getKeyboardInstrument(), previous.keyNum, 100, eventId);
+                                viewModel.noteEventSource.dispatch(prevEndEvent);
                                 previous.keyView.setActivated(false);
                             }
 
                             if(keyData.keyNum != -1) {
                                 // moved onto a key
-                                NoteEvent noteEvent = new NoteEvent(NoteEvent.NOTE_ON, null, keyData.keyNum, 100, eventId);
-                                viewModel.keyboardNoteSource.dispatch(noteEvent);
+                                NoteEvent noteEvent = new NoteEvent(NoteEvent.NOTE_ON, viewModel.getKeyboardInstrument(), keyData.keyNum, 100, eventId);
+                                viewModel.noteEventSource.dispatch(noteEvent);
                                 keyData.keyView.setActivated(true);
                             }
                             noteQueue.put(eventId, keyData);  // new location saved as last regardless

@@ -2,6 +2,7 @@ package libre.sampler;
 
 import android.annotation.SuppressLint;
 import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.res.Resources;
@@ -21,6 +22,7 @@ import org.puredata.core.utils.IoUtils;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.ref.WeakReference;
 import java.util.List;
 
 import androidx.appcompat.app.ActionBar;
@@ -46,6 +48,7 @@ import libre.sampler.utils.SampleBindingList;
 import libre.sampler.utils.VoiceBindingList;
 
 public class ProjectActivity extends AppCompatActivity {
+    public static final String TAG = "ProjectActivity";
     private ViewPager pager;
     private ProjectFragmentAdapter fragmentAdapter;
 
@@ -96,22 +99,7 @@ public class ProjectActivity extends AppCompatActivity {
     }
 
     private void attachEventListeners() {
-        viewModel.keyboardNoteSource.add("Evolve", new Consumer<NoteEvent>() {
-            @Override
-            public void accept(NoteEvent event) {
-                event.instrument = viewModel.getKeyboardInstrument();
-                viewModel.noteEventSource.dispatch(event);
-            }
-        });
-
-        viewModel.noteEventSource.add("logger", new Consumer<NoteEvent>() {
-            @Override
-            public void accept(NoteEvent noteEvent) {
-                // Log.d("ProjectActivity", String.format("noteEvent: action=%d keynum=%d velocity=%d id=%d", noteEvent.action, noteEvent.keyNum, noteEvent.velocity, noteEvent.eventId.second));
-            }
-        });
-
-        viewModel.instrumentEventSource.add("InstrumentLoader", new Consumer<InstrumentEvent>() {
+        viewModel.instrumentEventSource.add(TAG, new Consumer<InstrumentEvent>() {
             @Override
             public void accept(InstrumentEvent event) {
                 if(event.action == InstrumentEvent.INSTRUMENT_KEYBOARD_SELECT ||
@@ -133,11 +121,14 @@ public class ProjectActivity extends AppCompatActivity {
             }
         });
 
-        viewModel.noteEventSource.add("NoteEventConsumer", new NoteEventConsumer());
+        viewModel.noteEventSource.add(TAG, new NoteEventConsumer());
 
-        viewModel.patternEventSource.add("test", new Consumer<PatternEvent>() {
+        viewModel.patternEventSource.add(TAG, new Consumer<PatternEvent>() {
             @Override
             public void accept(PatternEvent event) {
+                if(patternThread == null) {
+                    return;
+                }
                 if(event.action == PatternEvent.PATTERN_ON) {
                     // Derived data must be complete before pattern starts playing
                     viewModel.getPatternDerivedData(event.pattern);
@@ -250,6 +241,7 @@ public class ProjectActivity extends AppCompatActivity {
         if(patternThread != null) {
             patternThread.finish();
         }
+        viewModel.instrumentEventSource.clearReplayQueue(InstrumentEvent.QUEUE_FOR_INIT_PD);
         if(pdService != null) {
             closeNotes();
             PdBase.release();
@@ -262,6 +254,9 @@ public class ProjectActivity extends AppCompatActivity {
     protected void onDestroy() {
         super.onDestroy();
         unbindService(pdConnection);
+        viewModel.instrumentEventSource.remove(TAG);
+        viewModel.noteEventSource.remove(TAG);
+        viewModel.patternEventSource.remove(TAG);
     }
 
     @Override
@@ -276,12 +271,8 @@ public class ProjectActivity extends AppCompatActivity {
         if(item.getItemId() == R.id.appbar_save) {
             viewModel.getProject().mtime = System.currentTimeMillis();
             patternThread.savePatterns(viewModel.getProject());
-            DatabaseConnectionManager.runTask(new UpdateProjectTask(viewModel.getProject(), new Runnable() {
-                @Override
-                public void run() {
-                    Toast.makeText(ProjectActivity.this, R.string.project_saved, Toast.LENGTH_SHORT).show();
-                }
-            }));
+            DatabaseConnectionManager.runTask(new UpdateProjectTask(viewModel.getProject(),
+                    new UpdateProjectTaskCallback(new WeakReference<Context>(this))));
             return true;
         } else if(item.getItemId() == R.id.appbar_refresh_midi) {
             refreshMidiConnection();
@@ -318,6 +309,21 @@ public class ProjectActivity extends AppCompatActivity {
 
     public boolean isPatternThreadPaused() {
         return patternThread.isSuspended;
+    }
+
+    private static class UpdateProjectTaskCallback implements Consumer<Void> {
+        private final WeakReference<Context> contextRef;
+
+        public UpdateProjectTaskCallback(WeakReference<Context> context) {
+            this.contextRef = context;
+        }
+
+        @Override
+        public void accept(Void result) {
+            if(this.contextRef.get() != null) {
+                Toast.makeText(this.contextRef.get(), R.string.project_saved, Toast.LENGTH_SHORT).show();
+            }
+        }
     }
 
     private class NoteEventConsumer implements Consumer<NoteEvent> {

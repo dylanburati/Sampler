@@ -142,6 +142,7 @@ public class PatternEditBase extends Fragment {
     @Override
     public void onDestroyView() {
         super.onDestroyView();
+        viewModel.instrumentEventSource.remove(TAG);
         patternsFragment.patternEditEventSource.remove(TAG);
     }
 

@@ -28,6 +28,7 @@ import libre.sampler.utils.AppConstants;
 import libre.sampler.utils.DatabaseConnectionManager;
 
 public class MainActivity extends AppCompatActivity implements ProjectCreateDialog.ProjectCreateDialogListener {
+    public static final String TAG = "MainActivity";
     private RecyclerView projectListView;
     private ProjectListAdapter projectListAdapter;
     private ProjectCreateDialog projectCreateDialog;
@@ -44,7 +45,7 @@ public class MainActivity extends AppCompatActivity implements ProjectCreateDial
 
         initUI();
 
-        viewModel.loadEventSource.add("MainActivity", new Consumer<String>() {
+        viewModel.loadEventSource.add(TAG, new Consumer<String>() {
             @Override
             public void accept(String eventName) {
                 if(eventName.equals(AppConstants.PROJECTS_LOADED)) {
@@ -96,6 +97,12 @@ public class MainActivity extends AppCompatActivity implements ProjectCreateDial
     }
 
     @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        viewModel.loadEventSource.remove(TAG);
+    }
+
+    @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu_main, menu);
         return super.onCreateOptionsMenu(menu);
@@ -132,12 +139,7 @@ public class MainActivity extends AppCompatActivity implements ProjectCreateDial
     public void onProjectCreate(String projectName) {
         final Project toAdd = new Project(projectName, System.currentTimeMillis());
         DatabaseConnectionManager.initialize(this);
-        DatabaseConnectionManager.runTask(new CreateProjectTask(toAdd, new Consumer<Integer>() {
-            @Override
-            public void accept(Integer id) {
-                toAdd.setProjectId(id);
-            }
-        }));
+        DatabaseConnectionManager.runTask(new CreateProjectTask(toAdd));
         AdapterLoader.insertItem(this.projectListAdapter, 0, toAdd);
     }
 

@@ -46,7 +46,6 @@ public class ProjectViewModel extends AndroidViewModel {
     private MidiEventDispatcher midiEventDispatcher;
 
     public final ProjectEventSource projectEventSource = new ProjectEventSource();
-    public final NoteEventSource keyboardNoteSource = new NoteEventSource();
     public final NoteEventSource noteEventSource = new NoteEventSource();
     public final InstrumentEventSource instrumentEventSource = new InstrumentEventSource();
     public final PatternEventSource patternEventSource = new PatternEventSource();

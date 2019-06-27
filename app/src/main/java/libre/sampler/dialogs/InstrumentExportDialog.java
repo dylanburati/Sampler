@@ -11,6 +11,7 @@ import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import java.io.File;
+import java.lang.ref.WeakReference;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -70,22 +71,8 @@ public class InstrumentExportDialog extends DialogFragment {
                         }
                         File outFile = new File(path, filename);
 
-                        final Toast toast0 = Toast.makeText(getActivity(), R.string.instrument_exported, Toast.LENGTH_SHORT);
-                        final Toast toast1 = Toast.makeText(getActivity(), R.string.export_file_exists, Toast.LENGTH_SHORT);
-                        final Toast toast2 = Toast.makeText(getActivity(), R.string.export_could_not_create, Toast.LENGTH_SHORT);
                         DatabaseConnectionManager.runTask(new ExportInstrumentTask(viewModel.getDialogInstrument(), outFile,
-                                new Consumer<String>() {
-                                    @Override
-                                    public void accept(String message) {
-                                        if(AppConstants.SUCCESS_EXPORT_INSTRUMENT.equals(message)) {
-                                            toast0.show();
-                                        } else if(AppConstants.ERROR_EXPORT_ZIP_EXISTS.equals(message)) {
-                                            toast1.show();
-                                        } else {
-                                            toast2.show();
-                                        }
-                                    }
-                                }));
+                                new ExportTaskCallback(new WeakReference<Context>(getActivity()))));
 
                         dialog.dismiss();
                     }
@@ -98,5 +85,27 @@ public class InstrumentExportDialog extends DialogFragment {
     public void onSaveInstanceState(@NonNull Bundle outState) {
         outState.putString(AppConstants.TAG_SAVED_STATE_INSTRUMENT_EXPORT_PATH, exportPathInputView.getText().toString());
         outState.putString(AppConstants.TAG_SAVED_STATE_INSTRUMENT_EXPORT_NAME, nameInputView.getText().toString());
+    }
+
+    private static class ExportTaskCallback implements Consumer<String> {
+        private final WeakReference<Context> contextRef;
+
+        public ExportTaskCallback(WeakReference<Context> context) {
+            this.contextRef = context;
+        }
+
+        @Override
+        public void accept(String message) {
+            if(this.contextRef.get() == null) {
+                return;
+            }
+            if(AppConstants.SUCCESS_EXPORT_INSTRUMENT.equals(message)) {
+                Toast.makeText(this.contextRef.get(), R.string.instrument_exported, Toast.LENGTH_SHORT).show();
+            } else if(AppConstants.ERROR_EXPORT_ZIP_EXISTS.equals(message)) {
+                Toast.makeText(this.contextRef.get(), R.string.export_file_exists, Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(this.contextRef.get(), R.string.export_could_not_create, Toast.LENGTH_SHORT).show();
+            }
+        }
     }
 }

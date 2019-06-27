@@ -15,7 +15,8 @@ public class ExportInstrumentTask extends AsyncTask<Void, Void, String> {
     private File outFile;
     private final Consumer<String> callback;
 
-    public ExportInstrumentTask(Instrument instrument, File outFile, Consumer<String> callback) {
+    public ExportInstrumentTask(Instrument instrument, File outFile,
+                                Consumer<String> callback) {
         this.instrument = instrument;
         this.outFile = outFile;
         this.callback = callback;
