@@ -1,9 +1,8 @@
 package libre.sampler.utils;
 
-import android.os.Parcel;
-import android.os.Parcelable;
+import android.util.Log;
 
-public class IdStatus implements Parcelable {
+public class IdStatus {
     public static final int INVALID = 0;
     public static final int SELF = 1;
     public static final int CHILDREN_DB = 2;
@@ -14,6 +13,8 @@ public class IdStatus implements Parcelable {
             false,  // CHILDREN_DB can be set once
             true    // CHILDREN_ADDED can be set multiple times
     };
+
+    private static boolean outputEnabled = false;
 
     private String tag;
     private int status = INVALID;
@@ -26,9 +27,9 @@ public class IdStatus implements Parcelable {
         if(this.status > newStatus || (this.status == newStatus && !repeatsAllowed[this.status])) {
             throw new AssertionError(String.format("Invalid ID status change: %d -> %d", this.status, newStatus));
         }
-        // if(this.tag != null) {
-        //     Log.d("IdStatus", String.format("ID status change: %s, %d -> %d", this.tag, this.status, newStatus));
-        // }
+        if(outputEnabled && this.tag != null) {
+            Log.d("IdStatus", String.format("ID status change: %s, %d -> %d", this.tag, this.status, newStatus));
+        }
         this.status = newStatus;
     }
 
@@ -38,31 +39,7 @@ public class IdStatus implements Parcelable {
         }
     }
 
-    protected IdStatus(Parcel in) {
-        tag = in.readString();
-        status = in.readInt();
+    public static void setOutputEnabled(boolean enabled) {
+        outputEnabled = enabled;
     }
-
-    @Override
-    public void writeToParcel(Parcel dest, int flags) {
-        dest.writeString(tag);
-        dest.writeInt(status);
-    }
-
-    @Override
-    public int describeContents() {
-        return 0;
-    }
-
-    public static final Creator<IdStatus> CREATOR = new Creator<IdStatus>() {
-        @Override
-        public IdStatus createFromParcel(Parcel in) {
-            return new IdStatus(in);
-        }
-
-        @Override
-        public IdStatus[] newArray(int size) {
-            return new IdStatus[size];
-        }
-    };
 }
