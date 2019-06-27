@@ -34,4 +34,7 @@ public class AppConstants {
 
     public static final int PIANO_ROLL_BOTTOM_KEYNUM = 24;
     public static final int PIANO_ROLL_TOP_KEYNUM = 119;
+
+    public static final String ERROR_EXPORT_ZIP_EXISTS = "File exists";
+    public static final String SUCCESS_EXPORT_INSTRUMENT = "Instrument exported";
 }

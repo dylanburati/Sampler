@@ -84,6 +84,9 @@
     <string name="default_instrument_export_path">Default Export Directory</string>
     <string name="export_path_hint">Export path</string>
     <string name="dialog_project_export_submit">Export</string>
+    <string name="export_could_not_create">Export failed</string>
+    <string name="export_file_exists">Export failed: file exists</string>
+    <string name="instrument_exported">Instrument exported</string>
     <plurals name="selected_notes_label">
         <item quantity="one">%d note selected</item>
         <item quantity="other">%d notes selected</item>

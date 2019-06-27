@@ -5,20 +5,23 @@ import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.widget.EditText;
 import android.widget.LinearLayout;
+import android.widget.Toast;
 
 import java.io.File;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.util.Consumer;
 import androidx.fragment.app.DialogFragment;
 import androidx.lifecycle.ViewModelProviders;
 import libre.sampler.R;
 import libre.sampler.models.ProjectViewModel;
+import libre.sampler.tasks.ExportInstrumentTask;
 import libre.sampler.utils.AppConstants;
+import libre.sampler.utils.DatabaseConnectionManager;
 
 public class InstrumentExportDialog extends DialogFragment {
     private EditText exportPathInputView;
@@ -66,7 +69,23 @@ public class InstrumentExportDialog extends DialogFragment {
                             filename += ".zip";
                         }
                         File outFile = new File(path, filename);
-                        Log.d("InstrumentExportDialog", outFile.getAbsolutePath());
+
+                        final Toast toast0 = Toast.makeText(getActivity(), R.string.instrument_exported, Toast.LENGTH_SHORT);
+                        final Toast toast1 = Toast.makeText(getActivity(), R.string.export_file_exists, Toast.LENGTH_SHORT);
+                        final Toast toast2 = Toast.makeText(getActivity(), R.string.export_could_not_create, Toast.LENGTH_SHORT);
+                        DatabaseConnectionManager.runTask(new ExportInstrumentTask(viewModel.getDialogInstrument(), outFile,
+                                new Consumer<String>() {
+                                    @Override
+                                    public void accept(String message) {
+                                        if(AppConstants.SUCCESS_EXPORT_INSTRUMENT.equals(message)) {
+                                            toast0.show();
+                                        } else if(AppConstants.ERROR_EXPORT_ZIP_EXISTS.equals(message)) {
+                                            toast1.show();
+                                        } else {
+                                            toast2.show();
+                                        }
+                                    }
+                                }));
 
                         dialog.dismiss();
                     }
