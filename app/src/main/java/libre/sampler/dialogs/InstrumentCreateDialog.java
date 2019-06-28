@@ -7,10 +7,10 @@ import android.content.DialogInterface;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.widget.EditText;
-import android.widget.LinearLayout;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.fragment.app.DialogFragment;
 import androidx.lifecycle.ViewModelProviders;
 import libre.sampler.R;
@@ -34,7 +34,7 @@ public class InstrumentCreateDialog extends DialogFragment {
     public Dialog onCreateDialog(@Nullable Bundle savedInstanceState) {
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
         LayoutInflater inflater = LayoutInflater.from(requireActivity());
-        LinearLayout rootView = (LinearLayout) inflater.inflate(R.layout.dialog_instrument_create, null);
+        ConstraintLayout rootView = (ConstraintLayout) inflater.inflate(R.layout.dialog_instrument_create, null);
         nameInputView = (EditText) rootView.findViewById(R.id.input_name);
 
         viewModel = ViewModelProviders.of(getActivity()).get(ProjectViewModel.class);

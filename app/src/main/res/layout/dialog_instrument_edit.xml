@@ -1,51 +1,51 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:orientation="vertical"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:paddingTop="@dimen/margin3"
-    android:paddingBottom="@dimen/margin2"
     android:paddingLeft="@dimen/margin3"
-    android:paddingRight="@dimen/margin3">
+    android:paddingTop="@dimen/margin3"
+    android:paddingRight="@dimen/margin3"
+    android:paddingBottom="@dimen/margin2">
 
     <TextView
         android:id="@+id/title"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="@dimen/margin2"
-        android:layout_marginLeft="@dimen/margin1"
+        android:layout_marginBottom="@dimen/margin3"
+        android:paddingStart="@dimen/margin1"
         android:text="@string/dialog_instrument_edit_title"
         android:textSize="@dimen/title"
         app:fontFamily="sans-serif-medium"
-        android:layout_marginStart="@dimen/margin1" />
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
-    <LinearLayout
-        android:layout_width="match_parent"
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/container_1"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:orientation="horizontal">
+        android:layout_marginTop="16dp"
+        android:layout_marginEnd="8dp"
+        android:hint="@string/name_hint"
+        app:layout_constraintEnd_toStartOf="@+id/delete_instrument"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/title">
 
-        <com.google.android.material.textfield.TextInputLayout
-            android:layout_width="0dp"
+        <EditText
+            android:id="@+id/input_name"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:layout_marginRight="@dimen/margin2"
-            android:hint="@string/name_hint">
+            android:inputType="textPersonName" />
+    </com.google.android.material.textfield.TextInputLayout>
 
-            <EditText
-                android:id="@+id/input_name"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:inputType="textPersonName" />
-        </com.google.android.material.textfield.TextInputLayout>
+    <Button
+        android:id="@+id/delete_instrument"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:backgroundTint="@color/colorError"
+        android:text="@string/delete"
+        app:layout_constraintBaseline_toBaselineOf="@+id/container_1"
+        app:layout_constraintEnd_toEndOf="parent" />
 
-        <Button
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:id="@+id/delete_instrument"
-            android:backgroundTint="@color/colorError"
-            android:text="@string/delete" />
-
-    </LinearLayout>
-</LinearLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>

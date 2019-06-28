@@ -9,10 +9,10 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.LinearLayout;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.fragment.app.DialogFragment;
 import androidx.lifecycle.ViewModelProviders;
 import libre.sampler.R;
@@ -37,7 +37,7 @@ public class InstrumentEditDialog extends DialogFragment {
     public Dialog onCreateDialog(@Nullable Bundle savedInstanceState) {
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
         LayoutInflater inflater = LayoutInflater.from(requireActivity());
-        LinearLayout rootView = (LinearLayout) inflater.inflate(R.layout.dialog_instrument_edit, null);
+        ConstraintLayout rootView = (ConstraintLayout) inflater.inflate(R.layout.dialog_instrument_edit, null);
         nameInputView = (EditText) rootView.findViewById(R.id.input_name);
         instrumentDeleteButton = (Button) rootView.findViewById(R.id.delete_instrument);
 

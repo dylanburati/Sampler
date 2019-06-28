@@ -1,59 +1,66 @@
 <?xml version="1.0" encoding="utf-8"?>
-<GridLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:columnCount="2"
-    android:paddingTop="@dimen/margin3"
     android:paddingLeft="@dimen/margin3"
+    android:paddingTop="@dimen/margin3"
     android:paddingRight="@dimen/margin3">
 
     <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/container_1"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_column="0"
-        android:layout_columnSpan="2"
         android:layout_marginBottom="@dimen/margin3"
-        android:hint="@string/default_sample_path">
+        android:hint="@string/default_sample_path"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
 
         <EditText
+            android:id="@+id/pref_default_sample_path"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:id="@+id/pref_default_sample_path"
-            android:inputType="textUri"
-            android:imeOptions="actionDone" />
+            android:imeOptions="actionDone"
+            android:inputType="textUri" />
     </com.google.android.material.textfield.TextInputLayout>
 
     <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/container_2"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_column="0"
-        android:layout_columnSpan="2"
+        android:layout_marginTop="@dimen/margin3"
         android:layout_marginBottom="@dimen/margin3"
-        android:hint="@string/default_instrument_export_path">
+        android:hint="@string/default_instrument_export_path"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/container_1">
 
         <EditText
+            android:id="@+id/pref_default_instrument_export_path"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:id="@+id/pref_default_instrument_export_path"
-            android:inputType="textUri"
-            android:imeOptions="actionDone" />
+            android:imeOptions="actionDone"
+            android:inputType="textUri" />
     </com.google.android.material.textfield.TextInputLayout>
 
     <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
         android:id="@+id/label_placeholder_bool"
-        android:layout_column="0"
-        android:layout_columnWeight="1"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/margin3"
         android:visibility="gone"
-        android:text="@string/default_instrument_export_path" />
+        android:text="@string/default_instrument_export_path"
+        app:layout_constraintEnd_toStartOf="@+id/pref_placeholder_bool"
+        app:layout_constraintHorizontal_weight="1"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/container_2" />
 
     <Switch
+        android:id="@+id/pref_placeholder_bool"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:id="@+id/pref_placeholder_bool"
         android:visibility="gone"
-        android:layout_column="1" />
-</GridLayout>
+        app:layout_constraintBaseline_toBaselineOf="@+id/label_placeholder_bool"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/label_placeholder_bool" />
+</androidx.constraintlayout.widget.ConstraintLayout>

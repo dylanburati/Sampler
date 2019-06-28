@@ -38,9 +38,6 @@ public class ProjectKeyboardFragment extends Fragment {
         }
     }
 
-    public ProjectKeyboardFragment() {
-    }
-
     private KeyData resolveKeyNum(View octaveContainer, float x, float y) {
         if(octaveContainer == null) {
             return new KeyData(null, -1);

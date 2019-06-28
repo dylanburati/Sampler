@@ -85,64 +85,73 @@
         <ScrollView
             android:id="@+id/instrument_editor_scrollview"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:paddingLeft="@dimen/margin2_border_out"
-            android:paddingTop="@dimen/margin2"
-            android:paddingRight="@dimen/margin2"
-            android:paddingBottom="@dimen/margin2">
+            android:layout_height="match_parent">
 
-            <LinearLayout
-                android:layout_width="wrap_content"
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:id="@+id/sample_select_container"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical">
+                android:paddingLeft="@dimen/margin2_border_out"
+                android:paddingTop="@dimen/margin2"
+                android:paddingRight="@dimen/margin2"
+                android:paddingBottom="@dimen/margin2">
 
-                <RelativeLayout
-                    android:id="@+id/sample_select_container"
+                <Spinner
+                    android:id="@+id/sample_edit_select"
+                    android:layout_width="match_parent"
+                    android:layout_height="40dp"
+                    app:layout_constraintBottom_toTopOf="@+id/input_sample_paths"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+                <EditText
+                    android:id="@+id/input_sample_paths"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@id/sample_edit_select"
+                    android:hint="@string/path_to_samples_hint"
+                    android:imeOptions="actionDone"
+                    android:inputType="textUri"
+                    app:layout_constraintBottom_toTopOf="@+id/sample_add"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/sample_edit_select" />
+
+                <Button
+                    android:id="@+id/sample_add"
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content">
+                    android:layout_height="wrap_content"
+                    android:minWidth="0dp"
+                    android:text="@string/sample_add_button"
+                    app:layout_constraintBottom_toTopOf="@+id/expanded_sample_data"
+                    app:layout_constraintEnd_toStartOf="@+id/sample_replace"
+                    app:layout_constraintHorizontal_bias="1.0"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/input_sample_paths"
+                    app:layout_constraintHorizontal_chainStyle="packed" />
+                <!--android:backgroundTint="#ff4caf50"-->
 
-                    <Spinner
-                        android:id="@+id/sample_edit_select"
-                        android:layout_width="match_parent"
-                        android:layout_height="40dp" />
+                <Button
+                    android:id="@+id/sample_replace"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:minWidth="0dp"
+                    android:text="@string/sample_replace_button"
+                    app:layout_constraintBaseline_toBaselineOf="@+id/sample_add"
+                    app:layout_constraintEnd_toStartOf="@+id/sample_delete"
+                    app:layout_constraintHorizontal_bias="0.5"
+                    app:layout_constraintStart_toEndOf="@+id/sample_add" />
+                <!--android:backgroundTint="@color/colorReplace"-->
 
-                    <EditText
-                        android:id="@+id/input_sample_paths"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_below="@id/sample_edit_select"
-                        android:layout_marginRight="@dimen/margin2"
-                        android:hint="@string/path_to_samples_hint"
-                        android:imeOptions="actionDone"
-                        android:inputType="textUri" />
-
-                    <Button
-                        android:id="@+id/sample_add"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_below="@id/input_sample_paths"
-                        android:layout_toLeftOf="@+id/sample_replace"
-                        android:text="@string/sample_add_button" />
-                    <!--android:backgroundTint="#ff4caf50"-->
-
-                    <Button
-                        android:id="@+id/sample_replace"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_below="@id/input_sample_paths"
-                        android:layout_toLeftOf="@+id/sample_delete"
-                        android:text="@string/sample_replace_button" />
-                    <!--android:backgroundTint="@color/colorReplace"-->
-
-                    <Button
-                        android:id="@+id/sample_delete"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_below="@id/input_sample_paths"
-                        android:layout_alignRight="@id/input_sample_paths"
-                        android:backgroundTint="@color/colorError"
-                        android:text="@string/sample_delete_button" />
-                </RelativeLayout>
+                <Button
+                    android:id="@+id/sample_delete"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:backgroundTint="@color/colorError"
+                    android:minWidth="0dp"
+                    android:text="@string/sample_delete_button"
+                    app:layout_constraintBaseline_toBaselineOf="@+id/sample_replace"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toEndOf="@+id/sample_replace" />
 
                 <com.google.android.flexbox.FlexboxLayout
                     android:id="@+id/expanded_sample_data"
@@ -150,7 +159,8 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="@dimen/margin3"
                     app:flexDirection="row"
-                    app:flexWrap="wrap">
+                    app:flexWrap="wrap"
+                    app:layout_constraintTop_toBottomOf="@+id/sample_add">
 
                     <!--Sample Zone Pitch-->
                     <RelativeLayout
@@ -260,7 +270,7 @@
                             android:layout_below="@id/label_position"
                             android:layout_alignLeft="@id/label_position"
                             android:layout_marginRight="@dimen/margin2_dense"
-                            android:ems="4"
+                            android:ems="3"
                             android:hint="@string/start"
                             android:imeOptions="actionNext"
                             android:inputType="numberDecimal"
@@ -273,7 +283,7 @@
                             android:layout_alignBaseline="@id/position_start"
                             android:layout_marginRight="@dimen/margin2_dense"
                             android:layout_toRightOf="@id/position_start"
-                            android:ems="4"
+                            android:ems="3"
                             android:hint="@string/end"
                             android:imeOptions="actionNext"
                             android:inputType="numberDecimal"
@@ -286,7 +296,7 @@
                             android:layout_alignBaseline="@id/position_start"
                             android:layout_marginRight="@dimen/margin2_dense"
                             android:layout_toRightOf="@id/position_end"
-                            android:ems="4"
+                            android:ems="3"
                             android:hint="@string/loop"
                             android:imeOptions="actionDone"
                             android:inputType="numberDecimal" />
@@ -349,6 +359,7 @@
                         android:paddingLeft="@dimen/margin2_dense"
                         android:paddingTop="@dimen/margin2"
                         android:paddingRight="@dimen/margin2_dense">
+
                         <libre.sampler.views.VerticalSlider
                             android:id="@+id/sample_attack_slider"
                             android:layout_width="wrap_content"
@@ -532,7 +543,7 @@
                             android:text="@string/release" />
                     </LinearLayout>
                 </com.google.android.flexbox.FlexboxLayout>
-            </LinearLayout>
+            </androidx.constraintlayout.widget.ConstraintLayout>
         </ScrollView>
     </LinearLayout>
 
