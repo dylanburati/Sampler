@@ -142,7 +142,12 @@ public class ProjectInstrumentsFragment extends Fragment {
 
     @Override
     public void onDestroyView() {
+        sampleSpinner.setAdapter(null);
+        instrumentListView.setAdapter(null);
         super.onDestroyView();
+        this.rootView = null;
+        this.instrumentListView = null;
+        this.sampleSpinner = null;
         viewModel.projectEventSource.remove(TAG);
         viewModel.instrumentEventSource.remove(TAG);
     }

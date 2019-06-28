@@ -89,6 +89,7 @@ public class ProjectPatternsFragment extends Fragment {
     private EditText tempoEditText;
     private ImageView patternStop;
     private ImageView patternPlay;
+    private RecyclerViewScrollChangeDispatcher scrollChangeDispatcher;
 
     @Nullable
     @Override
@@ -172,7 +173,7 @@ public class ProjectPatternsFragment extends Fragment {
 
         pianoRollPosition = (TextView) rootView.findViewById(R.id.piano_roll_position);
 
-        RecyclerViewScrollChangeDispatcher scrollChangeDispatcher = new RecyclerViewScrollChangeDispatcher(pianoRollContainer);
+        scrollChangeDispatcher = new RecyclerViewScrollChangeDispatcher(pianoRollContainer);
         scrollChangeDispatcher.setListener(new ScrollChangeListener() {
             @Override
             public void onScrollChange(int x, int y, int oldX, int oldY) {
@@ -226,7 +227,15 @@ public class ProjectPatternsFragment extends Fragment {
 
     @Override
     public void onDestroyView() {
+        pianoRollContainer.setAdapter(null);
+        scrollChangeDispatcher.onDestroyView();
         super.onDestroyView();
+        this.scrollChangeDispatcher = null;
+        this.pianoRollContainer = null;
+        this.patternPlay = null;
+        this.patternStop = null;
+        this.pianoRollPosition = null;
+        this.tempoEditText = null;
         viewModel.patternEventSource.remove(TAG);
         viewModel.instrumentEventSource.remove(TAG);
     }
@@ -574,12 +583,12 @@ public class ProjectPatternsFragment extends Fragment {
         if(which == AppConstants.PATTERN_EDITOR_BASE) {
             if(fm.getBackStackEntryCount() == 0) {
                 fragment = new PatternEditBase();
-                Transition trIn = new Slide(Gravity.LEFT).setDuration(getResources().getInteger(android.R.integer.config_shortAnimTime));
-                trIn.setPropagation(new NoTransitionPropagation());
-                fragment.setEnterTransition(trIn);
-                Transition trOut = new Slide(Gravity.LEFT).setDuration(getResources().getInteger(android.R.integer.config_shortAnimTime));
-                trOut.setPropagation(new NoTransitionPropagation());
-                fragment.setExitTransition(trOut);
+                // Transition trIn = new Slide(Gravity.LEFT).setDuration(getResources().getInteger(android.R.integer.config_shortAnimTime));
+                // trIn.setPropagation(new NoTransitionPropagation());
+                // fragment.setEnterTransition(trIn);
+                // Transition trOut = new Slide(Gravity.LEFT).setDuration(getResources().getInteger(android.R.integer.config_shortAnimTime));
+                // trOut.setPropagation(new NoTransitionPropagation());
+                // fragment.setExitTransition(trOut);
             } else {
                 fm.popBackStack();
             }

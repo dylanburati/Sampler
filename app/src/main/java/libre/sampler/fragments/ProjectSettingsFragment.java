@@ -17,8 +17,6 @@ import libre.sampler.models.ProjectViewModel;
 
 public class ProjectSettingsFragment extends Fragment {
     private ProjectViewModel viewModel;
-    private EditText defaultSamplePathInputView;
-    private EditText defaultExportPathInputView;
 
     @Nullable
     @Override
@@ -26,7 +24,7 @@ public class ProjectSettingsFragment extends Fragment {
         View rootView = inflater.inflate(R.layout.fragment_project_settings, container, false);
         viewModel = ViewModelProviders.of(getActivity()).get(ProjectViewModel.class);
 
-        defaultSamplePathInputView = (EditText) rootView.findViewById(R.id.pref_default_sample_path);
+        EditText defaultSamplePathInputView = (EditText) rootView.findViewById(R.id.pref_default_sample_path);
         defaultSamplePathInputView.setText(viewModel.getProject().getDefaultSamplePath());
         defaultSamplePathInputView.addTextChangedListener(new TextWatcher() {
             @Override
@@ -43,7 +41,7 @@ public class ProjectSettingsFragment extends Fragment {
             }
         });
 
-        defaultExportPathInputView = (EditText) rootView.findViewById(R.id.pref_default_instrument_export_path);
+        EditText defaultExportPathInputView = (EditText) rootView.findViewById(R.id.pref_default_instrument_export_path);
         defaultExportPathInputView.setText(viewModel.getProject().getDefaultExportPath());
         defaultExportPathInputView.addTextChangedListener(new TextWatcher() {
             @Override

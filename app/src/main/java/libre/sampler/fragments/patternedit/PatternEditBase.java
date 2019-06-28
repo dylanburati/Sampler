@@ -141,7 +141,10 @@ public class PatternEditBase extends Fragment {
 
     @Override
     public void onDestroyView() {
+        instrumentSpinner.setAdapter(null);
         super.onDestroyView();
+        this.instrumentSpinner = null;
+        this.noteSelectControls = null;
         viewModel.instrumentEventSource.remove(TAG);
         patternsFragment.patternEditEventSource.remove(TAG);
     }

@@ -143,4 +143,11 @@ public class ProjectKeyboardFragment extends Fragment {
         pianoContainer.setAdapter(pianoAdapter);
         return rootView;
     }
+
+    @Override
+    public void onDestroyView() {
+        pianoContainer.setAdapter(null);
+        super.onDestroyView();
+        this.pianoContainer = null;
+    }
 }

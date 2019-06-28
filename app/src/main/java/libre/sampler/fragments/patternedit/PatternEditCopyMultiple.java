@@ -148,6 +148,8 @@ public class PatternEditCopyMultiple extends Fragment {
     @Override
     public void onDestroyView() {
         super.onDestroyView();
+        this.rootView = null;
+        this.intervalPicker = null;
         patternsFragment.patternEditEventSource.remove(TAG);
     }
 

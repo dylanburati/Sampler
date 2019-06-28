@@ -59,4 +59,11 @@ public class PatternEditPatternLength extends Fragment {
         };
         loopLengthPicker.setTicks(viewModel.getPianoRollPattern().getLoopLengthTicks());
     }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        this.rootView = null;
+        this.loopLengthPicker = null;
+    }
 }

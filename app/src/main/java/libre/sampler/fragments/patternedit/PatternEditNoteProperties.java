@@ -80,6 +80,9 @@ public class PatternEditNoteProperties extends Fragment {
     @Override
     public void onDestroyView() {
         super.onDestroyView();
+        this.rootView = null;
+        this.noteStartPicker = null;
+        this.noteLengthPicker = null;
         patternsFragment.patternEditEventSource.remove(TAG);
     }
 

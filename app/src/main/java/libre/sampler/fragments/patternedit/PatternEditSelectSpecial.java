@@ -114,6 +114,7 @@ public class PatternEditSelectSpecial extends Fragment {
     @Override
     public void onDestroyView() {
         super.onDestroyView();
+        this.rootView = null;
         patternsFragment.removePianoRollTapListener(tapListener);
     }
 
