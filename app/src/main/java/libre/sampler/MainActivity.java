@@ -31,7 +31,6 @@ public class MainActivity extends AppCompatActivity implements ProjectCreateDial
     public static final String TAG = "MainActivity";
     private RecyclerView projectListView;
     private ProjectListAdapter projectListAdapter;
-    private ProjectCreateDialog projectCreateDialog;
     private boolean isAdapterLoaded;
     private MainViewModel viewModel;
     private boolean willShowDialogCreateProject;
@@ -91,8 +90,8 @@ public class MainActivity extends AppCompatActivity implements ProjectCreateDial
 
         if(willShowDialogCreateProject) {
             willShowDialogCreateProject = false;
-            projectCreateDialog = new ProjectCreateDialog();
-            projectCreateDialog.show(getSupportFragmentManager(), "dialog_project_create");
+            ProjectCreateDialog dialog = new ProjectCreateDialog();
+            dialog.show(getSupportFragmentManager(), "ProjectCreateDialog");
         }
     }
 
@@ -111,13 +110,9 @@ public class MainActivity extends AppCompatActivity implements ProjectCreateDial
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         if(item.getItemId() == R.id.appbar_create) {
-            if(ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-                if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                    requestPermissions(new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, AppConstants.PERM_REQUEST_READ_EXTERNAL_STORAGE);
-                }
-            } else {
-                projectCreateDialog = new ProjectCreateDialog();
-                projectCreateDialog.show(getSupportFragmentManager(), "dialog_project_create");
+            if(requireReadWritePermissions()) {
+                ProjectCreateDialog dialog = new ProjectCreateDialog();
+                dialog.show(getSupportFragmentManager(), "ProjectCreateDialog");
             }
             return true;
         } else if(item.getItemId() == R.id.appbar_delete) {
@@ -135,6 +130,22 @@ public class MainActivity extends AppCompatActivity implements ProjectCreateDial
         return super.onOptionsItemSelected(item);
     }
 
+    private boolean requireReadWritePermissions() {
+        boolean granted = true;
+
+        if(ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+            granted = false;
+        } else if(ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+            granted = false;
+        }
+
+        if(!granted && Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            requestPermissions(new String[]{Manifest.permission.READ_EXTERNAL_STORAGE,
+                    Manifest.permission.WRITE_EXTERNAL_STORAGE}, AppConstants.PERM_REQUEST_READ_EXTERNAL_STORAGE);
+        }
+        return granted;
+    }
+
     @Override
     public void onProjectCreate(String projectName) {
         final Project toAdd = new Project(projectName, System.currentTimeMillis());
@@ -147,7 +158,8 @@ public class MainActivity extends AppCompatActivity implements ProjectCreateDial
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         switch(requestCode) {
             case AppConstants.PERM_REQUEST_READ_EXTERNAL_STORAGE:
-                if(grantResults.length >= 1 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                if(grantResults.length >= 2 && grantResults[0] == PackageManager.PERMISSION_GRANTED &&
+                        grantResults[1] == PackageManager.PERMISSION_GRANTED) {
                     willShowDialogCreateProject = true;
                 }
                 break;

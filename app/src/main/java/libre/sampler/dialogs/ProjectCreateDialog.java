@@ -36,7 +36,7 @@ public class ProjectCreateDialog extends DialogFragment {
         LinearLayout rootView = (LinearLayout) inflater.inflate(R.layout.dialog_project_create, null);
         nameInputView = (EditText) rootView.findViewById(R.id.input_name);
         builder.setView(rootView)
-                .setPositiveButton(R.string.dialog_project_create_submit, new DialogInterface.OnClickListener() {
+                .setPositiveButton(R.string.create, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         if(listener != null) listener.onProjectCreate(nameInputView.getText().toString());

@@ -37,7 +37,7 @@ public class DatabaseConnectionManager {
         executor.execute(command);
     }
 
-    public static void runTask(AsyncTask<Void, Void, ?> task) {
+    public static <Progress> void runTask(AsyncTask<Void, Progress, ?> task) {
         task.executeOnExecutor(executor);
     }
 }

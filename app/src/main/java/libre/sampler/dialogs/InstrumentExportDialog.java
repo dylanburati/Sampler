@@ -1,12 +1,13 @@
 package libre.sampler.dialogs;
 
-import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.os.Bundle;
 import android.view.LayoutInflater;
+import android.view.View;
+import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import java.io.File;
@@ -15,7 +16,6 @@ import java.lang.ref.WeakReference;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.constraintlayout.widget.ConstraintLayout;
-import androidx.core.util.Consumer;
 import androidx.fragment.app.DialogFragment;
 import androidx.lifecycle.ViewModelProviders;
 import libre.sampler.R;
@@ -23,12 +23,14 @@ import libre.sampler.models.ProjectViewModel;
 import libre.sampler.tasks.ExportInstrumentTask;
 import libre.sampler.utils.AppConstants;
 import libre.sampler.utils.DatabaseConnectionManager;
+import libre.sampler.views.MyDialogBuilder;
 
 public class InstrumentExportDialog extends DialogFragment {
     private EditText exportPathInputView;
     private EditText nameInputView;
 
     private ProjectViewModel viewModel;
+    private ProgressBar progressBar;
 
     @Override
     public void onAttach(@NonNull Context context) {
@@ -38,11 +40,14 @@ public class InstrumentExportDialog extends DialogFragment {
     @NonNull
     @Override
     public Dialog onCreateDialog(@Nullable Bundle savedInstanceState) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+        MyDialogBuilder builder = new MyDialogBuilder(getActivity());
         LayoutInflater inflater = LayoutInflater.from(requireActivity());
         ConstraintLayout rootView = (ConstraintLayout) inflater.inflate(R.layout.dialog_instrument_export, null);
         exportPathInputView = (EditText) rootView.findViewById(R.id.input_export_path);
         nameInputView = (EditText) rootView.findViewById(R.id.input_name);
+        Button submitButton = rootView.findViewById(R.id.submit_button);
+        Button cancelButton = rootView.findViewById(R.id.cancel_button);
+        progressBar = rootView.findViewById(R.id.progress_bar);
 
         viewModel = ViewModelProviders.of(getActivity()).get(ProjectViewModel.class);
 
@@ -54,29 +59,29 @@ public class InstrumentExportDialog extends DialogFragment {
             nameInputView.setText(viewModel.getDialogInstrument().name);
         }
 
-        builder.setView(rootView)
-                .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        dialog.cancel();
-                    }
-                })
-                .setPositiveButton(R.string.dialog_project_export_submit, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        String path = exportPathInputView.getText().toString();
-                        String filename = nameInputView.getText().toString();
-                        if(!filename.endsWith(".zip")) {
-                            filename += ".zip";
-                        }
-                        File outFile = new File(path, filename);
+        builder.setContentView(rootView);
 
-                        DatabaseConnectionManager.runTask(new ExportInstrumentTask(viewModel.getDialogInstrument(), outFile,
-                                new ExportTaskCallback(new WeakReference<Context>(getActivity()))));
+        submitButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String path = exportPathInputView.getText().toString();
+                String filename = nameInputView.getText().toString();
+                if(!filename.endsWith(".zip")) {
+                    filename += ".zip";
+                }
+                File outFile = new File(path, filename);
 
-                        dialog.dismiss();
-                    }
-                });
+                progressBar.setVisibility(View.VISIBLE);
+                DatabaseConnectionManager.runTask(new ExportInstrumentTask(viewModel.getDialogInstrument(), outFile,
+                        new ExportTaskCallback(new WeakReference<>(getDialog()), new WeakReference<>(progressBar))));
+            }
+        });
+        cancelButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                getDialog().cancel();
+            }
+        });
 
         return builder.create();
     }
@@ -87,24 +92,37 @@ public class InstrumentExportDialog extends DialogFragment {
         outState.putString(AppConstants.TAG_SAVED_STATE_INSTRUMENT_EXPORT_NAME, nameInputView.getText().toString());
     }
 
-    private static class ExportTaskCallback implements Consumer<String> {
-        private final WeakReference<Context> contextRef;
+    private static class ExportTaskCallback implements ExportInstrumentTask.Callbacks {
+        private final WeakReference<Dialog> dialogRef;
+        private final WeakReference<ProgressBar> progressBarRef;
 
-        public ExportTaskCallback(WeakReference<Context> context) {
-            this.contextRef = context;
+        public ExportTaskCallback(WeakReference<Dialog> dialogRef, WeakReference<ProgressBar> progressBarRef) {
+            this.dialogRef = dialogRef;
+            this.progressBarRef = progressBarRef;
         }
 
         @Override
-        public void accept(String message) {
-            if(this.contextRef.get() == null) {
+        public void onProgressUpdate(float progress) {
+            ProgressBar bar = progressBarRef.get();
+            if(bar != null) {
+                bar.setProgress(Math.round(progress * bar.getMax()));
+            }
+        }
+
+        @Override
+        public void onPostExecute(String message) {
+            if(this.dialogRef.get() == null) {
                 return;
             }
             if(AppConstants.SUCCESS_EXPORT_INSTRUMENT.equals(message)) {
-                Toast.makeText(this.contextRef.get(), R.string.instrument_exported, Toast.LENGTH_SHORT).show();
-            } else if(AppConstants.ERROR_EXPORT_ZIP_EXISTS.equals(message)) {
-                Toast.makeText(this.contextRef.get(), R.string.export_file_exists, Toast.LENGTH_SHORT).show();
+                this.dialogRef.get().dismiss();
             } else {
-                Toast.makeText(this.contextRef.get(), R.string.export_could_not_create, Toast.LENGTH_SHORT).show();
+                this.progressBarRef.get().setVisibility(View.GONE);
+                if(AppConstants.ERROR_EXPORT_ZIP_EXISTS.equals(message)) {
+                    Toast.makeText(this.dialogRef.get().getContext(), R.string.export_file_exists, Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(this.dialogRef.get().getContext(), R.string.export_could_not_create, Toast.LENGTH_SHORT).show();
+                }
             }
         }
     }

@@ -64,6 +64,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="@dimen/margin3_dense"
         android:hint="@string/import_path_hint"
+        android:visibility="gone"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/import_checkbox">
 
@@ -73,4 +74,22 @@
             android:layout_height="wrap_content"
             android:inputType="textPersonName" />
     </com.google.android.material.textfield.TextInputLayout>
+
+    <Button
+        android:id="@+id/cancel_button"
+        style="?attr/buttonBarNegativeButtonStyle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintEnd_toStartOf="@+id/submit_button"
+        app:layout_constraintBaseline_toBaselineOf="@+id/submit_button"
+        android:text="@string/cancel" />
+
+    <Button
+        android:id="@+id/submit_button"
+        style="?attr/buttonBarPositiveButtonStyle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/input_import_path_container"
+        android:text="@string/create" />
 </androidx.constraintlayout.widget.ConstraintLayout>

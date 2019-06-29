@@ -1,13 +1,12 @@
 package libre.sampler.dialogs;
 
-import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.EditText;
@@ -20,7 +19,6 @@ import java.lang.ref.WeakReference;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.core.util.Consumer;
 import androidx.fragment.app.DialogFragment;
 import androidx.lifecycle.ViewModelProviders;
@@ -33,6 +31,7 @@ import libre.sampler.models.ProjectViewModel;
 import libre.sampler.tasks.ImportInstrumentTask;
 import libre.sampler.utils.AppConstants;
 import libre.sampler.utils.DatabaseConnectionManager;
+import libre.sampler.views.MyDialogBuilder;
 
 public class InstrumentCreateDialog extends DialogFragment {
     private EditText nameInputView;
@@ -49,11 +48,13 @@ public class InstrumentCreateDialog extends DialogFragment {
     @NonNull
     @Override
     public Dialog onCreateDialog(@Nullable Bundle savedInstanceState) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+        MyDialogBuilder builder = new MyDialogBuilder(getActivity());
         LayoutInflater inflater = LayoutInflater.from(requireActivity());
-        ConstraintLayout rootView = (ConstraintLayout) inflater.inflate(R.layout.dialog_instrument_create, null);
+        View rootView = inflater.inflate(R.layout.dialog_instrument_create, null);
         nameInputView = (EditText) rootView.findViewById(R.id.input_name);
         CheckBox importCheckBox = rootView.findViewById(R.id.import_checkbox);
+        Button submitButton = rootView.findViewById(R.id.submit_button);
+        Button cancelButton = rootView.findViewById(R.id.cancel_button);
 
         viewModel = ViewModelProviders.of(getActivity()).get(ProjectViewModel.class);
 
@@ -82,53 +83,56 @@ public class InstrumentCreateDialog extends DialogFragment {
             }
         });
 
-        builder.setView(rootView)
-                .setPositiveButton(R.string.dialog_project_create_submit, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        String name = nameInputView.getText().toString();
-                        Instrument toCreate = viewModel.getDialogInstrument();
-                        toCreate.name = name;
+        builder.setContentView(rootView);
+        submitButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String name = nameInputView.getText().toString();
+                Instrument toCreate = viewModel.getDialogInstrument();
+                toCreate.name = name;
 
-                        if(importIsChecked) {
-                            if(importPath.isEmpty()) {
-                                Toast.makeText(getContext(), R.string.file_not_found, Toast.LENGTH_SHORT).show();
-                                return;
-                            }
-                            File inFile = new File(importPath);
-                            if(!inFile.isFile() || !inFile.canRead()) {
-                                Toast.makeText(getContext(), R.string.file_not_found, Toast.LENGTH_SHORT).show();
-                                return;
-                            }
-                            String extractPath = viewModel.getProject().getDefaultSamplePath();
-                            File extractDir = getContext().getDir("data", Context.MODE_PRIVATE);
-                            if(!extractPath.isEmpty()) {
-                                File sampleDir = new File(extractPath);
-                                if(sampleDir.isDirectory() && sampleDir.canWrite()) {
-                                    extractDir = sampleDir;
-                                }
-                            }
-
-                            DatabaseConnectionManager.runTask(new ImportInstrumentTask(toCreate, inFile, extractDir,
-                                    new ImportTaskCallback(new WeakReference<>(getDialog()), viewModel, viewModel.getProject(), toCreate)));
-                        } else {
-                            viewModel.getProject().addInstrument(toCreate);
-                            viewModel.instrumentEventSource.dispatch(new InstrumentEvent(InstrumentEvent.INSTRUMENT_CREATE, toCreate));
-                            viewModel.setDialogInstrument(null);
-                            dialog.dismiss();
+                if(importIsChecked) {
+                    if(importPath.isEmpty()) {
+                        Toast.makeText(getContext(), R.string.file_not_found, Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+                    File inFile = new File(importPath);
+                    if(!inFile.isFile() || !inFile.canRead()) {
+                        Toast.makeText(getContext(), R.string.file_not_found, Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+                    String extractPath = viewModel.getProject().getDefaultSamplePath();
+                    File extractDir = getContext().getDir("data", Context.MODE_PRIVATE);
+                    if(!extractPath.isEmpty()) {
+                        File sampleDir = new File(extractPath);
+                        if(sampleDir.isDirectory() && sampleDir.canWrite()) {
+                            extractDir = sampleDir;
                         }
                     }
-                })
-                .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        dialog.cancel();
-                    }
-                });
+
+                    DatabaseConnectionManager.runTask(new ImportInstrumentTask(toCreate, inFile, extractDir,
+                            new ImportTaskCallback(new WeakReference<>(getDialog()), viewModel, viewModel.getProject(), toCreate)));
+                } else {
+                    viewModel.getProject().addInstrument(toCreate);
+                    viewModel.instrumentEventSource.dispatch(new InstrumentEvent(InstrumentEvent.INSTRUMENT_CREATE, toCreate));
+                    viewModel.setDialogInstrument(null);
+                    getDialog().dismiss();
+                }
+            }
+
+        });
+
+        cancelButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                getDialog().cancel();
+            }
+        });
 
         return builder.create();
     }
 
+    @Nullable
     @Override
     public void onSaveInstanceState(@NonNull Bundle outState) {
         outState.putString(AppConstants.TAG_SAVED_STATE_INSTRUMENT_CREATE_NAME, nameInputView.getText().toString());

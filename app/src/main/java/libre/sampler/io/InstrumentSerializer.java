@@ -19,15 +19,18 @@ import java.util.zip.ZipOutputStream;
 import libre.sampler.models.Instrument;
 import libre.sampler.models.Sample;
 import libre.sampler.utils.AppConstants;
+import libre.sampler.utils.ProgressFraction;
 
 public class InstrumentSerializer implements Closeable {
     private Instrument instrument;
     private Map<String, String> filenamesToEntries;
     private ZipOutputStream zipOutputStream;
     private JsonWriter jsonWriter;
+    private final ProgressFraction progress;
 
-    public InstrumentSerializer(Instrument instrument) {
+    public InstrumentSerializer(Instrument instrument, ProgressFraction progress) {
         this.instrument = instrument;
+        this.progress = progress;
         this.filenamesToEntries = new HashMap<>(instrument.getSamples().size());
     }
 
@@ -96,11 +99,14 @@ public class InstrumentSerializer implements Closeable {
         writeJson(this.jsonWriter);
         jsonWriter.flush();
 
+        int i = 0;
+        progress.setProgressTotal(filenamesToEntries.size());
         for(Map.Entry<String, String> kv : filenamesToEntries.entrySet()) {
             zipOutputStream.putNextEntry(new ZipEntry(kv.getValue()));
             try(InputStream inputStream = new FileInputStream(new File(kv.getKey()))) {
                 copy(inputStream, zipOutputStream);
             }
+            progress.setProgressCurrent(++i);
         }
     }
 
