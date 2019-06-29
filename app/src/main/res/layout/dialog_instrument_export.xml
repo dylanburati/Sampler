@@ -14,7 +14,7 @@
         android:id="@+id/title"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="@dimen/margin3"
+        android:layout_marginBottom="@dimen/margin3_dense"
         android:paddingStart="@dimen/margin1"
         android:text="@string/dialog_instrument_export_title"
         android:textSize="@dimen/title"

@@ -87,7 +87,7 @@ public class InstrumentDeserializer implements Closeable {
         while(reader.hasNext()) {
             String nextName = reader.nextName();
             if(nextName.equals("name")) {
-                // toCreate.name = reader.nextString();
+                /*discard*/ reader.nextString();
             } else if(nextName.equals("volume")) {
                 toCreate.setVolume((float) reader.nextDouble());
             } else if(nextName.equals("samples")) {

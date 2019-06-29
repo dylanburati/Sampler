@@ -26,7 +26,7 @@
         android:id="@+id/input_name_container"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
+        android:layout_marginTop="@dimen/margin3_dense"
         android:hint="@string/name_hint"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/title">
@@ -42,7 +42,7 @@
         android:id="@+id/import_checkbox"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="@dimen/margin3_dense"
+        android:layout_marginTop="@dimen/margin2"
         android:layout_marginEnd="@dimen/margin2"
         app:layout_constraintEnd_toStartOf="@+id/import_checkbox_label"
         app:layout_constraintStart_toStartOf="parent"
@@ -64,7 +64,6 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="@dimen/margin3_dense"
         android:hint="@string/import_path_hint"
-        android:visibility="gone"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/import_checkbox">
 

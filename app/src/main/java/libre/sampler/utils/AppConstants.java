@@ -37,4 +37,5 @@ public class AppConstants {
 
     public static final String ERROR_EXPORT_ZIP_EXISTS = "File exists";
     public static final String SUCCESS_EXPORT_INSTRUMENT = "Instrument exported";
+    public static final String SUCCESS_IMPORT_INSTRUMENT = "Instrument imported";
 }

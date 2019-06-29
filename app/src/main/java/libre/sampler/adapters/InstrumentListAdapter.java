@@ -110,7 +110,7 @@ public class InstrumentListAdapter extends RecyclerView.Adapter<InstrumentListAd
             menu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
                 @Override
                 public boolean onMenuItemClick(MenuItem item) {
-                    if(item.getItemId() == R.id.instrument_rename) {
+                    if(item.getItemId() == R.id.instrument_edit) {
                         instrumentActionConsumer.startRename(holder.instrument);
                     } else if(item.getItemId() == R.id.instrument_export) {
                         instrumentActionConsumer.startExport(holder.instrument);

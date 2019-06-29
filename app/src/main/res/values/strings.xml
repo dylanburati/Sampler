@@ -89,6 +89,8 @@
     <string name="instrument_exported">Instrument exported</string>
     <string name="import_checkbox_label">Import samples</string>
     <string name="import_path_hint">Import path</string>
+    <string name="file_not_found">File not found</string>
+    <string name="action_edit">Edit</string>
     <plurals name="selected_notes_label">
         <item quantity="one">%d note selected</item>
         <item quantity="other">%d notes selected</item>

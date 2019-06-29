@@ -555,7 +555,7 @@ public class ProjectInstrumentsFragment extends Fragment {
                 Instrument toCreate = new Instrument(null);
                 viewModel.setDialogInstrument(toCreate);
                 viewModel.getProject().registerInstrument(toCreate);
-                dialog.show(fm, "dialog_instrument_create");
+                dialog.show(fm, "InstrumentCreateDialog");
             }
         }
 
@@ -565,7 +565,7 @@ public class ProjectInstrumentsFragment extends Fragment {
             if(fm != null) {
                 InstrumentEditDialog dialog = new InstrumentEditDialog();
                 viewModel.setDialogInstrument(instrument);
-                dialog.show(fm, "dialog_instrument_edit");
+                dialog.show(fm, "InstrumentEditDialog");
             }
         }
 
@@ -575,7 +575,7 @@ public class ProjectInstrumentsFragment extends Fragment {
             if(fm != null) {
                 InstrumentExportDialog dialog = new InstrumentExportDialog();
                 viewModel.setDialogInstrument(instrument);
-                dialog.show(fm, "dialog_instrument_edit");
+                dialog.show(fm, "InstrumentExportDialog");
             }
         }
 
