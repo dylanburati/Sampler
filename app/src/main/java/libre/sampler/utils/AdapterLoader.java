@@ -7,7 +7,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 public class AdapterLoader {
     public interface Loadable<T> {
-        public List<T> items();
+        List<T> items();
     }
 
     public static <T> void insertItem(Loadable<T> adapter, T e) {

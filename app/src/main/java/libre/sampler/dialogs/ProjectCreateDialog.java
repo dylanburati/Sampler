@@ -16,7 +16,7 @@ import libre.sampler.R;
 
 public class ProjectCreateDialog extends DialogFragment {
     public interface ProjectCreateDialogListener {
-        public void onProjectCreate(String projectName);
+        void onProjectCreate(String projectName);
     }
 
     private ProjectCreateDialogListener listener;

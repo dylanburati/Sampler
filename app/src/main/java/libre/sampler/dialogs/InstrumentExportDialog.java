@@ -1,10 +1,12 @@
 package libre.sampler.dialogs;
 
+import android.animation.ObjectAnimator;
 import android.app.Dialog;
 import android.content.Context;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.animation.DecelerateInterpolator;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ProgressBar;
@@ -73,7 +75,7 @@ public class InstrumentExportDialog extends DialogFragment {
 
                 progressBar.setVisibility(View.VISIBLE);
                 DatabaseConnectionManager.runTask(new ExportInstrumentTask(viewModel.getDialogInstrument(), outFile,
-                        new ExportTaskCallback(new WeakReference<>(getDialog()), new WeakReference<>(progressBar))));
+                        new ExportTaskCallback(getDialog(), progressBar, getActivity())));
             }
         });
         cancelButton.setOnClickListener(new View.OnClickListener() {
@@ -95,33 +97,46 @@ public class InstrumentExportDialog extends DialogFragment {
     private static class ExportTaskCallback implements ExportInstrumentTask.Callbacks {
         private final WeakReference<Dialog> dialogRef;
         private final WeakReference<ProgressBar> progressBarRef;
+        private WeakReference<Context> contextRef;
 
-        public ExportTaskCallback(WeakReference<Dialog> dialogRef, WeakReference<ProgressBar> progressBarRef) {
-            this.dialogRef = dialogRef;
-            this.progressBarRef = progressBarRef;
+        public ExportTaskCallback(Dialog dialog, ProgressBar progressBar, Context context) {
+            this.dialogRef = new WeakReference<>(dialog);
+            this.progressBarRef = new WeakReference<>(progressBar);
+            this.contextRef = new WeakReference<>(context);
         }
 
         @Override
         public void onProgressUpdate(float progress) {
             ProgressBar bar = progressBarRef.get();
             if(bar != null) {
-                bar.setProgress(Math.round(progress * bar.getMax()));
+                ObjectAnimator anim = ObjectAnimator.ofInt(bar, "progress", Math.round(progress * bar.getMax()));
+                anim.setAutoCancel(true);
+                anim.setDuration(150);
+                anim.setInterpolator(new DecelerateInterpolator());
+                anim.start();
             }
         }
 
         @Override
         public void onPostExecute(String message) {
-            if(this.dialogRef.get() == null) {
-                return;
-            }
-            if(AppConstants.SUCCESS_EXPORT_INSTRUMENT.equals(message)) {
-                this.dialogRef.get().dismiss();
-            } else {
-                this.progressBarRef.get().setVisibility(View.GONE);
-                if(AppConstants.ERROR_EXPORT_ZIP_EXISTS.equals(message)) {
-                    Toast.makeText(this.dialogRef.get().getContext(), R.string.export_file_exists, Toast.LENGTH_SHORT).show();
+            Dialog dialog = dialogRef.get();
+            if(dialog != null && dialog.isShowing()) {
+                // Progress bar shows completion
+                if(AppConstants.SUCCESS_EXPORT_INSTRUMENT.equals(message)) {
+                    dialog.dismiss();
+                    return;
                 } else {
-                    Toast.makeText(this.dialogRef.get().getContext(), R.string.export_could_not_create, Toast.LENGTH_SHORT).show();
+                    this.progressBarRef.get().setVisibility(View.GONE);
+                }
+            }
+
+            if(this.contextRef.get() != null) {
+                if(AppConstants.SUCCESS_EXPORT_INSTRUMENT.equals(message)) {
+                    Toast.makeText(this.contextRef.get(), R.string.instrument_exported, Toast.LENGTH_SHORT).show();
+                } else if(AppConstants.ERROR_EXPORT_ZIP_EXISTS.equals(message)) {
+                    Toast.makeText(this.contextRef.get(), R.string.export_file_exists, Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(this.contextRef.get(), R.string.export_could_not_create, Toast.LENGTH_SHORT).show();
                 }
             }
         }

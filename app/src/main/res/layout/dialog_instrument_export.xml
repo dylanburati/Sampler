@@ -58,7 +58,6 @@
     <ProgressBar
         android:id="@+id/progress_bar"
         style="@android:style/Widget.Material.Light.ProgressBar.Horizontal"
-        android:interpolator="@android:anim/decelerate_interpolator"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:progressTint="@android:color/white"

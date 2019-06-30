@@ -111,7 +111,7 @@ public class InstrumentCreateDialog extends DialogFragment {
                     }
 
                     DatabaseConnectionManager.runTask(new ImportInstrumentTask(toCreate, inFile, extractDir,
-                            new ImportTaskCallback(new WeakReference<>(getDialog()), viewModel, viewModel.getProject(), toCreate)));
+                            new ImportTaskCallback(getDialog(), viewModel, viewModel.getProject(), toCreate)));
                 } else {
                     viewModel.getProject().addInstrument(toCreate);
                     viewModel.instrumentEventSource.dispatch(new InstrumentEvent(InstrumentEvent.INSTRUMENT_CREATE, toCreate));
@@ -144,10 +144,10 @@ public class InstrumentCreateDialog extends DialogFragment {
         private Project project;
         private Instrument instrument;
 
-        public ImportTaskCallback(WeakReference<Dialog> dialogRef, ProjectViewModel viewModel,
-                                  Project project, Instrument instrument) {
+        public ImportTaskCallback(Dialog dialog, ProjectViewModel viewModel, Project project,
+                                  Instrument instrument) {
             Log.d("ImportInstrumentTask", "start");
-            this.dialogRef = dialogRef;
+            this.dialogRef = new WeakReference<>(dialog);
             this.viewModel = viewModel;
             this.project = project;
             this.instrument = instrument;

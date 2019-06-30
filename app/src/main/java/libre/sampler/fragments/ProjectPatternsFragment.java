@@ -623,6 +623,6 @@ public class ProjectPatternsFragment extends Fragment {
     }
 
     public interface PianoRollTapListener {
-        public void onSingleTap(MusicTime xTime, int keyNum);
+        void onSingleTap(MusicTime xTime, int keyNum);
     }
 }

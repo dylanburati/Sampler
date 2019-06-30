@@ -59,6 +59,6 @@ public class ExportInstrumentTask extends AsyncTask<Void, Float, String> impleme
 
     @Override
     public void setProgressCurrent(int current) {
-        onProgressUpdate((float) current / total);
+        publishProgress((float) current / total);
     }
 }

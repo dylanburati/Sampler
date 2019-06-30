@@ -166,9 +166,9 @@ public class InstrumentListAdapter extends RecyclerView.Adapter<InstrumentListAd
     }
 
     public interface InstrumentActionConsumer {
-        public void startCreate();
-        public void startRename(Instrument instrument);
-        public void startExport(Instrument instrument);
-        public void select(Instrument instrument);
+        void startCreate();
+        void startRename(Instrument instrument);
+        void startExport(Instrument instrument);
+        void select(Instrument instrument);
     }
 }

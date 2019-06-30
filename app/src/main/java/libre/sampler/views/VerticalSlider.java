@@ -341,6 +341,6 @@ public class VerticalSlider extends View {
     }
 
     public interface OnProgressChangedListener {
-        public void onProgressChanged(VerticalSlider v, float progress, boolean fromUser);
+        void onProgressChanged(VerticalSlider v, float progress, boolean fromUser);
     }
 }
