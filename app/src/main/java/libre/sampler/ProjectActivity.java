@@ -43,7 +43,7 @@ import libre.sampler.publishers.MyPdDispatcher;
 import libre.sampler.tasks.UpdateProjectTask;
 import libre.sampler.utils.AppConstants;
 import libre.sampler.utils.DatabaseConnectionManager;
-import libre.sampler.utils.EditablePatternThread;
+import libre.sampler.utils.PatternThread;
 import libre.sampler.utils.SampleBindingList;
 import libre.sampler.utils.VoiceBindingList;
 
@@ -52,7 +52,7 @@ public class ProjectActivity extends AppCompatActivity {
     private ViewPager pager;
     private ProjectFragmentAdapter fragmentAdapter;
 
-    private EditablePatternThread patternThread;
+    private PatternThread patternThread;
 
     private PdService pdService = null;
     private MyPdDispatcher pdReceiver;
@@ -142,7 +142,7 @@ public class ProjectActivity extends AppCompatActivity {
     }
 
     private void initPatternThread() {
-        patternThread = new EditablePatternThread(viewModel.noteEventSource);
+        patternThread = new PatternThread(viewModel.noteEventSource);
         patternThread.start();
     }
 
@@ -299,7 +299,7 @@ public class ProjectActivity extends AppCompatActivity {
         }
     }
 
-    public EditablePatternThread getPatternThread() {
+    public PatternThread getPatternThread() {
         return patternThread;
     }
 

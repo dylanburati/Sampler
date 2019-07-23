@@ -2,6 +2,7 @@ package libre.sampler;
 
 import android.util.Pair;
 
+import org.junit.Before;
 import org.junit.Test;
 
 import java.util.ArrayList;
@@ -14,7 +15,6 @@ import libre.sampler.models.NoteEvent;
 import libre.sampler.models.Pattern;
 import libre.sampler.models.ScheduledNoteEvent;
 import libre.sampler.publishers.NoteEventSource;
-import libre.sampler.utils.EditablePatternThread;
 import libre.sampler.utils.PatternThread;
 
 import static libre.sampler.utils.AppConstants.NANOS_PER_MILLI;
@@ -34,16 +34,23 @@ public class PatternThreadTest {
         System.out.println("]");
     }
 
+    private NoteEventSource noteEventSource;
+    private PatternThread patternThread;
+
+    @Before
+    public void setUp() {
+        // run before each test
+        this.noteEventSource = new NoteEventSource();
+        this.patternThread = new PatternThread(noteEventSource);
+    }
+
     @Test
     public void patternThread_correctOrderingAndTiming() {
         final int TEST_RESULTS_SIZE = 20;
         final int LOOP_SIZE = 10;
 
         TimingNoteEventConsumer noteEventConsumer = new TimingNoteEventConsumer(TEST_RESULTS_SIZE);
-        final NoteEventSource noteEventSource = new NoteEventSource();
         noteEventSource.add("test", noteEventConsumer);
-
-        PatternThread patternThread = new PatternThread(noteEventSource);
         patternThread.start();
 
         int[] expectedResults = new int[]{56, 49, 37, 56, 61, 61, 64, 64, 49, 37, 56, 49, 37, 56, 61, 61, 64, 64, 49, 37};
@@ -129,7 +136,6 @@ public class PatternThreadTest {
         final int NUM_CHANGES = 100;
         final TestVisualNote[] notes = new TestVisualNote[NUM_NOTES];
 
-        NoteEventSource noteEventSource = new NoteEventSource();
         noteEventSource.add("correctAdditionAndRemoval", new Consumer<NoteEvent>() {
             @Override
             public void accept(NoteEvent event) {
@@ -148,7 +154,6 @@ public class PatternThreadTest {
             }
         });
 
-        EditablePatternThread patternThread = new EditablePatternThread(noteEventSource);
         patternThread.start();
         Pattern pattern = Pattern.getEmptyPattern();
         pattern.setPatternId(0);
@@ -161,7 +166,7 @@ public class PatternThreadTest {
             notes[i].eventOn = new ScheduledNoteEvent(startTicks, NoteEvent.NOTE_ON, null, i, 0, i);
             long endTicks = startTicks + ((rand.nextLong() & POSITIVE_MASK) % (Pattern.DEFAULT_LOOP_LENGTH.getTicks() - startTicks));
             notes[i].eventOff = new ScheduledNoteEvent(endTicks, NoteEvent.NOTE_OFF, null, i, 0, i);
-            patternThread.addToPattern(pattern, notes[i].eventOn, notes[i].eventOff);
+            addToPattern(pattern, notes[i].eventOn, notes[i].eventOff);
         }
 
         patternThread.addPattern("test", pattern);
@@ -176,7 +181,7 @@ public class PatternThreadTest {
             }
 
             int j = rand.nextInt(NUM_NOTES);
-            patternThread.removeFromPattern(pattern, notes[j].eventOn, notes[j].eventOff);
+            removeFromPattern(pattern, notes[j].eventOn, notes[j].eventOff);
             waitMillis = rand.nextInt(Math.toIntExact(MAX_WAIT_MILLIS - MIN_WAIT_MILLIS + 1)) + MIN_WAIT_MILLIS;
             try {
                 Thread.sleep(waitMillis);
@@ -187,7 +192,7 @@ public class PatternThreadTest {
             notes[j].eventOn.offsetTicks = startTicks;
             long endTicks = startTicks + ((rand.nextLong() & POSITIVE_MASK) % (Pattern.DEFAULT_LOOP_LENGTH.getTicks() - startTicks));
             notes[j].eventOff.offsetTicks = endTicks;
-            patternThread.addToPattern(pattern, notes[j].eventOn, notes[j].eventOff);
+            addToPattern(pattern, notes[j].eventOn, notes[j].eventOff);
         }
 
         try {
@@ -203,5 +208,22 @@ public class PatternThreadTest {
         public ScheduledNoteEvent eventOff;
         public Pair<Long, Integer> lastEventIdOn;
         public int numVoices;
+    }
+
+    private void addToPattern(Pattern pattern, ScheduledNoteEvent eventOn, ScheduledNoteEvent eventOff) {
+        try(PatternThread.Editor editor = patternThread.getEditor(pattern)) {
+            editor.pattern.addEvent(eventOn);
+            editor.pattern.addEvent(eventOff);
+        }
+    }
+
+    private void removeFromPattern(Pattern pattern, ScheduledNoteEvent eventOn, ScheduledNoteEvent eventOff) {
+        try(PatternThread.Editor editor = patternThread.getEditor(pattern)) {
+            editor.pattern.removeEvent(eventOn);
+            NoteEvent sendOff = editor.pattern.removeAndGetEvent(eventOff);
+            if(sendOff != null) {
+                noteEventSource.dispatch(sendOff);
+            }
+        }
     }
 }

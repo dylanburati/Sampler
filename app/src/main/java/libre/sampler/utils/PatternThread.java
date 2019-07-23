@@ -21,7 +21,7 @@ public class PatternThread extends Thread {
 
     private static final int EVENT_GROUP_SIZE = 4;
 
-    final Lock lock = new ReentrantLock();
+    protected final Lock lock = new ReentrantLock();
     private Condition patternsChangedTrigger = lock.newCondition();
     private Condition suspendTrigger = lock.newCondition();
     private boolean done = false;
@@ -184,6 +184,34 @@ public class PatternThread extends Thread {
             }
         } finally {
             lock.unlock();
+        }
+    }
+
+    public Editor getEditor(Pattern pattern) {
+        return new Editor(this, pattern);
+    }
+
+    public static class Editor implements AutoCloseable {
+        private final PatternThread thread;
+        private final boolean isPatternActive;
+        public final Pattern pattern;
+
+        public Editor(PatternThread patternThread, Pattern pattern) {
+            this.thread = patternThread;
+            this.pattern = pattern;
+            this.isPatternActive = thread.runningPatterns.containsValue(pattern);
+
+            if(isPatternActive) {
+                thread.lock.lock();
+            }
+        }
+
+        @Override
+        public void close() {
+            if(isPatternActive) {
+                thread.notifyPatternsChanged();
+                thread.lock.unlock();
+            }
         }
     }
 }

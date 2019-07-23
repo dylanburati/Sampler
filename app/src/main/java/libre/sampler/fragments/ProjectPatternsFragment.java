@@ -56,6 +56,7 @@ import libre.sampler.utils.AppConstants;
 import libre.sampler.utils.MusicTime;
 import libre.sampler.utils.NoTransitionPropagation;
 import libre.sampler.utils.NoteId;
+import libre.sampler.utils.PatternThread;
 import libre.sampler.views.VisualNote;
 
 public class ProjectPatternsFragment extends Fragment {
@@ -322,15 +323,26 @@ public class ProjectPatternsFragment extends Fragment {
 
 
     private void addToPianoRollPattern(VisualNote visualNote) {
-        projectActivity.getPatternThread().addToPattern(viewModel.getPianoRollPattern(),
-                visualNote.eventOn, visualNote.eventOff);
-        pianoRollAdapter.addNote(visualNote, selectedNotes.contains(visualNote));
+        try(PatternThread.Editor editor = projectActivity.getPatternThread()
+                .getEditor(viewModel.getPianoRollPattern())) {
+
+            editor.pattern.addEvent(visualNote.eventOn);
+            editor.pattern.addEvent(visualNote.eventOff);
+            pianoRollAdapter.addNote(visualNote, selectedNotes.contains(visualNote));
+        }
     }
 
     private void removeFromPianoRollPattern(VisualNote visualNote) {
-        projectActivity.getPatternThread().removeFromPattern(viewModel.getPianoRollPattern(),
-                visualNote.eventOn, visualNote.eventOff);
-        pianoRollAdapter.removeNote(visualNote);
+        try(PatternThread.Editor editor = projectActivity.getPatternThread()
+                .getEditor(viewModel.getPianoRollPattern())) {
+
+            editor.pattern.removeEvent(visualNote.eventOn);
+            NoteEvent sendOff = editor.pattern.removeAndGetEvent(visualNote.eventOff);
+            if(sendOff != null) {
+                viewModel.noteEventSource.dispatch(sendOff);
+            }
+            pianoRollAdapter.removeNote(visualNote);
+        }
     }
 
     public void insertMultiplePianoRollNotes(VisualNote src, MusicTime interval, int count) {
@@ -427,7 +439,6 @@ public class ProjectPatternsFragment extends Fragment {
                     public void run() {
                         if(noteRef.modificationCount == modCount) {
                             addToPianoRollPattern(noteRef);
-                            pianoRollAdapter.updateNote(noteRef, selectedNotes.contains(noteRef));
                         }
                     }
                 }, 50);
@@ -454,7 +465,6 @@ public class ProjectPatternsFragment extends Fragment {
                 public void run() {
                     if(noteRef.modificationCount == modCount) {
                         addToPianoRollPattern(noteRef);
-                        pianoRollAdapter.updateNote(noteRef, selectedNotes.contains(noteRef));
                     }
                 }
             }, 50);
@@ -482,8 +492,12 @@ public class ProjectPatternsFragment extends Fragment {
     }
 
     public void setPatternLength(MusicTime inputLoopLength) {
-        projectActivity.getPatternThread().setLoopLength(viewModel.getPianoRollPattern(), inputLoopLength);
-        pianoRollAdapter.updateRollLength((int) (inputLoopLength.getTicks() * getTickWidth()));
+        try(PatternThread.Editor editor = projectActivity.getPatternThread()
+                .getEditor(viewModel.getPianoRollPattern())) {
+
+            editor.pattern.setLoopLengthTicks(inputLoopLength.getTicks());
+            pianoRollAdapter.updateRollLength((int) (inputLoopLength.getTicks() * getTickWidth()));
+        }
     }
 
     public void addPianoRollTapListener(PianoRollTapListener listener) {
@@ -528,7 +542,11 @@ public class ProjectPatternsFragment extends Fragment {
             @Override
             public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
                 if(actionId == EditorInfo.IME_ACTION_DONE) {
-                    projectActivity.getPatternThread().setTempo(viewModel.getPianoRollPattern(), inputTempo);
+                    try(PatternThread.Editor editor = projectActivity.getPatternThread()
+                            .getEditor(viewModel.getPianoRollPattern())) {
+
+                        editor.pattern.setTempo(inputTempo);
+                    }
                 }
                 return false;
             }
