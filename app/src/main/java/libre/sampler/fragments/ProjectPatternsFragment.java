@@ -6,7 +6,6 @@ import android.graphics.Rect;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
-import android.util.SparseArray;
 import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
@@ -20,7 +19,9 @@ import android.widget.TextView;
 
 import java.text.DecimalFormat;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.TreeSet;
 
 import androidx.annotation.NonNull;
@@ -241,7 +242,6 @@ public class ProjectPatternsFragment extends Fragment {
         this.tempoEditText = null;
         viewModel.patternEventSource.remove(TAG);
         viewModel.instrumentEventSource.remove(TAG);
-        this.fragmentInstances.clear();
     }
 
     private void attachEventListeners() {
@@ -626,41 +626,59 @@ public class ProjectPatternsFragment extends Fragment {
         });
     }
 
-    private final SparseArray<Fragment> fragmentInstances = new SparseArray<>();
+    private static final Map<Class, Integer> navPositionLookup = new HashMap<>();
+    static {
+        navPositionLookup.put(PatternEditBase.class, AppConstants.PATTERN_EDITOR_BASE);
+        navPositionLookup.put(PatternEditNoteProperties.class, AppConstants.PATTERN_EDITOR_NOTE_PROPERTIES);
+        navPositionLookup.put(PatternEditCopyMultiple.class, AppConstants.PATTERN_EDITOR_COPY_MULTIPLE);
+        navPositionLookup.put(PatternEditSelectSpecial.class, AppConstants.PATTERN_EDITOR_SELECT_SPECIAL);
+        navPositionLookup.put(PatternEditSnapLength.class, AppConstants.PATTERN_EDITOR_SNAP_LENGTH);
+        navPositionLookup.put(PatternEditPatternLength.class, AppConstants.PATTERN_EDITOR_PATTERN_LENGTH);
+    }
     public void setEditorFragment(int which) {
         FragmentManager fm = getChildFragmentManager();
-        FragmentTransaction transaction = fm.beginTransaction();
-        Fragment fragment = fragmentInstances.get(which);
-        if(fragment == null) {
-            if(which == AppConstants.PATTERN_EDITOR_BASE) {
-                fragment = new PatternEditBase();
-            } else if(which == AppConstants.PATTERN_EDITOR_NOTE_PROPERTIES) {
-                fragment = new PatternEditNoteProperties();
-            } else if(which == AppConstants.PATTERN_EDITOR_COPY_MULTIPLE) {
-                fragment = new PatternEditCopyMultiple();
-            } else if(which == AppConstants.PATTERN_EDITOR_SELECT_SPECIAL) {
-                fragment = new PatternEditSelectSpecial();
-            } else if(which == AppConstants.PATTERN_EDITOR_SNAP_LENGTH) {
-                fragment = new PatternEditSnapLength();
-            } else if(which == AppConstants.PATTERN_EDITOR_PATTERN_LENGTH) {
-                fragment = new PatternEditPatternLength();
-            } else {
-                return;
-            }
-            fragmentInstances.put(which, fragment);
+        if(which == AppConstants.PATTERN_EDITOR_BACK && fm.getBackStackEntryCount() > 0) {
+            fm.popBackStack();
+            return;
         }
 
-        int previousWhich = -1;
-        int prevIndex = fragmentInstances.indexOfValue(fm.findFragmentById(R.id.pattern_edit_fragment_container));
-        if(prevIndex >= 0) {
-            previousWhich = fragmentInstances.keyAt(prevIndex);
+        Fragment prevFragment = fm.findFragmentById(R.id.pattern_edit_fragment_container);
+        Integer prevWhich = null;
+        if(prevFragment != null) {
+            prevWhich = navPositionLookup.get(prevFragment.getClass());
+            if(prevWhich == null) {
+                prevWhich = -1;
+            } else if(prevWhich == which) {
+                return;
+            }
         }
-        Slide trIn = new Slide(Gravity.BOTTOM);
-        trIn.setPropagation(new NoTransitionPropagation());
-        fragment.setEnterTransition(trIn);
-        fragment.setReenterTransition(trIn);
-        if(which < previousWhich) {
-            trIn.setSlideEdge(Gravity.TOP);
+
+        FragmentTransaction transaction = fm.beginTransaction();
+        Fragment fragment = null;
+        if(which == AppConstants.PATTERN_EDITOR_BASE) {
+            fragment = new PatternEditBase();
+        } else if(which == AppConstants.PATTERN_EDITOR_NOTE_PROPERTIES) {
+            fragment = new PatternEditNoteProperties();
+        } else if(which == AppConstants.PATTERN_EDITOR_COPY_MULTIPLE) {
+            fragment = new PatternEditCopyMultiple();
+        } else if(which == AppConstants.PATTERN_EDITOR_SELECT_SPECIAL) {
+            fragment = new PatternEditSelectSpecial();
+        } else if(which == AppConstants.PATTERN_EDITOR_SNAP_LENGTH) {
+            fragment = new PatternEditSnapLength();
+        } else if(which == AppConstants.PATTERN_EDITOR_PATTERN_LENGTH) {
+            fragment = new PatternEditPatternLength();
+        } else {
+            return;
+        }
+
+        if(prevWhich != null) {
+            Slide trIn = new Slide(Gravity.BOTTOM);
+            trIn.setPropagation(new NoTransitionPropagation());
+            fragment.setEnterTransition(trIn);
+            fragment.setReenterTransition(trIn);
+            if(which < prevWhich) {
+                trIn.setSlideEdge(Gravity.TOP);
+            }
         }
 
         transaction.addToBackStack(null);

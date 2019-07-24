@@ -113,10 +113,9 @@ public class IconNavigationPanel extends RelativeLayout {
             view.setSelected(true);
         }
 
-        RelativeLayout.LayoutParams lp = (LayoutParams) view.getLayoutParams();
-        double overflow = 0.4 * (lp.topMargin + lp.bottomMargin);
-        int h = (int) (view.getHeight() + overflow);
-        int t = (int) (view.getTop() - 0.5 * overflow);
+        double underflow = 0.5 * (view.getPaddingTop() + view.getPaddingBottom());
+        int h = (int) (view.getHeight() - underflow);
+        int t = (int) (view.getTop() + 0.5 * underflow);
         navIndicator.setIndicatorHeight(h);
         ObjectAnimator anim = ObjectAnimator.ofInt(navIndicator, "indicatorTop", t);
         anim.setDuration(200);

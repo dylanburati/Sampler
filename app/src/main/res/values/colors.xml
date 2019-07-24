@@ -19,4 +19,5 @@
     <color name="colorError">#FFD32F2F</color>
     <color name="colorReplace">#FF2196F3</color>
     <color name="colorBorderOnBackground">#4FFFFFFF</color>
+    <color name="colorPrimaryLighter">#92D0FF</color>
 </resources>

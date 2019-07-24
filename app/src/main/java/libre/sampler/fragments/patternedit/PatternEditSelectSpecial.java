@@ -101,6 +101,13 @@ public class PatternEditSelectSpecial extends Fragment {
             }
         });
 
+        rootView.findViewById(R.id.close_select_special).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                patternsFragment.setEditorFragment(AppConstants.PATTERN_EDITOR_BACK);
+            }
+        });
+
         return rootView;
     }
 

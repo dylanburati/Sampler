@@ -29,8 +29,9 @@ public class AppConstants {
     public static final int PATTERN_EDITOR_NOTE_PROPERTIES = 1;
     public static final int PATTERN_EDITOR_COPY_MULTIPLE = 2;
     public static final int PATTERN_EDITOR_SELECT_SPECIAL = 3;
-    public static final int PATTERN_EDITOR_SNAP_LENGTH = 9;
-    public static final int PATTERN_EDITOR_PATTERN_LENGTH = 10;
+    public static final int PATTERN_EDITOR_SNAP_LENGTH = 10;
+    public static final int PATTERN_EDITOR_PATTERN_LENGTH = 11;
+    public static final int PATTERN_EDITOR_BACK = 20;
 
     public static final int PIANO_ROLL_BOTTOM_KEYNUM = 24;
     public static final int PIANO_ROLL_TOP_KEYNUM = 119;
