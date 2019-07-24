@@ -13,7 +13,6 @@ import androidx.lifecycle.ViewModelProviders;
 import libre.sampler.R;
 import libre.sampler.fragments.ProjectPatternsFragment;
 import libre.sampler.models.ProjectViewModel;
-import libre.sampler.utils.AppConstants;
 import libre.sampler.utils.MusicTime;
 import libre.sampler.views.MusicTimePicker;
 
@@ -40,13 +39,6 @@ public class PatternEditPatternLength extends Fragment {
             }
         });
 
-        rootView.findViewById(R.id.close_pattern_length).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                patternsFragment.setEditorFragment(AppConstants.PATTERN_EDITOR_BASE);
-            }
-        });
-
         return rootView;
     }
 
@@ -62,6 +54,9 @@ public class PatternEditPatternLength extends Fragment {
 
     @Override
     public void onDestroyView() {
+        setEnterTransition(null);
+        setExitTransition(null);
+        setReenterTransition(null);
         super.onDestroyView();
         this.rootView = null;
         this.loopLengthPicker = null;

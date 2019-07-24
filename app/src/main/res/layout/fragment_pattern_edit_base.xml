@@ -2,25 +2,41 @@
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:fillViewport="true">
 
-    <RelativeLayout
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:padding="@dimen/margin3">
+        android:layout_height="wrap_content">
 
         <TextView
             android:id="@+id/instrument_label"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/select_instrument" />
+            android:text="@string/select_instrument"
+            android:layout_marginTop="@dimen/margin3"
+            android:layout_marginStart="@dimen/margin3"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toStartOf="parent" />
 
         <Spinner
             android:id="@+id/instrument_spinner"
             android:layout_width="wrap_content"
             android:layout_height="40dp"
-            android:layout_below="@id/instrument_label"
+            android:layout_marginStart="@dimen/margin3"
+            app:layout_constraintTop_toBottomOf="@id/instrument_label"
+            app:layout_constraintStart_toStartOf="parent"
             android:minWidth="100sp" />
+
+        <TextView
+            android:id="@+id/note_select_label"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/select_notes"
+            android:layout_marginTop="@dimen/margin3"
+            android:layout_marginStart="@dimen/margin3"
+            app:layout_constraintTop_toBottomOf="@id/instrument_spinner"
+            app:layout_constraintStart_toStartOf="parent" />
 
         <com.google.android.material.button.MaterialButtonToggleGroup
             android:layout_width="wrap_content"
@@ -28,7 +44,9 @@
             android:id="@+id/note_select_controls"
             android:orientation="horizontal"
             android:layout_below="@id/instrument_spinner"
-            android:layout_marginTop="@dimen/margin2"
+            android:layout_marginStart="@dimen/margin3"
+            app:layout_constraintTop_toBottomOf="@id/note_select_label"
+            app:layout_constraintStart_toStartOf="parent"
             app:singleSelection="true">
 
             <com.google.android.material.button.MaterialButton
@@ -53,43 +71,5 @@
                 android:text="@string/select_special" />
         </com.google.android.material.button.MaterialButtonToggleGroup>
 
-        <com.google.android.flexbox.FlexboxLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_below="@id/note_select_controls"
-            android:layout_marginTop="@dimen/margin2"
-            app:flexDirection="row"
-            app:flexWrap="wrap">
-
-            <Button
-                android:id="@+id/delete_selected_notes"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/delete_selected" />
-
-            <Button
-                android:id="@+id/open_note_properties"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/note_properties" />
-
-            <Button
-                android:id="@+id/open_snap_length"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/set_snap_length" />
-
-            <Button
-                android:id="@+id/open_pattern_length"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/set_pattern_length" />
-
-            <Button
-                android:id="@+id/open_copy_multiple"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/copy_multiple" />
-        </com.google.android.flexbox.FlexboxLayout>
-    </RelativeLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>
 </ScrollView>

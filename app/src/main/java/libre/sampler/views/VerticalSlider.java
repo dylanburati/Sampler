@@ -51,7 +51,6 @@ public class VerticalSlider extends View {
     private Paint backgroundPaint;
     private Paint thumbPaint;
     private Drawable thumbDrawable;
-    private float density;
 
     private boolean isDragging;
     private int position;
@@ -81,7 +80,7 @@ public class VerticalSlider extends View {
 
         Resources res = context.getResources();
         DisplayMetrics displayMetrics = res.getDisplayMetrics();
-        density = displayMetrics.density;
+        float density = displayMetrics.density;
         int defaultBarWidth = dpToPxSize(density, DEFAULT_BAR_WIDTH_DP);
         int defaultTouchTargetWidth = dpToPxSize(density, DEFAULT_TOUCH_TARGET_WIDTH_DP);
         int defaultThumbWidth = dpToPxSize(density, DEFAULT_THUMB_WIDTH_DP);

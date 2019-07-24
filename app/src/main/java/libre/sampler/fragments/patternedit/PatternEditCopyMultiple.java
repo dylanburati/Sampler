@@ -78,13 +78,6 @@ public class PatternEditCopyMultiple extends Fragment {
             }
         });
 
-        rootView.findViewById(R.id.close_copy_multiple).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                patternsFragment.setEditorFragment(AppConstants.PATTERN_EDITOR_BASE);
-            }
-        });
-
         return rootView;
     }
 
@@ -147,6 +140,9 @@ public class PatternEditCopyMultiple extends Fragment {
 
     @Override
     public void onDestroyView() {
+        setEnterTransition(null);
+        setExitTransition(null);
+        setReenterTransition(null);
         super.onDestroyView();
         this.rootView = null;
         this.intervalPicker = null;

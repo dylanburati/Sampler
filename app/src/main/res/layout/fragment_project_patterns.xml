@@ -117,15 +117,25 @@
             </LinearLayout>
         </ScrollView>
 
-        <LinearLayout
-            android:id="@+id/pattern_edit_fragment_container"
+        <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="1"
             android:orientation="vertical"
             android:background="@drawable/border_top">
 
-        </LinearLayout>
+            <include
+                android:id="@+id/pattern_edit_nav"
+                layout="@layout/component_pattern_edit_nav" />
+
+            <FrameLayout
+                android:id="@+id/pattern_edit_fragment_container"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_toRightOf="@id/pattern_edit_nav"
+                android:layout_alignParentEnd="true" />
+
+        </RelativeLayout>
     </LinearLayout>
 
     <RelativeLayout

@@ -82,15 +82,5 @@
             android:layout_marginBottom="0dp"
             android:layout_toRightOf="@id/note_length_picker_sixteenths"
             android:dividerPadding="0dp" />
-        
-        <Button
-            android:id="@+id/close_note_properties"
-            android:layout_marginTop="@dimen/margin3"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignParentBottom="true"
-            android:layout_alignParentRight="true"
-            style="@style/Base.Widget.AppCompat.Button.Borderless"
-            android:text="@string/done"/>
     </RelativeLayout>
 </ScrollView>

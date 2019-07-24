@@ -1,9 +1,10 @@
 package libre.sampler.utils;
 
-import android.transition.Transition;
-import android.transition.TransitionValues;
-import android.transition.VisibilityPropagation;
 import android.view.ViewGroup;
+
+import androidx.transition.Transition;
+import androidx.transition.TransitionValues;
+import androidx.transition.VisibilityPropagation;
 
 public class NoTransitionPropagation extends VisibilityPropagation {
     @Override

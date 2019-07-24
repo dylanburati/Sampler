@@ -39,15 +39,5 @@
             android:layout_marginLeft="@dimen/margin3"
             android:layout_toRightOf="@id/pattern_length_sixteenths"
             android:text="@string/change" />
-
-        <Button
-            android:id="@+id/close_pattern_length"
-            android:layout_marginTop="@dimen/margin3"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignParentBottom="true"
-            android:layout_alignParentRight="true"
-            style="@style/Base.Widget.AppCompat.Button.Borderless"
-            android:text="@string/done"/>
     </RelativeLayout>
 </ScrollView>

@@ -17,7 +17,6 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import libre.sampler.R;
 import libre.sampler.fragments.ProjectPatternsFragment;
-import libre.sampler.utils.AppConstants;
 import libre.sampler.utils.MusicTime;
 
 public class PatternEditSnapLength extends Fragment {
@@ -82,14 +81,15 @@ public class PatternEditSnapLength extends Fragment {
             }
         });
 
-        rootView.findViewById(R.id.close_snap_length).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                patternsFragment.setEditorFragment(AppConstants.PATTERN_EDITOR_BASE);
-            }
-        });
-
         return rootView;
+    }
+
+    @Override
+    public void onDestroyView() {
+        setEnterTransition(null);
+        setExitTransition(null);
+        setReenterTransition(null);
+        super.onDestroyView();
     }
 
     private void generateOptions(SpannableString[] outOptions, Context ctx) {

@@ -101,18 +101,14 @@ public class PatternEditSelectSpecial extends Fragment {
             }
         });
 
-        rootView.findViewById(R.id.close_select_special).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                patternsFragment.setEditorFragment(AppConstants.PATTERN_EDITOR_BASE);
-            }
-        });
-
         return rootView;
     }
 
     @Override
     public void onDestroyView() {
+        setEnterTransition(null);
+        setExitTransition(null);
+        setReenterTransition(null);
         super.onDestroyView();
         this.rootView = null;
         patternsFragment.removePianoRollTapListener(tapListener);

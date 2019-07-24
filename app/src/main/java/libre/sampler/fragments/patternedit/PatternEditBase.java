@@ -73,21 +73,6 @@ public class PatternEditBase extends Fragment {
         instrumentSpinnerItems = viewModel.getProject().getInstruments();
         updateInstrumentSpinner();
 
-        final int[] buttonFragmentPairs = new int[]{R.id.open_snap_length, AppConstants.PATTERN_EDITOR_SNAP_LENGTH,
-                R.id.open_note_properties, AppConstants.PATTERN_EDITOR_NOTE_PROPERTIES,
-                R.id.open_pattern_length, AppConstants.PATTERN_EDITOR_PATTERN_LENGTH,
-                R.id.open_copy_multiple, AppConstants.PATTERN_EDITOR_COPY_MULTIPLE};
-
-        for(int i = 0; i < buttonFragmentPairs.length; i += 2) {
-            final int fragmentConst = buttonFragmentPairs[i + 1];
-            rootView.findViewById(buttonFragmentPairs[i]).setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    patternsFragment.setEditorFragment(fragmentConst);
-                }
-            });
-        }
-
         noteSelectControls = (MaterialButtonToggleGroup) rootView.findViewById(R.id.note_select_controls);
         noteSelectControls.addOnButtonCheckedListener(new MaterialButtonToggleGroup.OnButtonCheckedListener() {
             @Override
@@ -129,18 +114,21 @@ public class PatternEditBase extends Fragment {
         });
         highlightNoteSelectControls();
 
-        rootView.findViewById(R.id.delete_selected_notes).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                patternsFragment.deleteAllSelectedNotes();
-            }
-        });
+        // rootView.findViewById(R.id.delete_selected_notes).setOnClickListener(new View.OnClickListener() {
+        //     @Override
+        //     public void onClick(View v) {
+        //         patternsFragment.deleteAllSelectedNotes();
+        //     }
+        // });
 
         return rootView;
     }
 
     @Override
     public void onDestroyView() {
+        setEnterTransition(null);
+        setExitTransition(null);
+        setReenterTransition(null);
         instrumentSpinner.setAdapter(null);
         super.onDestroyView();
         this.instrumentSpinner = null;

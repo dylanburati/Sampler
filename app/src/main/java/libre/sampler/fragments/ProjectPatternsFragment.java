@@ -6,8 +6,7 @@ import android.graphics.Rect;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
-import android.transition.Slide;
-import android.transition.Transition;
+import android.util.SparseArray;
 import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
@@ -33,6 +32,7 @@ import androidx.fragment.app.FragmentTransaction;
 import androidx.lifecycle.ViewModelProviders;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.transition.Slide;
 import libre.sampler.ProjectActivity;
 import libre.sampler.R;
 import libre.sampler.adapters.PianoRollAdapter;
@@ -57,6 +57,7 @@ import libre.sampler.utils.MusicTime;
 import libre.sampler.utils.NoTransitionPropagation;
 import libre.sampler.utils.NoteId;
 import libre.sampler.utils.PatternThread;
+import libre.sampler.views.IconNavigationPanel;
 import libre.sampler.views.VisualNote;
 
 public class ProjectPatternsFragment extends Fragment {
@@ -186,6 +187,7 @@ public class ProjectPatternsFragment extends Fragment {
 
         updatePlayPauseControls(getContext());
 
+        registerEditorFragmentNav((IconNavigationPanel) rootView.findViewById(R.id.pattern_edit_nav));
         setEditorFragment(AppConstants.PATTERN_EDITOR_BASE);
 
         return rootView;
@@ -198,7 +200,7 @@ public class ProjectPatternsFragment extends Fragment {
         visibleLeft.setTicks((long) (x / 1.0 / tickWidth));
         visibleRight.setTicks((long) ((x + dx) / 1.0 / tickWidth));
         visibleTop = AppConstants.PIANO_ROLL_TOP_KEYNUM - (int) Math.floor(y / keyHeight);
-        visibleBottom = AppConstants.PIANO_ROLL_BOTTOM_KEYNUM - (int) Math.ceil((y + dy) / keyHeight) + 1;
+        visibleBottom = AppConstants.PIANO_ROLL_TOP_KEYNUM - (int) Math.ceil((y + dy) / keyHeight) + 1;
     }
 
     public MusicTime getVisibleLeft() {
@@ -239,6 +241,7 @@ public class ProjectPatternsFragment extends Fragment {
         this.tempoEditText = null;
         viewModel.patternEventSource.remove(TAG);
         viewModel.instrumentEventSource.remove(TAG);
+        this.fragmentInstances.clear();
     }
 
     private void attachEventListeners() {
@@ -593,47 +596,74 @@ public class ProjectPatternsFragment extends Fragment {
         pianoRollPosition.setText(getResources().getString(R.string.piano_roll_position, bars, sixteenths));
     }
 
+    public void registerEditorFragmentNav(IconNavigationPanel panel) {
+        panel.setOnItemSelectedListener(new IconNavigationPanel.OnItemSelectedListener() {
+            @Override
+            public void onSelect(View v) {
+                int fragmentId = -1;
+
+                switch(v.getId()) {
+                    case R.id.open_pattern_edit_base:
+                        fragmentId = AppConstants.PATTERN_EDITOR_BASE;
+                        break;
+                    case R.id.open_snap_length:
+                        fragmentId = AppConstants.PATTERN_EDITOR_SNAP_LENGTH;
+                        break;
+                    case R.id.open_note_properties:
+                        fragmentId = AppConstants.PATTERN_EDITOR_NOTE_PROPERTIES;
+                        break;
+                    case R.id.open_pattern_length:
+                        fragmentId = AppConstants.PATTERN_EDITOR_PATTERN_LENGTH;
+                        break;
+                    case R.id.open_copy_multiple:
+                        fragmentId = AppConstants.PATTERN_EDITOR_COPY_MULTIPLE;
+                        break;
+                }
+                if(fragmentId != -1) {
+                    setEditorFragment(fragmentId);
+                }
+            }
+        });
+    }
+
+    private final SparseArray<Fragment> fragmentInstances = new SparseArray<>();
     public void setEditorFragment(int which) {
         FragmentManager fm = getChildFragmentManager();
         FragmentTransaction transaction = fm.beginTransaction();
-        Fragment fragment = null;
-
-        if(which == AppConstants.PATTERN_EDITOR_BASE) {
-            if(fm.getBackStackEntryCount() == 0) {
+        Fragment fragment = fragmentInstances.get(which);
+        if(fragment == null) {
+            if(which == AppConstants.PATTERN_EDITOR_BASE) {
                 fragment = new PatternEditBase();
-                // Transition trIn = new Slide(Gravity.LEFT).setDuration(getResources().getInteger(android.R.integer.config_shortAnimTime));
-                // trIn.setPropagation(new NoTransitionPropagation());
-                // fragment.setEnterTransition(trIn);
-                // Transition trOut = new Slide(Gravity.LEFT).setDuration(getResources().getInteger(android.R.integer.config_shortAnimTime));
-                // trOut.setPropagation(new NoTransitionPropagation());
-                // fragment.setExitTransition(trOut);
-            } else {
-                fm.popBackStack();
-            }
-        } else {
-            transaction.addToBackStack(null);
-            if(which == AppConstants.PATTERN_EDITOR_SNAP_LENGTH) {
-                fragment = new PatternEditSnapLength();
             } else if(which == AppConstants.PATTERN_EDITOR_NOTE_PROPERTIES) {
                 fragment = new PatternEditNoteProperties();
-            } else if(which == AppConstants.PATTERN_EDITOR_PATTERN_LENGTH) {
-                fragment = new PatternEditPatternLength();
             } else if(which == AppConstants.PATTERN_EDITOR_COPY_MULTIPLE) {
                 fragment = new PatternEditCopyMultiple();
             } else if(which == AppConstants.PATTERN_EDITOR_SELECT_SPECIAL) {
                 fragment = new PatternEditSelectSpecial();
+            } else if(which == AppConstants.PATTERN_EDITOR_SNAP_LENGTH) {
+                fragment = new PatternEditSnapLength();
+            } else if(which == AppConstants.PATTERN_EDITOR_PATTERN_LENGTH) {
+                fragment = new PatternEditPatternLength();
             } else {
                 return;
             }
-
-            Transition trIn = new Slide(Gravity.RIGHT).setDuration(getResources().getInteger(android.R.integer.config_shortAnimTime));
-            trIn.setPropagation(new NoTransitionPropagation());
-            fragment.setEnterTransition(trIn);
-            Transition trOut = new Slide(Gravity.RIGHT).setDuration(getResources().getInteger(android.R.integer.config_shortAnimTime));
-            trOut.setPropagation(new NoTransitionPropagation());
-            fragment.setExitTransition(trOut);
+            fragmentInstances.put(which, fragment);
         }
 
+        int previousWhich = -1;
+        int prevIndex = fragmentInstances.indexOfValue(fm.findFragmentById(R.id.pattern_edit_fragment_container));
+        if(prevIndex >= 0) {
+            previousWhich = fragmentInstances.keyAt(prevIndex);
+        }
+        Slide trIn = new Slide(Gravity.BOTTOM);
+        trIn.setPropagation(new NoTransitionPropagation());
+        fragment.setEnterTransition(trIn);
+        fragment.setReenterTransition(trIn);
+        if(which < previousWhich) {
+            trIn.setSlideEdge(Gravity.TOP);
+        }
+
+        transaction.addToBackStack(null);
         if(fragment != null) {
             transaction.replace(R.id.pattern_edit_fragment_container, fragment);
             transaction.commit();

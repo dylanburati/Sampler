@@ -52,13 +52,6 @@ public class PatternEditNoteProperties extends Fragment {
         });
         updateSelectedLabel();
 
-        rootView.findViewById(R.id.close_note_properties).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                patternsFragment.setEditorFragment(AppConstants.PATTERN_EDITOR_BASE);
-            }
-        });
-
         return rootView;
     }
 
@@ -79,6 +72,9 @@ public class PatternEditNoteProperties extends Fragment {
 
     @Override
     public void onDestroyView() {
+        setEnterTransition(null);
+        setExitTransition(null);
+        setReenterTransition(null);
         super.onDestroyView();
         this.rootView = null;
         this.noteStartPicker = null;
