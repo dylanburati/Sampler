@@ -39,14 +39,20 @@
 
     <style name="GroupedButton" parent="Widget.AppCompat.Button.Borderless" />
 
-    <style name="MaterialButton" parent="Widget.MaterialComponents.Button.OutlinedButton">
+    <style name="MaterialButton" parent="Widget.MaterialComponents.Button">
+        <item name="android:backgroundTint">?attr/colorControlHighlight</item>
+        <item name="android:backgroundTintMode">src_atop</item>
+        <item name="android:letterSpacing">0</item>
+        <item name="android:textAppearance">@style/Base.TextAppearance.AppCompat.Widget.Button</item>
+    </style>
+
+    <style name="MaterialButtonOutlined" parent="Widget.MaterialComponents.Button.OutlinedButton">
         <item name="android:backgroundTint">?attr/colorControlHighlight</item>
         <item name="android:backgroundTintMode">src_atop</item>
         <item name="android:letterSpacing">0</item>
     </style>
 
-    <style name="IconButton" parent="Widget.AppCompat.Button">
-        <item name="android:layout_width">40dp</item>
-        <item name="android:layout_height">44dp</item>
+    <style name="MaterialButtonBridge" parent="Widget.AppCompat.Button">
+        <item name="android:background">@drawable/no_inset_button</item>
     </style>
 </resources>

@@ -68,6 +68,7 @@ public class RecyclerViewScrollChangeDispatcher {
         if(viewTreeObserver != null && viewTreeObserver.isAlive()) {
             viewTreeObserver.removeOnScrollChangedListener(internalListener);
         }
+        viewRef.clear();
         internalListener = null;
         viewTreeObserver = null;
     }

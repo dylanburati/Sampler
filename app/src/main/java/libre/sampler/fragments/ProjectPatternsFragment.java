@@ -19,6 +19,7 @@ import android.widget.TextView;
 
 import java.text.DecimalFormat;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -285,6 +286,12 @@ public class ProjectPatternsFragment extends Fragment {
         }
     }
 
+    public int resolveKeyNum(int containerIndex, float y) {
+        int keyIndex = (int) (y / keyHeight);
+
+        return (9 - containerIndex) * 12 + (11 - keyIndex);
+    }
+
     public void onAdapterCreateNote(int containerIndex, float x, float y) {
         double tickWidth = getTickWidth();
         double inputTicks = x / tickWidth;
@@ -298,32 +305,21 @@ public class ProjectPatternsFragment extends Fragment {
             noteLengthTicks = (long) Math.floor(maxTicks / 1.0 / snapTicks) * snapTicks;
         }
 
-        int keyIndex = (int) (y / keyHeight);
-
-        int keyNum = (9 - containerIndex) * 12 + (11 - keyIndex);
+        int keyNum = resolveKeyNum(containerIndex, y);
         long baseId = NoteId.createForScheduledNoteEvent(System.currentTimeMillis(), 0);
         VisualNote visualNote = createVisualNote(startTicks, noteLengthTicks, keyNum, baseId);
         addToPianoRollPattern(visualNote);
         patternEditEventSource.dispatch(AppConstants.PIANO_ROLL_NOTES);
     }
 
-    public void onAdapterRemoveNote(VisualNote visualNote) {
-        removeFromPianoRollPattern(visualNote);
-        patternEditEventSource.dispatch(AppConstants.PIANO_ROLL_NOTES);
-        if(selectedNotes.remove(visualNote)) {
-            patternEditEventSource.dispatch(AppConstants.SELECTED_NOTES);
-        }
-    }
-
     private VisualNote createVisualNote(long startTicks, long lengthTicks, int keyNum, long baseId) {
-        VisualNote visualNote = new VisualNote();
-        visualNote.setEventOn(new ScheduledNoteEvent(startTicks, NoteEvent.NOTE_ON,
-                viewModel.getPianoRollInstrument(), keyNum, velocity, baseId));
-        visualNote.setEventOff(new ScheduledNoteEvent(startTicks + lengthTicks, NoteEvent.NOTE_OFF,
-                viewModel.getPianoRollInstrument(), keyNum, velocity, baseId));
-        return visualNote;
+        return new VisualNote(
+                new ScheduledNoteEvent(startTicks, NoteEvent.NOTE_ON,
+                        viewModel.getPianoRollInstrument(), keyNum, velocity, baseId),
+                new ScheduledNoteEvent(startTicks + lengthTicks, NoteEvent.NOTE_OFF,
+                        viewModel.getPianoRollInstrument(), keyNum, velocity, baseId)
+        );
     }
-
 
     private void addToPianoRollPattern(VisualNote visualNote) {
         try(PatternThread.Editor editor = projectActivity.getPatternThread()
@@ -331,11 +327,31 @@ public class ProjectPatternsFragment extends Fragment {
 
             editor.pattern.addEvent(visualNote.eventOn);
             editor.pattern.addEvent(visualNote.eventOff);
-            pianoRollAdapter.addNote(visualNote, selectedNotes.contains(visualNote));
+            if(visualNote.eventOn.instrument == viewModel.getPianoRollInstrument()) {
+                pianoRollAdapter.addNote(visualNote, selectedNotes.contains(visualNote));
+            }
         }
+
+        patternEditEventSource.dispatch(AppConstants.PIANO_ROLL_NOTES);
     }
 
-    private void removeFromPianoRollPattern(VisualNote visualNote) {
+    private void addBatchToPianoRollPattern(Collection<VisualNote> visualNotes) {
+        try(PatternThread.Editor editor = projectActivity.getPatternThread()
+                .getEditor(viewModel.getPianoRollPattern())) {
+
+            for(VisualNote note : visualNotes) {
+                editor.pattern.addEvent(note.eventOn);
+                editor.pattern.addEvent(note.eventOff);
+                if(note.eventOn.instrument == viewModel.getPianoRollInstrument()) {
+                    pianoRollAdapter.addNote(note, selectedNotes.contains(note));
+                }
+            }
+        }
+
+        patternEditEventSource.dispatch(AppConstants.PIANO_ROLL_NOTES);
+    }
+
+    public void removeFromPianoRollPattern(VisualNote visualNote, boolean willAddBack) {
         try(PatternThread.Editor editor = projectActivity.getPatternThread()
                 .getEditor(viewModel.getPianoRollPattern())) {
 
@@ -344,34 +360,84 @@ public class ProjectPatternsFragment extends Fragment {
             if(sendOff != null) {
                 viewModel.noteEventSource.dispatch(sendOff);
             }
-            pianoRollAdapter.removeNote(visualNote);
+            if(visualNote.eventOn.instrument == viewModel.getPianoRollInstrument()) {
+                pianoRollAdapter.removeNote(visualNote, willAddBack);
+            }
+        }
+
+        if(!willAddBack) {
+            patternEditEventSource.dispatch(AppConstants.PIANO_ROLL_NOTES);
+            if(selectedNotes.remove(visualNote)) {
+                patternEditEventSource.dispatch(AppConstants.SELECTED_NOTES);
+            }
         }
     }
 
-    public void insertMultiplePianoRollNotes(VisualNote src, MusicTime interval, int count) {
+    public void removeBatchFromPianoRollPattern(Collection<VisualNote> visualNotes) {
+        try(PatternThread.Editor editor = projectActivity.getPatternThread()
+                .getEditor(viewModel.getPianoRollPattern())) {
+
+            for(VisualNote note : visualNotes) {
+                editor.pattern.removeEvent(note.eventOn);
+                NoteEvent sendOff = editor.pattern.removeAndGetEvent(note.eventOff);
+                if(sendOff != null) {
+                    viewModel.noteEventSource.dispatch(sendOff);
+                }
+                pianoRollAdapter.removeNote(note, false);
+            }
+        }
+
+        patternEditEventSource.dispatch(AppConstants.PIANO_ROLL_NOTES);
+        patternEditEventSource.dispatch(AppConstants.SELECTED_NOTES);
+    }
+
+    public void removeBatchFromPianoRollPattern(Collection<VisualNote> visualNotes, List<VisualNote> source) {
+        List<VisualNote> adapterNotes = pianoRollAdapter.getPianoRollNotes();
+        if(source == adapterNotes) {
+            removeBatchFromPianoRollPattern(visualNotes);
+            return;
+        }
+        try(PatternThread.Editor editor = projectActivity.getPatternThread()
+                .getEditor(viewModel.getPianoRollPattern())) {
+
+            for(VisualNote note : visualNotes) {
+                editor.pattern.removeEvent(note.eventOn);
+                NoteEvent sendOff = editor.pattern.removeAndGetEvent(note.eventOff);
+                if(sendOff != null) {
+                    viewModel.noteEventSource.dispatch(sendOff);
+                }
+                source.remove(note);
+            }
+        }
+
+        patternEditEventSource.dispatch(AppConstants.PIANO_ROLL_NOTES);
+        patternEditEventSource.dispatch(AppConstants.SELECTED_NOTES);
+    }
+
+    public void copyMultiplePianoRollNotes(MusicTime interval, int count) {
+        List<VisualNote> toAdd = new ArrayList<>();
         long intervalTicks = interval.getTicks();
         long baseId = NoteId.createForScheduledNoteEvent(System.currentTimeMillis(), 0);
         for(int i = 1; i <= count; i++) {
-            long startTicks = src.startTicks + intervalTicks * i;
-            VisualNote visualNote = new VisualNote();
-            visualNote.setEventOn(new ScheduledNoteEvent(startTicks, NoteEvent.NOTE_ON,
-                    src.eventOn.instrument, src.eventOn.keyNum, src.eventOn.velocity, baseId));
-            visualNote.setEventOff(new ScheduledNoteEvent(startTicks + src.lengthTicks, NoteEvent.NOTE_OFF,
-                    src.eventOff.instrument, src.eventOff.keyNum, src.eventOff.velocity, baseId));
+            for(VisualNote src : selectedNotes) {
+                long startTicks = src.startTicks + intervalTicks * i;
+                VisualNote visualNote = new VisualNote(
+                        new ScheduledNoteEvent(startTicks, NoteEvent.NOTE_ON,
+                                src.eventOn.instrument, src.eventOn.keyNum, src.eventOn.velocity, baseId),
+                        new ScheduledNoteEvent(startTicks + src.lengthTicks, NoteEvent.NOTE_OFF,
+                                src.eventOff.instrument, src.eventOff.keyNum, src.eventOff.velocity, baseId)
+                );
 
-            addToPianoRollPattern(visualNote);
-            baseId = NoteId.createDuplicate(baseId);
+                toAdd.add(visualNote);
+                baseId = NoteId.createDuplicate(baseId);
+            }
         }
-        patternEditEventSource.dispatch(AppConstants.PIANO_ROLL_NOTES);
+        addBatchToPianoRollPattern(toAdd);
     }
 
     public void deleteAllSelectedNotes() {
-        for(VisualNote note : selectedNotes) {
-            removeFromPianoRollPattern(note);
-        }
+        removeBatchFromPianoRollPattern(selectedNotes);
         selectedNotes.clear();
-        patternEditEventSource.dispatch(AppConstants.PIANO_ROLL_NOTES);
-        patternEditEventSource.dispatch(AppConstants.SELECTED_NOTES);
     }
 
     public boolean onAdapterSelectNote(VisualNote n) {
@@ -421,6 +487,20 @@ public class ProjectPatternsFragment extends Fragment {
         patternEditEventSource.dispatch(AppConstants.SELECTED_NOTES);
     }
 
+    private void deleteNotesAfterTicks(long maxTicks) {
+        for(Instrument instrument : patternDerivedData.getInstrumentList()) {
+            List<VisualNote> toDelete = new ArrayList<>();
+            List<VisualNote> source = patternDerivedData.getNotesForInstrument(instrument);
+            // source.descendingIterator()
+            for(VisualNote note : source) {
+                if(note.startTicks + note.lengthTicks > maxTicks) {
+                    toDelete.add(note);
+                }
+            }
+            removeBatchFromPianoRollPattern(toDelete, source);
+        }
+    }
+
     public void setNoteLength(MusicTime noteLength, boolean fromUser) {
         setNoteLength(noteLength.getTicks(), fromUser);
     }
@@ -431,7 +511,7 @@ public class ProjectPatternsFragment extends Fragment {
             long lengthenTicks = inputNoteLength.getTicks() - selectedNotes.first().lengthTicks;
 
             for(VisualNote n : selectedNotes) {
-                removeFromPianoRollPattern(n);
+                removeFromPianoRollPattern(n, true);
                 n.lengthTicks += lengthenTicks;
                 n.eventOff.offsetTicks = n.startTicks + n.lengthTicks;
 
@@ -444,7 +524,7 @@ public class ProjectPatternsFragment extends Fragment {
                             addToPianoRollPattern(noteRef);
                         }
                     }
-                }, 50);
+                }, 100);
             }
         }
     }
@@ -456,7 +536,7 @@ public class ProjectPatternsFragment extends Fragment {
         long moveTicks = noteStart.getTicks() - selectedNotes.first().startTicks;
 
         for(VisualNote n : selectedNotes) {
-            removeFromPianoRollPattern(n);
+            removeFromPianoRollPattern(n, true);
             n.startTicks += moveTicks;
             n.eventOn.offsetTicks = n.startTicks;
             n.eventOff.offsetTicks = n.startTicks + n.lengthTicks;
@@ -470,7 +550,7 @@ public class ProjectPatternsFragment extends Fragment {
                         addToPianoRollPattern(noteRef);
                     }
                 }
-            }, 50);
+            }, 100);
         }
     }
 
@@ -495,6 +575,10 @@ public class ProjectPatternsFragment extends Fragment {
     }
 
     public void setPatternLength(MusicTime inputLoopLength) {
+        long prevLength = viewModel.getPianoRollPattern().getLoopLengthTicks();
+        if(prevLength > inputLoopLength.getTicks()) {
+            deleteNotesAfterTicks(inputLoopLength.getTicks());
+        }
         try(PatternThread.Editor editor = projectActivity.getPatternThread()
                 .getEditor(viewModel.getPianoRollPattern())) {
 

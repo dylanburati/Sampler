@@ -114,12 +114,12 @@ public class PatternEditBase extends Fragment {
         });
         highlightNoteSelectControls();
 
-        // rootView.findViewById(R.id.delete_selected_notes).setOnClickListener(new View.OnClickListener() {
-        //     @Override
-        //     public void onClick(View v) {
-        //         patternsFragment.deleteAllSelectedNotes();
-        //     }
-        // });
+        rootView.findViewById(R.id.delete_selected_notes).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                patternsFragment.deleteAllSelectedNotes();
+            }
+        });
 
         return rootView;
     }

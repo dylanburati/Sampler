@@ -6,12 +6,15 @@ import android.media.midi.MidiDeviceInfo;
 import android.media.midi.MidiManager;
 import android.os.Build;
 import android.os.Handler;
+import android.util.Log;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -164,25 +167,37 @@ public class ProjectViewModel extends AndroidViewModel {
         }
 
         Map<Instrument, List<VisualNote>> derivedMap = new HashMap<>();
-        Map<Long, VisualNote> noteViews = new HashMap<>();
+        Map<Long, ScheduledNoteEvent> eventOnMap = new HashMap<>();
+        Set<Long> eventOffKeySet = new HashSet<>();
+
         for(ScheduledNoteEvent event : pattern.getEvents()) {
             if(event.action == NoteEvent.NOTE_ON) {
-                VisualNote v = new VisualNote();
-                v.setEventOn(event);
-                noteViews.put(event.noteId, v);
-            } else if(event.action == NoteEvent.NOTE_OFF) {
-                VisualNote v = noteViews.get(event.noteId);
-                if(v != null) {
-                    v.setEventOff(event);
-
-                    List<VisualNote> viewsForInstrument = derivedMap.get(event.instrument);
-                    if(viewsForInstrument == null) {
-                        viewsForInstrument = new ArrayList<>();
-                        derivedMap.put(event.instrument, viewsForInstrument);
-                    }
-                    viewsForInstrument.add(v);
+                ScheduledNoteEvent prevVal = eventOnMap.put(event.noteId, event);
+                if(prevVal != null) {
+                    Log.e("Sampler", String.format("duplicate note ID:\n  %s\n  %s",
+                            prevVal.toString(), event.toString()));
                 }
+            } else if(event.action == NoteEvent.NOTE_OFF) {
+                eventOffKeySet.add(event.noteId);
+                ScheduledNoteEvent eventOn = eventOnMap.get(event.noteId);
+                if(eventOn == null) {
+                    Log.e("Sampler", String.format("unpaired NOTE_OFF:\n  %s",
+                            event.toString()));
+                    continue;
+                }
+
+                VisualNote v = new VisualNote(eventOn, event);
+                List<VisualNote> viewsForInstrument = derivedMap.get(event.instrument);
+                if(viewsForInstrument == null) {
+                    viewsForInstrument = new ArrayList<>();
+                    derivedMap.put(event.instrument, viewsForInstrument);
+                }
+                viewsForInstrument.add(v);
             }
+        }
+
+        if(!eventOffKeySet.containsAll(eventOnMap.keySet())) {
+            Log.e("Sampler", "unpaired NOTE_ON");
         }
 
         derivedData = new PatternDerivedData(derivedMap);

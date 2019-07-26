@@ -71,9 +71,7 @@ public class PatternEditCopyMultiple extends Fragment {
             @Override
             public void onClick(View v) {
                 if(selectedNotes.size() > 0) {
-                    for(VisualNote n : selectedNotes) {
-                        patternsFragment.insertMultiplePianoRollNotes(n, intervalPicker.getValue(), inputCount);
-                    }
+                    patternsFragment.copyMultiplePianoRollNotes(intervalPicker.getValue(), inputCount);
                 }
             }
         });

@@ -3,8 +3,8 @@ package libre.sampler.views;
 import libre.sampler.models.ScheduledNoteEvent;
 
 public class VisualNote implements Comparable<VisualNote> {
-    public ScheduledNoteEvent eventOn;
-    public ScheduledNoteEvent eventOff;
+    public final ScheduledNoteEvent eventOn;
+    public final ScheduledNoteEvent eventOff;
     public Long tag;
 
     public long startTicks;
@@ -13,15 +13,13 @@ public class VisualNote implements Comparable<VisualNote> {
     public int keyIndex;
     public int modificationCount;
 
-    public void setEventOn(ScheduledNoteEvent eventOn) {
+    public VisualNote(ScheduledNoteEvent eventOn, ScheduledNoteEvent eventOff) {
         this.eventOn = eventOn;
-    }
-
-    public void setEventOff(ScheduledNoteEvent eventOff) {
         this.eventOff = eventOff;
+
         this.tag = eventOn.noteId;
         this.startTicks = eventOn.offsetTicks;
-        this.lengthTicks = eventOff.offsetTicks - this.startTicks;
+        this.lengthTicks = eventOff.offsetTicks - eventOn.offsetTicks;
         this.containerIndex = 9 - (eventOn.keyNum / 12);
         this.keyIndex = 11 - (eventOn.keyNum % 12);
     }

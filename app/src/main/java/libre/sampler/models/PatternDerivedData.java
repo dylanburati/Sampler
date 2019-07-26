@@ -25,12 +25,12 @@ public class PatternDerivedData {
     }
 
     public List<VisualNote> getNotesForInstrument(@NonNull Instrument t) {
-        List<VisualNote> list = noteMap.get(t);
-        if(list == null) {
-            list = new ArrayList<>();
-            noteMap.put(t, list);
+        List<VisualNote> notes = noteMap.get(t);
+        if(notes == null) {
+            notes = new ArrayList<>();
+            noteMap.put(t, notes);
         }
-        return list;
+        return notes;
     }
 
     public List<Instrument> getInstrumentList() {

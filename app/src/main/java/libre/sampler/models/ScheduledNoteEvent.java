@@ -58,6 +58,7 @@ public class ScheduledNoteEvent {
     @NonNull
     @Override
     public String toString() {
-        return String.format("ScheduledNoteEvent(patternId=%d, id=%d, instrumentId=%d, offsetTicks=%d)", this.patternId, this.id, this.instrumentId, this.offsetTicks);
+        return String.format("ScheduledNoteEvent(id=%d, instrumentId=%d, noteId=%016x, offsetTicks=%d)",
+                this.id, this.instrumentId, this.noteId, this.offsetTicks);
     }
 }
