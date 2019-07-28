@@ -196,8 +196,32 @@ public class PianoRollAdapter extends RecyclerView.Adapter<PianoRollAdapter.View
         }
     }
 
+    private Rect tmpRect = new Rect();
+    private VisualNote getNoteUnder(int containerIdx, float x, float y, View[] outView) {
+        ViewHolder holder = viewHolderList.get(containerIdx);
+        int keyIndex = (int) (y / controller.getKeyHeight());
+
+        ListIterator<VisualNote> reversed = pianoRollNotes.listIterator(pianoRollNotes.size());
+        while(reversed.hasPrevious()) {
+            VisualNote n = reversed.previous();
+            if(n.containerIndex == containerIdx && n.keyIndex == keyIndex) {
+                View view = holder.notePane.findViewWithTag(n.tag);
+                view.getLocalVisibleRect(tmpRect);
+                holder.notePane.offsetDescendantRectToMyCoords(view, tmpRect);
+                if(tmpRect.contains((int) x, (int) y)) {
+                    if(outView != null) {
+                        outView[0] = view;
+                    }
+                    return n;
+                }
+            }
+        }
+        return null;
+    }
+
     private class MyGestureListener extends GestureDetector.SimpleOnGestureListener {
         private ViewHolder holder;
+        private View[] tmpViewUnder = new View[1];
 
         public MyGestureListener(ViewHolder holder) {
             this.holder = holder;
@@ -215,17 +239,10 @@ public class PianoRollAdapter extends RecyclerView.Adapter<PianoRollAdapter.View
             }
             int containerIndex = holder.getAdapterPosition();
 
-            Rect r = new Rect();
-            for(VisualNote n : pianoRollNotes) {
-                if(n.containerIndex == containerIndex) {
-                    View view = holder.notePane.findViewWithTag(n.tag);
-                    view.getLocalVisibleRect(r);
-                    holder.notePane.offsetDescendantRectToMyCoords(view, r);
-                    if(r.contains((int) e.getX(), (int) e.getY())) {
-                        boolean isSelected = controller.onAdapterSelectNote(n);
-                        view.setActivated(isSelected);
-                    }
-                }
+            VisualNote toSelect = getNoteUnder(containerIndex, e.getX(), e.getY(), tmpViewUnder);
+            if(toSelect != null) {
+                boolean isSelected = controller.onAdapterSelectNote(toSelect);
+                tmpViewUnder[0].setActivated(isSelected);
             }
 
             controller.dispatchPianoRollTap(containerIndex, e.getX(), e.getY());
@@ -238,23 +255,8 @@ public class PianoRollAdapter extends RecyclerView.Adapter<PianoRollAdapter.View
                 return;
             }
             int containerIndex = holder.getAdapterPosition();
-            int keyIndex = (int) (e.getY() / controller.getKeyHeight());
 
-            Rect r = new Rect();
-            ListIterator<VisualNote> reversed = pianoRollNotes.listIterator(pianoRollNotes.size());
-            VisualNote toRemove = null;
-            while(reversed.hasPrevious()) {
-                VisualNote n = reversed.previous();
-                if(n.containerIndex == containerIndex && n.keyIndex == keyIndex) {
-                    View view = holder.notePane.findViewWithTag(n.tag);
-                    view.getLocalVisibleRect(r);
-                    holder.notePane.offsetDescendantRectToMyCoords(view, r);
-                    if(r.contains((int) e.getX(), (int) e.getY())) {
-                        toRemove = n;
-                        break;
-                    }
-                }
-            }
+            VisualNote toRemove = getNoteUnder(containerIndex, e.getX(), e.getY(), null);
 
             if(toRemove != null) {
                 controller.removeFromPianoRollPattern(toRemove, false);

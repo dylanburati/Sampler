@@ -136,6 +136,7 @@ public class ProjectActivity extends AppCompatActivity {
                 } else if(event.action == PatternEvent.PATTERN_OFF) {
                     closeNotes();
                     patternThread.clearPatterns();
+                    patternThread.resumeLoop();
                 }
             }
         });

@@ -19,6 +19,8 @@ import java.util.List;
 import androidx.annotation.Nullable;
 import libre.sampler.R;
 
+import static libre.sampler.utils.ViewUtil.dpToPxSize;
+
 public class IconNavigationPanel extends RelativeLayout {
     private static final int INDICATOR_WIDTH_DP = 2;
     private static final int BORDER_WIDTH_DP = 2;
@@ -186,9 +188,5 @@ public class IconNavigationPanel extends RelativeLayout {
             this.indicatorTop = top;
             invalidate();
         }
-    }
-
-    private static int dpToPxSize(float density, int dps) {
-        return (int) (dps * density + 0.5f);
     }
 }

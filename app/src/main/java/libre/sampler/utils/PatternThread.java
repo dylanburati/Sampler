@@ -62,6 +62,10 @@ public class PatternThread extends Thread {
     }
 
     public void suspendLoop() {
+        if(isSuspended) {
+            return;
+        }
+
         isSuspended = true;
         for(Pattern p : runningPatterns.values()) {
             p.pause();
@@ -70,6 +74,10 @@ public class PatternThread extends Thread {
     }
 
     public void resumeLoop() {
+        if(!isSuspended) {
+            return;
+        }
+
         isSuspended = false;
         for(Pattern p : runningPatterns.values()) {
             p.resume();
@@ -107,7 +115,7 @@ public class PatternThread extends Thread {
             lock.lock();
             try {
                 for(Pattern p : runningPatterns.values()) {
-                    if(!p.isStarted || p.isPaused) {
+                    if(!p.isPlaying()) {
                         continue;
                     }
 

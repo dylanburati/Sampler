@@ -41,9 +41,14 @@ public class Pattern {
     public LoopScheduler scheduler;
 
     @Ignore
-    public boolean isStarted;
-    @Ignore
-    public boolean isPaused;
+    private int playingState;
+
+    private static final int STOPPED = 0;
+    private static final int PLAYING = 1;
+    private static final int PAUSED = 2;
+    public boolean isStarted() { return playingState != 0; }
+    public boolean isPlaying() { return playingState == 1; }
+    public boolean isPaused() { return playingState == 2; }
 
     @Ignore
     private Pattern(String name) {
@@ -107,7 +112,7 @@ public class Pattern {
     // All of the following methods should be called
     // by a thread holding the patternThread.lock
     public void setLoopLengthTicks(long ticks) {
-        if(isStarted) {
+        if(isStarted()) {
             scheduler.cancelPending();
             long now = System.nanoTime();
             long phantomTicks = scheduler.getLoopIndex() * (ticks - this.loopLengthTicks);
@@ -134,7 +139,7 @@ public class Pattern {
     }
 
     public void setNanosPerTick(double updatedNanosPerTick) {
-        if(isStarted && !isPaused) {
+        if(isPlaying()) {
             long now = System.nanoTime();
             checkpointTicks = getTicksAtTime(now);
             checkpointNanos = now;
@@ -193,8 +198,7 @@ public class Pattern {
 
     public void start() {
         synchronized(scheduler) {
-            isStarted = true;
-            isPaused = false;
+            playingState = PLAYING;
             checkpointNanos = System.nanoTime();
             checkpointTicks = 0;
             scheduler.reset();
@@ -207,29 +211,29 @@ public class Pattern {
             checkpointTicks = getTicksAtTime(now);
             checkpointNanos = now;
             scheduler.cancelPending();
-            isPaused = true;
+            playingState = PAUSED;
         }
     }
 
     public void resume() {
-        if(!isPaused) {
+        if(!isPaused()) {
             return;
         }
         synchronized(scheduler) {
-            isPaused = false;
+            playingState = PLAYING;
             checkpointNanos = System.nanoTime();
         }
     }
 
     public void stop() {
-        isStarted = false;
+        playingState = STOPPED;
     }
 
     private long getTicksAtTime(long time) {
-        if(!isStarted) {
+        if(!isStarted()) {
             return 0;
         }
-        if(isPaused) {
+        if(isPaused()) {
             return checkpointTicks;
         }
         long afterCheckpointTicks = (long) ((time - checkpointNanos) / nanosPerTick);
