@@ -4,7 +4,6 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.NumberPicker;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -43,13 +42,9 @@ public class PatternEditPatternLength extends Fragment {
     }
 
     private void initPicker() {
-        loopLengthPicker = new MusicTimePicker((NumberPicker) rootView.findViewById(R.id.pattern_length_bars),
-                (NumberPicker) rootView.findViewById(R.id.pattern_length_sixteenths)) {
-            @Override
-            public void onValueChanged(MusicTime value) {
-            }
-        };
-        loopLengthPicker.setTicks(viewModel.getPianoRollPattern().getLoopLengthTicks());
+        loopLengthPicker = rootView.findViewById(R.id.pattern_length_picker);
+        MusicTime initLength = new MusicTime(viewModel.getPianoRollPattern().getLoopLengthTicks());
+        loopLengthPicker.setValue(initLength);
     }
 
     @Override

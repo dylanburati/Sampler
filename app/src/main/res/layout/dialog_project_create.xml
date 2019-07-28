@@ -17,7 +17,7 @@
         android:layout_marginBottom="@dimen/margin2"
         android:layout_marginLeft="@dimen/margin1"
         android:text="@string/dialog_project_create_title"
-        android:textSize="@dimen/title"
+        android:textSize="@dimen/text_title"
         app:fontFamily="sans-serif-medium"
         android:layout_marginStart="@dimen/margin1" />
 

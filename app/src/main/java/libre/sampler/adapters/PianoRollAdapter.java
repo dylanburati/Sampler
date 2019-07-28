@@ -14,6 +14,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.Map;
 import java.util.Set;
 
@@ -118,6 +119,7 @@ public class PianoRollAdapter extends RecyclerView.Adapter<PianoRollAdapter.View
         if(view == null) {
             view = new View(holder.notePane.getContext());
             view.setBackgroundColor(Color.WHITE);
+            view.setAlpha(0.8f);
             view.setBackgroundTintList(holder.notePane.getResources().getColorStateList(R.color.piano_roll_note));
             view.setTag(note.tag);
             view.setActivated(isSelected);
@@ -239,21 +241,26 @@ public class PianoRollAdapter extends RecyclerView.Adapter<PianoRollAdapter.View
             int keyIndex = (int) (e.getY() / controller.getKeyHeight());
 
             Rect r = new Rect();
-            for(VisualNote n : pianoRollNotes) {
+            ListIterator<VisualNote> reversed = pianoRollNotes.listIterator(pianoRollNotes.size());
+            VisualNote toRemove = null;
+            while(reversed.hasPrevious()) {
+                VisualNote n = reversed.previous();
                 if(n.containerIndex == containerIndex && n.keyIndex == keyIndex) {
                     View view = holder.notePane.findViewWithTag(n.tag);
                     view.getLocalVisibleRect(r);
                     holder.notePane.offsetDescendantRectToMyCoords(view, r);
                     if(r.contains((int) e.getX(), (int) e.getY())) {
-                        controller.removeFromPianoRollPattern(n, false);
-                        pianoRollNotes.remove(n);
-                        return;
+                        toRemove = n;
+                        break;
                     }
                 }
             }
 
-            controller.onAdapterCreateNote(containerIndex, e.getX(), e.getY());
+            if(toRemove != null) {
+                controller.removeFromPianoRollPattern(toRemove, false);
+            } else {
+                controller.onAdapterCreateNote(containerIndex, e.getX(), e.getY());
+            }
         }
     }
-
 }

@@ -23,64 +23,24 @@
             android:layout_height="wrap_content"
             android:text="@string/note_start_label" />
 
-        <NumberPicker
-            android:id="@+id/note_start_picker_bars"
+        <libre.sampler.views.MusicTimePicker
+            android:id="@+id/note_start_picker"
             android:layout_width="wrap_content"
             android:layout_height="60sp"
-            android:layout_below="@id/note_start_label"
-            android:layout_marginBottom="0dp"
-            android:dividerPadding="0dp" />
-
-        <NumberPicker
-            android:id="@+id/note_start_picker_sixteenths"
-            android:layout_width="wrap_content"
-            android:layout_height="60sp"
-            android:layout_alignTop="@id/note_start_picker_bars"
-            android:layout_marginBottom="0dp"
-            android:layout_toRightOf="@id/note_start_picker_bars"
-            android:dividerPadding="0dp" />
-
-        <NumberPicker
-            android:id="@+id/note_start_picker_ticks"
-            android:layout_width="wrap_content"
-            android:layout_height="60sp"
-            android:layout_alignTop="@id/note_start_picker_bars"
-            android:layout_marginBottom="0dp"
-            android:layout_toRightOf="@id/note_start_picker_sixteenths"
-            android:dividerPadding="0dp" />
+            android:layout_below="@id/note_start_label" />
 
         <TextView
             android:id="@+id/note_length_label"
-            android:layout_below="@id/note_start_picker_bars"
+            android:layout_below="@id/note_start_picker"
             android:layout_marginTop="@dimen/margin2"
-            android:layout_width="wrap_content"
+            android:layout_width="250dp"
             android:layout_height="wrap_content"
             android:text="@string/note_length_label" />
 
-        <NumberPicker
-            android:id="@+id/note_length_picker_bars"
+        <libre.sampler.views.MusicTimePicker
+            android:id="@+id/note_length_picker"
             android:layout_width="wrap_content"
             android:layout_height="60sp"
-            android:layout_below="@id/note_length_label"
-            android:layout_marginBottom="0dp"
-            android:dividerPadding="0dp" />
-
-        <NumberPicker
-            android:id="@+id/note_length_picker_sixteenths"
-            android:layout_width="wrap_content"
-            android:layout_height="60sp"
-            android:layout_alignTop="@id/note_length_picker_bars"
-            android:layout_marginBottom="0dp"
-            android:layout_toRightOf="@id/note_length_picker_bars"
-            android:dividerPadding="0dp" />
-
-        <NumberPicker
-            android:id="@+id/note_length_picker_ticks"
-            android:layout_width="wrap_content"
-            android:layout_height="60sp"
-            android:layout_alignTop="@id/note_length_picker_bars"
-            android:layout_marginBottom="0dp"
-            android:layout_toRightOf="@id/note_length_picker_sixteenths"
-            android:dividerPadding="0dp" />
+            android:layout_below="@id/note_length_label" />
     </RelativeLayout>
 </ScrollView>

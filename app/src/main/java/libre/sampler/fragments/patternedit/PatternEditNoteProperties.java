@@ -4,7 +4,6 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.NumberPicker;
 import android.widget.TextView;
 
 import java.util.TreeSet;
@@ -56,16 +55,15 @@ public class PatternEditNoteProperties extends Fragment {
     }
 
     private void initNoteStartPicker() {
-        noteStartPicker = new MusicTimePicker((NumberPicker) rootView.findViewById(R.id.note_start_picker_bars),
-                (NumberPicker) rootView.findViewById(R.id.note_start_picker_sixteenths),
-                (NumberPicker) rootView.findViewById(R.id.note_start_picker_ticks)) {
+        noteStartPicker = rootView.findViewById(R.id.note_start_picker);
+        noteStartPicker.setOnValueChangedListener(new MusicTimePicker.OnValueChangedListener() {
             @Override
-            public void onValueChanged(MusicTime value) {
+            public void onValueChange(MusicTime value) {
                 if(selectedNotes.size() > 0) {
                     patternsFragment.setNoteStart(value);
                 }
             }
-        };
+        });
 
         updateNoteStartPicker();
     }
@@ -83,25 +81,26 @@ public class PatternEditNoteProperties extends Fragment {
     }
 
     private void initNoteLengthPicker() {
-        noteLengthPicker = new MusicTimePicker((NumberPicker) rootView.findViewById(R.id.note_length_picker_bars),
-                (NumberPicker) rootView.findViewById(R.id.note_length_picker_sixteenths),
-                (NumberPicker) rootView.findViewById(R.id.note_length_picker_ticks)) {
+        noteLengthPicker = rootView.findViewById(R.id.note_length_picker);
+        noteLengthPicker.setOnValueChangedListener(new MusicTimePicker.OnValueChangedListener() {
             @Override
-            public void onValueChanged(MusicTime value) {
+            public void onValueChange(MusicTime value) {
                 patternsFragment.setNoteLength(value, true);
             }
-        };
+        });
 
         updateNoteLengthPicker();
     }
 
+    private final MusicTime tmpNoteStart = new MusicTime(0L);
     private void updateNoteStartPicker() {
         int visibility = (selectedNotes.size() > 0) ? View.VISIBLE : View.GONE;
         noteStartPicker.setVisibility(visibility);
         rootView.findViewById(R.id.note_start_label).setVisibility(visibility);
 
         if(selectedNotes.size() > 0) {
-            noteStartPicker.setTicks(selectedNotes.first().startTicks);
+            tmpNoteStart.setTicks(selectedNotes.first().startTicks);
+            noteStartPicker.setValue(tmpNoteStart);
         }
     }
 

@@ -36,6 +36,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 import androidx.annotation.Nullable;
 import libre.sampler.R;
+import static libre.sampler.utils.ViewUtil.*;
 
 public class VerticalSlider extends View {
     public static final int DEFAULT_BAR_WIDTH_DP = 4;
@@ -268,7 +269,8 @@ public class VerticalSlider extends View {
         int widthMode = MeasureSpec.getMode(widthMeasureSpec);
         int widthSize = MeasureSpec.getSize(widthMeasureSpec);
         int width = (widthMode == MeasureSpec.UNSPECIFIED) ? touchTargetWidth
-                : (widthMode == MeasureSpec.EXACTLY) ? widthSize : Math.min(touchTargetWidth, widthSize);
+                : (widthMode == MeasureSpec.EXACTLY) ? widthSize
+                : /* widthMode == MeasureSpec.AT_MOST */ Math.min(touchTargetWidth, widthSize);
         setMeasuredDimension(width, MeasureSpec.getSize(heightMeasureSpec));
         updateDrawableState();
     }
@@ -333,10 +335,6 @@ public class VerticalSlider extends View {
                 fn.onProgressChanged(this, progress, fromUser);
             }
         }
-    }
-
-    private static int dpToPxSize(float density, int dps) {
-        return (int) (dps * density + 0.5f);
     }
 
     public interface OnProgressChangedListener {

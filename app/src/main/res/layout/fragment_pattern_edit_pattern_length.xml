@@ -2,6 +2,7 @@
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:fillViewport="true">
 
     <RelativeLayout
@@ -16,28 +17,20 @@
             android:layout_height="wrap_content"
             android:text="@string/pattern_length_label" />
 
-        <NumberPicker
-            android:id="@+id/pattern_length_bars"
+        <libre.sampler.views.MusicTimePicker
+            android:id="@+id/pattern_length_picker"
             android:layout_width="wrap_content"
             android:layout_height="60sp"
             android:layout_below="@id/pattern_length_label"
-            android:dividerPadding="0dp" />
-
-        <NumberPicker
-            android:id="@+id/pattern_length_sixteenths"
-            android:layout_width="wrap_content"
-            android:layout_height="60sp"
-            android:layout_alignTop="@id/pattern_length_bars"
-            android:layout_toRightOf="@id/pattern_length_bars"
-            android:dividerPadding="0dp" />
+            app:num_pickers="2" />
 
         <Button
             android:id="@+id/submit_pattern_length"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_alignBottom="@id/pattern_length_bars"
+            android:layout_alignBottom="@id/pattern_length_picker"
             android:layout_marginLeft="@dimen/margin3"
-            android:layout_toRightOf="@id/pattern_length_sixteenths"
+            android:layout_toRightOf="@id/pattern_length_picker"
             android:text="@string/change" />
     </RelativeLayout>
 </ScrollView>

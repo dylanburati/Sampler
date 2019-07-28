@@ -79,7 +79,7 @@ public class ProjectKeyboardFragment extends Fragment {
         pianoContainer.addOnItemTouchListener(new RecyclerView.OnItemTouchListener() {
             @Override
             public boolean onInterceptTouchEvent(@NonNull RecyclerView rv, @NonNull MotionEvent e) {
-                float scrollBarHeight = getResources().getDimension(R.dimen.caption) + getResources().getDimension(R.dimen.margin2) * 2;
+                float scrollBarHeight = getResources().getDimension(R.dimen.text_caption) + getResources().getDimension(R.dimen.margin2) * 2;
                 if((e.getAction() == MotionEvent.ACTION_DOWN) && e.getY() > scrollBarHeight) {
                     return true;
                 }

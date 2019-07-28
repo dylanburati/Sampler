@@ -175,7 +175,7 @@
             android:paddingRight="@dimen/margin2"
             android:paddingBottom="@dimen/margin2"
             android:gravity="bottom"
-            android:textSize="@dimen/subheading" />
+            android:textSize="@dimen/text_subheading" />
 
         <TextView
             android:id="@+id/pattern_tempo_label"
@@ -200,7 +200,7 @@
             android:background="@android:color/transparent"
             android:inputType="numberDecimal"
             android:imeOptions="actionDone"
-            android:textSize="@dimen/title"
+            android:textSize="@dimen/text_title"
             android:minEms="3" />
     </RelativeLayout>
 </LinearLayout>

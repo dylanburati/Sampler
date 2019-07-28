@@ -52,8 +52,8 @@ public class PatternEditCopyMultiple extends Fragment {
         viewModel = ViewModelProviders.of(getActivity()).get(ProjectViewModel.class);
         selectedNotes = patternsFragment.getSelectedNotes();
 
-        initCountPicker();
         initIntervalPicker();
+        initCountPicker();
 
         patternsFragment.patternEditEventSource.add(TAG, new Consumer<String>() {
             @Override
@@ -81,19 +81,19 @@ public class PatternEditCopyMultiple extends Fragment {
 
     private void initIntervalPicker() {
         int visibility = (selectedNotes.size() > 0) ? View.VISIBLE : View.GONE;
-        intervalPicker = new MusicTimePicker((NumberPicker) rootView.findViewById(R.id.interval_bars),
-                (NumberPicker) rootView.findViewById(R.id.interval_sixteenths),
-                (NumberPicker) rootView.findViewById(R.id.interval_ticks)) {
+        intervalPicker = rootView.findViewById(R.id.interval_picker);
+        intervalPicker.setOnValueChangedListener(new MusicTimePicker.OnValueChangedListener() {
             @Override
-            public void onValueChanged(MusicTime value) {
+            public void onValueChange(MusicTime value) {
                 updateMaxCount();
                 updateStatus();
             }
-        };
+        });
         intervalPicker.setVisibility(visibility);
         rootView.findViewById(R.id.interval_label).setVisibility(visibility);
         rootView.findViewById(R.id.count_label).setVisibility(visibility);
         rootView.findViewById(R.id.count_picker).setVisibility(visibility);
+        rootView.findViewById(R.id.submit_copy_multiple).setVisibility(visibility);
 
         if(selectedNotes.size() > 0) {
             chooseCommonInterval();
@@ -150,8 +150,9 @@ public class PatternEditCopyMultiple extends Fragment {
     private void initCountPicker() {
         final NumberPicker countPicker = rootView.findViewById(R.id.count_picker);
         countPicker.setMinValue(0);
-        countPicker.setMaxValue(MAX_INPUT_BARS);
-        countPicker.setValue(1);
+        updateMaxCount();
+        inputCount = Math.min(1, countPicker.getMaxValue());
+        countPicker.setValue(inputCount);
         countPicker.setOnValueChangedListener(new NumberPicker.OnValueChangeListener() {
             @Override
             public void onValueChange(NumberPicker picker, int oldVal, int newVal) {
@@ -169,6 +170,7 @@ public class PatternEditCopyMultiple extends Fragment {
         rootView.findViewById(R.id.interval_label).setVisibility(visibility);
         rootView.findViewById(R.id.count_label).setVisibility(visibility);
         rootView.findViewById(R.id.count_picker).setVisibility(visibility);
+        rootView.findViewById(R.id.submit_copy_multiple).setVisibility(visibility);
 
         if(selectedNotes.size() > 0) {
             if(!commonIntervalChosen) {
@@ -185,7 +187,7 @@ public class PatternEditCopyMultiple extends Fragment {
             long maxTicks = viewModel.getPianoRollPattern().getLoopLengthTicks() - getSelectionStartTicks();
             maxCount = (int) (maxTicks / intervalTicks) - 1;
             long leftoverTicks = maxTicks - maxCount * intervalTicks;
-            if(leftoverTicks < getSelectionLengthTicks()) {
+            if(leftoverTicks >= getSelectionLengthTicks()) {
                 maxCount += 1;
             }
         }

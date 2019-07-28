@@ -1,208 +1,231 @@
 package libre.sampler.views;
 
+import android.content.Context;
+import android.content.res.Resources;
+import android.content.res.TypedArray;
+import android.util.AttributeSet;
+import android.util.DisplayMetrics;
+import android.view.View;
 import android.widget.NumberPicker;
+import android.widget.RelativeLayout;
 
-import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import libre.sampler.R;
 import libre.sampler.listeners.StatefulScrollListener;
-import libre.sampler.utils.Debouncer;
 import libre.sampler.utils.MusicTime;
+import libre.sampler.utils.ViewUtil;
 
 import static android.widget.NumberPicker.OnScrollListener.SCROLL_STATE_IDLE;
 
-public abstract class MusicTimePicker {
-    private static final int MAX_INPUT_BARS = 999;
-    private static final int SIXTEENTHS_WRAP_THRESHOLD = 2;
-    private static final int USER_TICKS_WRAP_THRESHOLD = 2;
-    @NonNull
-    private final NumberPicker pickerBars;
-    @NonNull
-    private final NumberPicker pickerSixteenths;
-    @Nullable
-    private final NumberPicker pickerUserTicks;
-    
-    private final StatefulScrollListener pickerSixteenthsScroll = new StatefulScrollListener();
-    private final StatefulScrollListener pickerUserTicksScroll = new StatefulScrollListener();
+public class MusicTimePicker extends RelativeLayout {
+    public static final int DEFAULT_PICKER_WIDTH_DP = 64;
+    public static final int DEFAULT_PICKER_HEIGHT_DP = 60;
 
-    private final AlternatingFormatterProvider sixteenthsFormatters = new AlternatingFormatterProvider("%d");
-    private final AlternatingFormatterProvider userTicksFormatters = new AlternatingFormatterProvider("%02d");
+    private int pickerWidth;
+    private int pickerHeight;
+
+    public interface OnValueChangedListener {
+        void onValueChange(MusicTime value);
+    }
 
     private final MusicTime value = new MusicTime(0L);
-    private Debouncer debouncer = new Debouncer();
+    private final MusicTime maxValue = new MusicTime(999, 0, 0);
 
-    public MusicTimePicker(@NonNull NumberPicker pickerBars, @NonNull NumberPicker pickerSixteenths) {
-        this.pickerBars = pickerBars;
-        this.pickerSixteenths = pickerSixteenths;
-        this.pickerUserTicks = null;
+    private OnValueChangedListener externalListener;
+
+    private static final int PICKER_INDEX_BARS = 0;
+    private static final int PICKER_INDEX_SIXTEENTHS = 1;
+    private static final int PICKER_INDEX_USER_TICKS = 2;
+
+    private int[] PICKER_INDICES;
+    private final NumberPicker[] pickers;
+    private final StatefulScrollListener[] scrollListeners;
+    private AlternatingFormatterProvider[] formatterProviders = new AlternatingFormatterProvider[] {
+            new AlternatingFormatterProvider("%d"),
+            new AlternatingFormatterProvider("%d"),
+            new AlternatingFormatterProvider("%2d")
+    };
+
+    public MusicTimePicker(Context context, @Nullable AttributeSet attrs) {
+        super(context, attrs);
+
+        Resources res = context.getResources();
+        DisplayMetrics displayMetrics = res.getDisplayMetrics();
+        float density = displayMetrics.density;
+        pickerWidth = ViewUtil.dpToPxSize(density, DEFAULT_PICKER_WIDTH_DP);
+        pickerHeight = ViewUtil.dpToPxSize(density, DEFAULT_PICKER_HEIGHT_DP);
+
+        TypedArray a = context.getTheme().obtainStyledAttributes(attrs, R.styleable.MusicTimePicker, 0, 0);
+        int numPickers = a.getInt(R.styleable.MusicTimePicker_num_pickers, 3);
+        if(numPickers < 3) {
+            PICKER_INDICES = new int[]{ 0, 1 };
+        } else {
+            PICKER_INDICES = new int[]{ 0, 1, 2 };
+        }
+        a.recycle();
+        scrollListeners = new StatefulScrollListener[PICKER_INDICES.length];
+        pickers = new NumberPicker[PICKER_INDICES.length];
+
+        for(int i : PICKER_INDICES) {
+            LayoutParams pickerLp = new LayoutParams(pickerWidth, LayoutParams.MATCH_PARENT);
+            pickers[i] = new NumberPicker(context);
+            pickers[i].setId(View.generateViewId());
+
+            if(i == 0) {
+                pickerLp.addRule(ALIGN_PARENT_LEFT);
+            } else {
+                pickerLp.addRule(RIGHT_OF, pickers[i - 1].getId());
+                pickerLp.addRule(ALIGN_TOP, pickers[i - 1].getId());
+            }
+
+            addView(pickers[i], pickerLp);
+        }
+
+        setPickerFormatters();
         attachInternalListeners();
+        setValue(value);
+        setMaxValue(maxValue);
     }
-    
-    public MusicTimePicker(@NonNull NumberPicker pickerBars, @NonNull NumberPicker pickerSixteenths,
-                           @NonNull NumberPicker pickerUserTicks) {
-        this.pickerBars = pickerBars;
-        this.pickerSixteenths = pickerSixteenths;
-        this.pickerUserTicks = pickerUserTicks;
-        attachInternalListeners();
+
+    private void setPickerFormatters() {
+        for(int i : PICKER_INDICES) {
+            pickers[i].setFormatter(formatterProviders[i].getNext());
+        }
     }
-    
+
+    private long lastRolloverMs = 0;
+    private final MusicTime tmpValue = new MusicTime(0L);
     private void attachInternalListeners() {
-        pickerBars.setMinValue(0);
-        pickerBars.setMaxValue(MAX_INPUT_BARS);
-        pickerBars.setOnValueChangedListener(new NumberPicker.OnValueChangeListener() {
+        for(int i : PICKER_INDICES) {
+            scrollListeners[i] = new StatefulScrollListener();
+            pickers[i].setOnScrollListener(scrollListeners[i]);
+        }
+
+        pickers[PICKER_INDEX_BARS].setOnValueChangedListener(new NumberPicker.OnValueChangeListener() {
             @Override
-            public void onValueChange(NumberPicker picker, int oldBars, int newBars) {
-                value.bars = newBars;
-                setWrapPickerSixteenths(true);
-                setWrapPickerUserTicks(true);
-                MusicTimePicker.this.onValueChanged(value);
+            public void onValueChange(NumberPicker picker, int oldVal, int newVal) {
+                tmpValue.setTicks(value.getTicks());
+                tmpValue.bars = newVal;
+                setValue(tmpValue, PICKER_INDEX_BARS, true);
             }
         });
-        pickerBars.setWrapSelectorWheel(false);
 
-        pickerSixteenths.setOnScrollListener(pickerSixteenthsScroll);
-        pickerSixteenths.setMinValue(0);
-        pickerSixteenths.setMaxValue(MusicTime.SIXTEENTHS_PER_BAR - 1);
-        pickerSixteenths.setFormatter(sixteenthsFormatters.getNext());
-        pickerSixteenths.setOnValueChangedListener(new NumberPicker.OnValueChangeListener() {
+        pickers[PICKER_INDEX_SIXTEENTHS].setOnValueChangedListener(new NumberPicker.OnValueChangeListener() {
             @Override
-            public void onValueChange(NumberPicker picker, int oldSixteenths, int newSixteenths) {
-                value.sixteenths = newSixteenths;
-                boolean rolloverMinusAllowed = (value.bars > 0);
-                if(pickerSixteenthsScroll.scrollState != SCROLL_STATE_IDLE) {
-                    if(oldSixteenths == picker.getMaxValue() && newSixteenths == picker.getMinValue()) {
-                        // rollover +
-                        value.changeByTicks(MusicTime.TICKS_PER_BAR);
-                        pickerBars.setValue(value.bars);
-                    } else if(oldSixteenths == picker.getMinValue() && newSixteenths == picker.getMaxValue()) {
-                        if(rolloverMinusAllowed) {
-                            // rollover -
-                            value.changeByTicks(-MusicTime.TICKS_PER_BAR);
-                            pickerBars.setValue(value.bars);
-                        } else {
-                            // cancel
-                            value.sixteenths = oldSixteenths;
-                            picker.setValue(oldSixteenths);
-                        }
+            public void onValueChange(NumberPicker picker, int oldVal, int newVal) {
+                tmpValue.setTicks(value.getTicks());
+                tmpValue.sixteenths = newVal;
+                if((System.currentTimeMillis() - lastRolloverMs) < 100 ||
+                        scrollListeners[PICKER_INDEX_SIXTEENTHS].getScrollState() != SCROLL_STATE_IDLE) {
+
+                    lastRolloverMs = System.currentTimeMillis();
+                    if(oldVal == picker.getMaxValue() && newVal == 0) {
+                        tmpValue.changeByTicks(MusicTime.TICKS_PER_BAR);
+                    } else if(oldVal == 0 && newVal == picker.getMaxValue()) {
+                        tmpValue.changeByTicks(-MusicTime.TICKS_PER_BAR);
                     }
                 }
-                setWrapPickerSixteenths(true);
-                setWrapPickerUserTicks(true);
-                MusicTimePicker.this.onValueChanged(value);
+                setValue(tmpValue, PICKER_INDEX_SIXTEENTHS, true);
             }
         });
-        pickerSixteenths.setWrapSelectorWheel(false);
 
-        if(pickerUserTicks != null) {
-            pickerUserTicks.setOnScrollListener(pickerUserTicksScroll);
-            pickerUserTicks.setMinValue(0);
-            pickerUserTicks.setMaxValue(MusicTime.USER_TICKS_PER_SIXTEENTH - 1);
-            pickerUserTicks.setFormatter(sixteenthsFormatters.getNext());
-            pickerUserTicks.setOnValueChangedListener(new NumberPicker.OnValueChangeListener() {
+        if(pickers.length > PICKER_INDEX_USER_TICKS) {
+            pickers[PICKER_INDEX_USER_TICKS].setOnValueChangedListener(new NumberPicker.OnValueChangeListener() {
                 @Override
-                public void onValueChange(NumberPicker picker, int oldUserTicks, int newUserTicks) {
-                    value.userTicks = newUserTicks;
-                    boolean rolloverMinusAllowed = (value.bars > 0) || (value.sixteenths > 0);
-                    if(pickerUserTicksScroll.scrollState != SCROLL_STATE_IDLE) {
-                        if(oldUserTicks == picker.getMaxValue() && newUserTicks == picker.getMinValue()) {
-                            // rollover +
-                            value.changeByTicks(MusicTime.TICKS_PER_SIXTEENTH);
-                            pickerSixteenths.setValue(value.sixteenths);
-                            pickerBars.setValue(value.bars);
-                        } else if(oldUserTicks == picker.getMinValue() && newUserTicks == picker.getMaxValue()) {
-                            if(rolloverMinusAllowed) {
-                                // rollover -
-                                value.changeByTicks(-MusicTime.TICKS_PER_SIXTEENTH);
-                                pickerSixteenths.setValue(value.sixteenths);
-                                pickerBars.setValue(value.bars);
-                            } else {
-                                // cancel
-                                value.userTicks = oldUserTicks;
-                                picker.setValue(oldUserTicks);
-                            }
+                public void onValueChange(NumberPicker picker, int oldVal, int newVal) {
+                    tmpValue.setTicks(value.getTicks());
+                    tmpValue.userTicks = newVal;
+                    if((System.currentTimeMillis() - lastRolloverMs) < 100 ||
+                            scrollListeners[PICKER_INDEX_USER_TICKS].getScrollState() != SCROLL_STATE_IDLE) {
+
+                        lastRolloverMs = System.currentTimeMillis();
+                        if(oldVal == picker.getMaxValue() && newVal == 0) {
+                            tmpValue.changeByTicks(MusicTime.TICKS_PER_SIXTEENTH);
+                        } else if(oldVal == 0 && newVal == picker.getMaxValue()) {
+                            tmpValue.changeByTicks(-MusicTime.TICKS_PER_SIXTEENTH);
                         }
                     }
-                    setWrapPickerUserTicks(true);
-                    MusicTimePicker.this.onValueChanged(value);
+                    setValue(tmpValue, PICKER_INDEX_USER_TICKS, true);
                 }
             });
-            pickerUserTicks.setWrapSelectorWheel(false);
         }
     }
 
-    private void setWrapPickerSixteenths(final boolean redraw) {
-        final boolean shouldWrap = (value.bars > 0 || value.sixteenths >= SIXTEENTHS_WRAP_THRESHOLD);
-        final String taskName = "setWrapPickerSixteenths";
-        final int debounceId = debouncer.getNextId(taskName);
-
-        pickerSixteenths.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                if(debouncer.getCurrentId(taskName) != debounceId) {
-                    return;
-                }
-                pickerSixteenths.setWrapSelectorWheel(shouldWrap);
-                if(redraw) {
-                    pickerSixteenths.setFormatter(sixteenthsFormatters.getNext());
-                    pickerSixteenths.invalidate();
-                }
-            }
-        }, 30);
+    private boolean isInitialSetValue = true;
+    public void setValue(MusicTime v) {
+        setValue(v, -1, false);
     }
 
-    private void setWrapPickerUserTicks(final boolean redraw) {
-        if(pickerUserTicks == null) {
-            return;
+    private void setValue(MusicTime v, int skipIndex, boolean dispatchChange) {
+        if(skipIndex != PICKER_INDEX_BARS && (isInitialSetValue || v.bars != value.bars)) {
+            pickers[PICKER_INDEX_BARS].setValue(v.bars);
         }
-        final boolean shouldWrap = (value.bars > 0 || value.sixteenths > 0 ||
-                value.userTicks >= USER_TICKS_WRAP_THRESHOLD);
+        if(skipIndex != PICKER_INDEX_SIXTEENTHS && (isInitialSetValue || v.sixteenths != value.sixteenths)) {
+            pickers[PICKER_INDEX_SIXTEENTHS].setValue(v.sixteenths);
+        }
+        if(pickers.length > PICKER_INDEX_USER_TICKS && skipIndex != PICKER_INDEX_USER_TICKS &&
+                (isInitialSetValue || v.userTicks != value.userTicks)) {
+            pickers[PICKER_INDEX_USER_TICKS].setValue(v.userTicks);
+        }
+        isInitialSetValue = false;
 
-        final String taskName = "setWrapPickerUserTicks";
-        final int debounceId = debouncer.getNextId(taskName);
-
-        pickerUserTicks.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                if(debouncer.getCurrentId(taskName) != debounceId) {
-                    return;
-                }
-                pickerUserTicks.setWrapSelectorWheel(shouldWrap);
-                if(redraw) {
-                    pickerUserTicks.setFormatter(userTicksFormatters.getNext());
-                    pickerUserTicks.invalidate();
-                }
-            }
-        }, 30);
-    }
-
-    public void setVisibility(int visibility) {
-        pickerBars.setVisibility(visibility);
-        pickerSixteenths.setVisibility(visibility);
-        if(pickerUserTicks != null) {
-            pickerUserTicks.setVisibility(visibility);
+        value.setTicks(v.getTicks());
+        updateWrapEnabled();
+        if(dispatchChange && externalListener != null) {
+            externalListener.onValueChange(value);
         }
     }
-
-    public void setValue(MusicTime newVal) {
-        setTicks(newVal.getTicks());
-    }
-
-    public void setTicks(long newValInTicks) {
-        value.setTicks(newValInTicks);
-        pickerBars.setValue(value.bars);
-
-        pickerSixteenths.setValue(value.sixteenths);
-        setWrapPickerSixteenths(true);
-
-        if(pickerUserTicks != null) {
-            pickerUserTicks.setValue(value.userTicks);
-            setWrapPickerUserTicks(true);
-        }
-    }
-
-    public abstract void onValueChanged(MusicTime value);
 
     public MusicTime getValue() {
         return value;
+    }
+
+    public void setMaxValue(MusicTime v) {
+        maxValue.setTicks(v.getTicks());
+        if(value.getTicks() > maxValue.getTicks()) {
+            setValue(v);
+        } else {
+            updateWrapEnabled();
+        }
+    }
+
+    private void updateWrapEnabled() {
+        boolean[] willDisableDecrement = new boolean[3];
+        boolean[] willDisableIncrement = new boolean[3];
+        if(value.bars == 0) {
+            willDisableDecrement[PICKER_INDEX_SIXTEENTHS] = (value.sixteenths < 3);
+            if(value.sixteenths == 0) {
+                willDisableDecrement[PICKER_INDEX_USER_TICKS] = (value.userTicks < 3);
+            }
+        }
+
+        if(value.bars == maxValue.bars) {
+            willDisableIncrement[PICKER_INDEX_SIXTEENTHS] = ((maxValue.sixteenths - value.sixteenths) < 3);
+            if(value.sixteenths == maxValue.sixteenths) {
+                willDisableIncrement[PICKER_INDEX_USER_TICKS] = ((maxValue.sixteenths - value.sixteenths) < 3);
+            }
+        }
+
+        pickers[PICKER_INDEX_BARS].setWrapSelectorWheel(false);
+        pickers[PICKER_INDEX_BARS].setMaxValue(maxValue.bars);
+        for(int i : new int[]{ PICKER_INDEX_SIXTEENTHS, PICKER_INDEX_USER_TICKS }) {
+            if(i >= pickers.length) {
+                break;
+            }
+            int normalMaxVal = (i == PICKER_INDEX_SIXTEENTHS ? MusicTime.SIXTEENTHS_PER_BAR - 1 : MusicTime.USER_TICKS_PER_SIXTEENTH - 1);
+            int nowrapMaxVal = (i == PICKER_INDEX_SIXTEENTHS ? maxValue.sixteenths : maxValue.bars);
+            pickers[i].setWrapSelectorWheel(!willDisableDecrement[i] && !willDisableIncrement[i]);
+            if(willDisableIncrement[i]) {
+                pickers[i].setMaxValue(nowrapMaxVal);
+            } else {
+                pickers[i].setMaxValue(normalMaxVal);
+            }
+            pickers[i].setFormatter(formatterProviders[i].getNext());
+        }
+    }
+
+    public void setOnValueChangedListener(OnValueChangedListener listener) {
+        this.externalListener = listener;
     }
 
     private static class AlternatingFormatterProvider {
