@@ -60,7 +60,6 @@
     <string name="done">Done</string>
     <string name="note_properties">Note Properties</string>
     <string name="set_pattern_length">Set Pattern Length</string>
-    <string name="piano_roll_position">Left gridline: %d:%d:00</string>
     <string name="copy_multiple">Copy Multiple</string>
     <string name="number_of_copies">Number of copies</string>
     <string name="interval_label">Copy interval (bars, sixteenths, ticks)</string>
@@ -92,6 +91,7 @@
     <string name="file_not_found">File not found</string>
     <string name="action_edit">Edit</string>
     <string name="select_notes">Select notes</string>
+    <string name="zero_music_time">0:0:00</string>
     <plurals name="selected_notes_label">
         <item quantity="one">%d note selected</item>
         <item quantity="other">%d notes selected</item>

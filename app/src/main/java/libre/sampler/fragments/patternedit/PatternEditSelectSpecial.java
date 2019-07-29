@@ -41,10 +41,11 @@ public class PatternEditSelectSpecial extends Fragment {
 
         topLeftLocked = false;
         bottomRightLocked = false;
-        inputLeft = patternsFragment.getVisibleLeft();
-        inputRight = patternsFragment.getVisibleRight();
-        inputTop = patternsFragment.getVisibleTop();
-        inputBottom = patternsFragment.getVisibleBottom();
+        ProjectPatternsFragment.MusicRect visible = patternsFragment.getVisibleRect();
+        inputLeft = visible.left;
+        inputRight = visible.right;
+        inputTop = visible.top;
+        inputBottom = visible.bottom;
 
         updateControl();
         tapListener = new MyListener();

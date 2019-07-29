@@ -229,7 +229,7 @@ public class Pattern {
         playingState = STOPPED;
     }
 
-    private long getTicksAtTime(long time) {
+    public long getTicksAtTime(long time) {
         if(!isStarted()) {
             return 0;
         }

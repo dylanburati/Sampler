@@ -13,7 +13,7 @@
         android:layout_weight="1"
         android:orientation="vertical">
 
-        <ScrollView
+        <HorizontalScrollView
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="1"
@@ -21,101 +21,71 @@
             android:scrollbars="none">
 
             <LinearLayout
+                android:id="@+id/piano_roll_container"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:scrollbars="none">
+                android:scrollbars="none"
+                android:orientation="vertical">
 
                 <LinearLayout
-                    android:layout_width="wrap_content"
+                    android:id="@+id/piano_roll_time_labels"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:background="#27FFFFFF"
-                    android:orientation="vertical"
-                    android:scrollbars="none">
+                    android:orientation="horizontal"
+                    android:layout_alignParentTop="true"
+                    android:background="#27FFFFFF">
 
                     <TextView
                         android:layout_width="wrap_content"
-                        android:layout_height="@dimen/piano_roll_colheight"
+                        android:layout_height="wrap_content"
                         android:layout_marginLeft="@dimen/margin1"
                         android:layout_marginRight="@dimen/margin1"
                         android:gravity="bottom"
                         android:text="C8"
-                        android:fontFamily="sans-serif-medium" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="@dimen/piano_roll_colheight"
-                        android:layout_marginLeft="@dimen/margin1"
-                        android:layout_marginRight="@dimen/margin1"
-                        android:gravity="bottom"
-                        android:text="C7"
-                        android:fontFamily="sans-serif-medium" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="@dimen/piano_roll_colheight"
-                        android:layout_marginLeft="@dimen/margin1"
-                        android:layout_marginRight="@dimen/margin1"
                         android:fontFamily="sans-serif-medium"
-                        android:gravity="bottom"
-                        android:text="C6" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="@dimen/piano_roll_colheight"
-                        android:layout_marginLeft="@dimen/margin1"
-                        android:layout_marginRight="@dimen/margin1"
-                        android:gravity="bottom"
-                        android:text="C5"
-                        android:fontFamily="sans-serif-medium" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="@dimen/piano_roll_colheight"
-                        android:layout_marginLeft="@dimen/margin1"
-                        android:layout_marginRight="@dimen/margin1"
-                        android:gravity="bottom"
-                        android:text="C4"
-                        android:fontFamily="sans-serif-medium" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="@dimen/piano_roll_colheight"
-                        android:layout_marginLeft="@dimen/margin1"
-                        android:layout_marginRight="@dimen/margin1"
-                        android:gravity="bottom"
-                        android:text="C3"
-                        android:fontFamily="sans-serif-medium" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="@dimen/piano_roll_colheight"
-                        android:layout_marginLeft="@dimen/margin1"
-                        android:layout_marginRight="@dimen/margin1"
-                        android:gravity="bottom"
-                        android:text="C2"
-                        android:fontFamily="sans-serif-medium" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="@dimen/piano_roll_colheight"
-                        android:layout_marginLeft="@dimen/margin1"
-                        android:layout_marginRight="@dimen/margin1"
-                        android:gravity="bottom"
-                        android:text="C1"
-                        android:fontFamily="sans-serif-medium" />
+                        android:visibility="invisible" />
                 </LinearLayout>
 
-                <androidx.recyclerview.widget.RecyclerView
-                    android:id="@+id/piano_roll_container"
+                <ScrollView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:scrollbars="horizontal">
+                    android:scrollbars="none">
 
-                </androidx.recyclerview.widget.RecyclerView>
+                    <RelativeLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content">
+
+                        <LinearLayout
+                            android:id="@+id/piano_roll"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_toRightOf="@+id/piano_roll_octave_labels"
+                            android:orientation="vertical">
+
+                            <include layout="@layout/component_piano_roll_row" />
+                            <include layout="@layout/component_piano_roll_row" />
+                            <include layout="@layout/component_piano_roll_row" />
+                            <include layout="@layout/component_piano_roll_row" />
+                            <include layout="@layout/component_piano_roll_row" />
+                            <include layout="@layout/component_piano_roll_row" />
+                            <include layout="@layout/component_piano_roll_row" />
+                            <include layout="@layout/component_piano_roll_row" />
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:id="@+id/piano_roll_octave_labels"
+                            android:layout_width="wrap_content"
+                            android:layout_height="match_parent"
+                            android:layout_alignParentLeft="true"
+                            android:layout_alignParentTop="true"
+                            android:background="#19FFFFFF"
+                            android:orientation="vertical">
+                        </LinearLayout>
+
+                    </RelativeLayout>
+                </ScrollView>
             </LinearLayout>
-        </ScrollView>
+        </HorizontalScrollView>
 
         <RelativeLayout
             android:layout_width="match_parent"
@@ -168,23 +138,21 @@
         <TextView
             android:id="@+id/piano_roll_position"
             android:layout_width="wrap_content"
-            android:layout_height="match_parent"
+            android:layout_height="wrap_content"
             android:layout_toRightOf="@id/pattern_stop"
             android:layout_toLeftOf="@+id/pattern_tempo_label"
-            android:paddingLeft="@dimen/margin2"
-            android:paddingRight="@dimen/margin2"
-            android:paddingBottom="@dimen/margin2"
-            android:gravity="bottom"
+            android:layout_alignBaseline="@+id/pattern_tempo"
+            android:layout_marginLeft="@dimen/margin2"
+            android:text="@string/zero_music_time"
             android:textSize="@dimen/text_subheading" />
 
         <TextView
             android:id="@+id/pattern_tempo_label"
             android:labelFor="@+id/pattern_tempo"
             android:layout_width="wrap_content"
-            android:layout_height="match_parent"
+            android:layout_height="wrap_content"
             android:layout_toLeftOf="@+id/pattern_tempo"
-            android:gravity="bottom"
-            android:paddingBottom="@dimen/margin2"
+            android:layout_alignBaseline="@id/pattern_tempo"
             android:layout_marginRight="@dimen/margin1"
             android:fontFamily="sans-serif-medium"
             android:text="@string/tempo_label" />
@@ -192,11 +160,12 @@
         <EditText
             android:id="@+id/pattern_tempo"
             android:layout_width="wrap_content"
-            android:layout_height="match_parent"
+            android:layout_height="wrap_content"
             android:layout_alignParentRight="true"
+            android:layout_marginTop="@dimen/margin1"
             android:layout_marginRight="@dimen/margin2"
             android:padding="0dp"
-            android:gravity="center"
+            android:gravity="center_horizontal"
             android:background="@android:color/transparent"
             android:inputType="numberDecimal"
             android:imeOptions="actionDone"
