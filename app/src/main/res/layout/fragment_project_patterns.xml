@@ -144,6 +144,7 @@
             android:layout_alignBaseline="@+id/pattern_tempo"
             android:layout_marginLeft="@dimen/margin2"
             android:text="@string/zero_music_time"
+            android:fontFamily="monospace"
             android:textSize="@dimen/text_subheading" />
 
         <TextView

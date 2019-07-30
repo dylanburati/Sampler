@@ -52,7 +52,7 @@ public class MusicTime {
     @NonNull
     @Override
     public String toString() {
-        return String.format("%d:%d:%02d", bars, sixteenths, userTicks);
+        return String.format("%d:%02d:%02d", bars, sixteenths, userTicks);
     }
 
     public static String ticksToString(long ticks) {

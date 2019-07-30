@@ -135,6 +135,7 @@ public class ProjectPatternsFragment extends Fragment {
                 if(projectActivity.isPatternThreadRunning()) {
                     viewModel.patternEventSource.dispatch(new PatternEvent(PatternEvent.PATTERN_OFF, null));
                 }
+                updatePianoRollPosition();
                 updatePlayPauseControls(v.getContext());
             }
         });
@@ -146,14 +147,13 @@ public class ProjectPatternsFragment extends Fragment {
                 if(projectActivity.isPatternThreadRunning()) {
                     if(projectActivity.isPatternThreadPaused()) {
                         projectActivity.getPatternThread().resumeLoop();
-                        startTrackingPianoRollPosition();
                     } else {
                         projectActivity.getPatternThread().suspendLoop();
                     }
                 } else {
                     viewModel.patternEventSource.dispatch(new PatternEvent(PatternEvent.PATTERN_ON, viewModel.getPianoRollPattern()));
-                    startTrackingPianoRollPosition();
                 }
+                updatePianoRollPosition();
                 updatePlayPauseControls(v.getContext());
             }
         });
@@ -200,6 +200,7 @@ public class ProjectPatternsFragment extends Fragment {
                         viewModel.instrumentEventSource.dispatch(new InstrumentEvent(InstrumentEvent.INSTRUMENT_PD_LOAD, t));
                     }
                     updateTempoInput();
+                    updatePianoRollPosition();
                 }
             }
         });
@@ -520,6 +521,7 @@ public class ProjectPatternsFragment extends Fragment {
             editor.pattern.setLoopLengthTicks(inputLoopLength.getTicks());
             updatePianoRollTicks(inputLoopLength.getTicks());
         }
+        updatePianoRollPosition();
     }
 
     private void deleteNotesAfterTicks(long maxTicks) {
@@ -566,6 +568,7 @@ public class ProjectPatternsFragment extends Fragment {
 
                         editor.pattern.setTempo(inputTempo);
                     }
+                    updatePianoRollPosition();
                 }
                 return false;
             }
@@ -603,24 +606,38 @@ public class ProjectPatternsFragment extends Fragment {
         }
     }
 
-    private void startTrackingPianoRollPosition() {
+    private int currentPositionTrackerId = 0;
+    private void updatePianoRollPosition() {
+        final Pattern pianoRollPattern = viewModel.getPianoRollPattern();
+        final int newId = ++currentPositionTrackerId;
+
+        if(!pianoRollPattern.isStarted()) {
+            pianoRollPosition.setText(R.string.zero_music_time);
+        } else if(pianoRollPattern.isPaused()) {
+            return;
+        }
+
         Runnable tracker = new Runnable() {
+            private final int id = newId;
+            private final long loopLengthTicks = pianoRollPattern.getLoopLengthTicks();
+            private final long checkpointNanos = System.nanoTime();
+            private final long checkpointTicks = pianoRollPattern.getTicksAtTime(checkpointNanos);
+            private final double nanosPerTick = pianoRollPattern.getNanosPerTick();
+
             @Override
             public void run() {
-                Pattern pianoRollPattern = viewModel.getPianoRollPattern();
-                if(pianoRollPattern.isStarted()) {
-                    long totalTicks = pianoRollPattern.getTicksAtTime(System.nanoTime());
-                    long ticksInCurrentLoop = totalTicks % pianoRollPattern.getLoopLengthTicks();
+                if(currentPositionTrackerId != this.id) {
+                    return;
+                }
+                if(pianoRollPattern.isPlaying()) {
+                    long totalTicks = checkpointTicks + (long) ((System.nanoTime() - checkpointNanos) / nanosPerTick);
+                    long ticksInCurrentLoop = totalTicks % loopLengthTicks;
                     pianoRollPosition.setText(MusicTime.ticksToString(ticksInCurrentLoop));
-                    if(pianoRollPattern.isPlaying()) {
-                        pianoRollPosition.postDelayed(this, 60);
-                    }
-                } else {
-                    pianoRollPosition.setText(R.string.zero_music_time);
+                    pianoRollPosition.postDelayed(this, 30);
                 }
             }
         };
-        pianoRollPosition.postDelayed(tracker, 60);
+        pianoRollPosition.postDelayed(tracker, 30);
     }
 
     /* Child fragments */
@@ -703,9 +720,9 @@ public class ProjectPatternsFragment extends Fragment {
         if(fragment != null) {
             if(prevWhich != null) {
                 if(which < prevWhich) {
-                    transaction.setCustomAnimations(R.anim.slide_in_from_top, R.anim.slide_out_to_bottom);
+                    transaction.setCustomAnimations(R.anim.slide_in_from_top, 0);
                 } else {
-                    transaction.setCustomAnimations(R.anim.slide_in_from_bottom, R.anim.slide_out_to_top);
+                    transaction.setCustomAnimations(R.anim.slide_in_from_bottom, 0);
                 }
             }
             transaction.replace(R.id.pattern_edit_fragment_container, fragment);
