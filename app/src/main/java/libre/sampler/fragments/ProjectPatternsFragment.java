@@ -2,11 +2,9 @@ package libre.sampler.fragments;
 
 import android.content.Context;
 import android.content.res.Configuration;
-import android.graphics.Rect;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
-import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -32,7 +30,6 @@ import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 import androidx.lifecycle.ViewModelProviders;
-import androidx.transition.Slide;
 import libre.sampler.ProjectActivity;
 import libre.sampler.R;
 import libre.sampler.adapters.PianoRoll;
@@ -54,7 +51,6 @@ import libre.sampler.publishers.EmptyEventSource;
 import libre.sampler.utils.AppConstants;
 import libre.sampler.utils.LabelHelper;
 import libre.sampler.utils.MusicTime;
-import libre.sampler.utils.NoTransitionPropagation;
 import libre.sampler.utils.NoteId;
 import libre.sampler.utils.PatternThread;
 import libre.sampler.views.IconNavigationPanel;
@@ -72,13 +68,7 @@ public class ProjectPatternsFragment extends Fragment {
     public EmptyEventSource patternEditEventSource = new EmptyEventSource();
     private List<PianoRollTapListener> pianoRollTapListeners = new ArrayList<>();
 
-    private double tickWidth;
-    private float keyHeight;
-
-    private MusicTime inputNoteLength;
-    private MusicTime snap;
     private double inputTempo;
-    public int velocity;
 
     private TextView pianoRollPosition;
 
@@ -107,13 +97,7 @@ public class ProjectPatternsFragment extends Fragment {
             }
         }
 
-        float octaveHeight = getResources().getDimension(R.dimen.piano_roll_colheight);
-        this.keyHeight = octaveHeight / 12.0f;
-        this.tickWidth = getResources().getDimension(R.dimen.piano_roll_barwidth) / 1.0 / MusicTime.TICKS_PER_BAR;
-        this.inputNoteLength = new MusicTime(0, 4, 0);
-        this.snap = new MusicTime(0, 1, 0);
-        this.velocity = 100;
-        MusicTime inputLoopLength = new MusicTime(viewModel.getPianoRollPattern().getLoopLengthTicks());
+        final float octaveHeight = getResources().getDimension(R.dimen.piano_roll_colheight);
         this.inputTempo = viewModel.getPianoRollPattern().getTempo();
 
         registerTempoInput((EditText) rootView.findViewById(R.id.pattern_tempo));
@@ -121,8 +105,15 @@ public class ProjectPatternsFragment extends Fragment {
         pianoRoll = new PianoRoll(this, (LinearLayout) rootView.findViewById(R.id.piano_roll));
         pianoRollTimeLabels = rootView.findViewById(R.id.piano_roll_time_labels);
         LinearLayout pianoRollOctaveLabels = rootView.findViewById(R.id.piano_roll_octave_labels);
-        LabelHelper.refreshSegmented(pianoRollOctaveLabels, getResources().getDimension(R.dimen.piano_roll_colheight),
-                0, new String[]{"C8", "C7", "C6", "C5", "C4", "C3", "C2", "C1"}, R.layout.component_piano_roll_octave_label);
+        LabelHelper.refreshSegmented(pianoRollOctaveLabels, 0, 8,
+                R.layout.component_piano_roll_octave_label,
+                new LabelHelper.LabelSelector() {
+                    @Override
+                    public void setup(int index, TextView outLabel) {
+                        outLabel.getLayoutParams().height = LabelHelper.getLabelSize(octaveHeight, index);
+                        outLabel.setText(String.format("C%d", 8 - index));
+                    }
+                });
         attachEventListeners();
 
         patternDerivedData = viewModel.getPatternDerivedData(viewModel.getPianoRollPattern());
@@ -134,7 +125,7 @@ public class ProjectPatternsFragment extends Fragment {
         } else {
             viewModel.setPianoRollInstrument(viewModel.getKeyboardInstrument());
         }
-        updatePianoRollLength((int) (inputLoopLength.getTicks() * getTickWidth()));
+        updatePianoRollTicks(viewModel.getPianoRollPattern().getLoopLengthTicks());
         setPianoRollNotes();
 
         patternStop = (ImageView) rootView.findViewById(R.id.pattern_stop);
@@ -175,51 +166,6 @@ public class ProjectPatternsFragment extends Fragment {
         setEditorFragment(AppConstants.PATTERN_EDITOR_BASE);
 
         return rootView;
-    }
-
-    private void updatePianoRollLength(int px) {
-        pianoRoll.updateRollLength(px);
-        pianoRollTimeLabels.getLayoutParams().width = px;
-        pianoRollTimeLabels.requestLayout();
-        LabelHelper.refreshSegmented(pianoRollTimeLabels, tickWidth * MusicTime.TICKS_PER_BAR,
-                1, R.layout.component_piano_roll_time_label);
-    }
-
-    public class MusicRect {
-        public MusicTime left;
-        public MusicTime right;
-        public int top;
-        public int bottom;
-        public MusicRect(MusicTime left, int top, MusicTime right, int bottom) {
-            this.left = left;
-            this.top = top;
-            this.right = right;
-            this.bottom = bottom;
-        }
-
-    }
-
-    private final Rect tmpRect = new Rect();
-    public MusicRect getVisibleRect() {
-        pianoRoll.rootView.getLocalVisibleRect(tmpRect);
-        MusicTime left = new MusicTime((long) (tmpRect.left / 1.0 / tickWidth));
-        MusicTime right = new MusicTime((long) (tmpRect.right / 1.0 / tickWidth));
-        int top = AppConstants.PIANO_ROLL_TOP_KEYNUM - (int) Math.floor(tmpRect.top / keyHeight);
-        int bottom = AppConstants.PIANO_ROLL_TOP_KEYNUM - (int) Math.ceil(tmpRect.bottom / keyHeight) + 1;
-
-        return new MusicRect(left, top, right, bottom);
-    }
-
-    public MusicTime getVisibleRight() {
-        return new MusicTime(0L);
-    }
-
-    public int getVisibleTop() {
-        return AppConstants.PIANO_ROLL_TOP_KEYNUM;
-    }
-
-    public int getVisibleBottom() {
-        return AppConstants.PIANO_ROLL_BOTTOM_KEYNUM;
     }
 
     @Override
@@ -274,7 +220,7 @@ public class ProjectPatternsFragment extends Fragment {
      * Called when the notes to be displayed are changed from somewhere other than the
      * PianoRoll.
      *
-     * <p>Changes to the properties of notes are handled by {@link PianoRoll#updateNote} or
+     * <p>Changes to the properties of notes are handled by {@link PianoRoll#setNoteActivated} or
      * {@link PianoRoll#updateAllNotes}
      */
     private void setPianoRollNotes() {
@@ -285,42 +231,27 @@ public class ProjectPatternsFragment extends Fragment {
         }
     }
 
-    public int resolveKeyNum(int containerIndex, float y) {
-        int keyIndex = (int) (y / keyHeight);
-
-        return (9 - containerIndex) * 12 + (11 - keyIndex);
+    private void updatePianoRollTicks(long ticks) {
+        pianoRoll.updateRollTicks(ticks);
+        final int px = pianoRoll.getRollWidth();
+        final int labelCount = 1 + (int) ((ticks - 1) / MusicTime.TICKS_PER_BAR);
+        final double barWidth = pianoRoll.getTickWidth() * MusicTime.TICKS_PER_BAR;
+        LabelHelper.refreshSegmented(pianoRollTimeLabels, 1, labelCount,
+                R.layout.component_piano_roll_time_label,
+                new LabelHelper.LabelSelector() {
+                    @Override
+                    public void setup(int index, TextView outLabel) {
+                        if(index < labelCount - 1) {
+                            outLabel.getLayoutParams().width = LabelHelper.getLabelSize(barWidth, index);
+                        } else {
+                            outLabel.getLayoutParams().width = px - (int) Math.round(barWidth * (labelCount - 1));
+                        }
+                        outLabel.setText(String.format("%d", index));
+                    }
+                });
     }
 
-    public void onAdapterCreateNote(int containerIndex, float x, float y) {
-        double tickWidth = getTickWidth();
-        double inputTicks = x / tickWidth;
-        long snapTicks = snap.getTicks();
-
-        long startTicks = Math.round(inputTicks / 1.0 / snapTicks - 0.3) * snapTicks;
-
-        long maxTicks = viewModel.getPianoRollPattern().getLoopLengthTicks() - startTicks;
-        long noteLengthTicks = inputNoteLength.getTicks();
-        if(noteLengthTicks > maxTicks) {
-            noteLengthTicks = (long) Math.floor(maxTicks / 1.0 / snapTicks) * snapTicks;
-        }
-
-        int keyNum = resolveKeyNum(containerIndex, y);
-        long baseId = NoteId.createForScheduledNoteEvent(System.currentTimeMillis(), 0);
-        VisualNote visualNote = createVisualNote(startTicks, noteLengthTicks, keyNum, baseId);
-        addToPianoRollPattern(visualNote);
-        patternEditEventSource.dispatch(AppConstants.PIANO_ROLL_NOTES);
-    }
-
-    private VisualNote createVisualNote(long startTicks, long lengthTicks, int keyNum, long baseId) {
-        return new VisualNote(
-                new ScheduledNoteEvent(startTicks, NoteEvent.NOTE_ON,
-                        viewModel.getPianoRollInstrument(), keyNum, velocity, baseId),
-                new ScheduledNoteEvent(startTicks + lengthTicks, NoteEvent.NOTE_OFF,
-                        viewModel.getPianoRollInstrument(), keyNum, velocity, baseId)
-        );
-    }
-
-    private void addToPianoRollPattern(VisualNote visualNote) {
+    public void addToPianoRollPattern(VisualNote visualNote) {
         try(PatternThread.Editor editor = projectActivity.getPatternThread()
                 .getEditor(viewModel.getPianoRollPattern())) {
 
@@ -372,7 +303,7 @@ public class ProjectPatternsFragment extends Fragment {
         }
     }
 
-    public void removeBatchFromPianoRollPattern(Collection<VisualNote> visualNotes) {
+    private void removeBatchFromPianoRollPattern(Collection<VisualNote> visualNotes) {
         try(PatternThread.Editor editor = projectActivity.getPatternThread()
                 .getEditor(viewModel.getPianoRollPattern())) {
 
@@ -387,10 +318,9 @@ public class ProjectPatternsFragment extends Fragment {
         }
 
         patternEditEventSource.dispatch(AppConstants.PIANO_ROLL_NOTES);
-        patternEditEventSource.dispatch(AppConstants.SELECTED_NOTES);
     }
 
-    public void removeBatchFromPianoRollPattern(Collection<VisualNote> visualNotes, List<VisualNote> source) {
+    private void removeBatchFromPianoRollPattern(Collection<VisualNote> visualNotes, List<VisualNote> source) {
         List<VisualNote> adapterNotes = pianoRoll.getPianoRollNotes();
         if(source == adapterNotes) {
             removeBatchFromPianoRollPattern(visualNotes);
@@ -413,60 +343,45 @@ public class ProjectPatternsFragment extends Fragment {
         patternEditEventSource.dispatch(AppConstants.SELECTED_NOTES);
     }
 
-    public void copyMultiplePianoRollNotes(MusicTime interval, int count) {
-        List<VisualNote> toAdd = new ArrayList<>();
-        long intervalTicks = interval.getTicks();
-        long baseId = NoteId.createForScheduledNoteEvent(System.currentTimeMillis(), 0);
-        for(int i = 1; i <= count; i++) {
-            for(VisualNote src : selectedNotes) {
-                long startTicks = src.startTicks + intervalTicks * i;
-                VisualNote visualNote = new VisualNote(
-                        new ScheduledNoteEvent(startTicks, NoteEvent.NOTE_ON,
-                                src.eventOn.instrument, src.eventOn.keyNum, src.eventOn.velocity, baseId),
-                        new ScheduledNoteEvent(startTicks + src.lengthTicks, NoteEvent.NOTE_OFF,
-                                src.eventOff.instrument, src.eventOff.keyNum, src.eventOff.velocity, baseId)
-                );
-
-                toAdd.add(visualNote);
-                baseId = NoteId.createDuplicate(baseId);
-            }
-        }
-        addBatchToPianoRollPattern(toAdd);
-    }
-
-    public void deleteAllSelectedNotes() {
-        removeBatchFromPianoRollPattern(selectedNotes);
-        selectedNotes.clear();
-    }
-
-    public boolean onAdapterSelectNote(VisualNote n) {
-        if(selectedNotes.remove(n)) {
-            patternEditEventSource.dispatch(AppConstants.SELECTED_NOTES);
-            return false;
-        }
-        selectedNotes.add(n);
-        inputNoteLength.setTicks(n.lengthTicks);
-        patternEditEventSource.dispatch(AppConstants.SELECTED_NOTES);
-        return true;
+    public Instrument getPianoRollInstrument() {
+        return viewModel.getPianoRollInstrument();
     }
 
     public TreeSet<VisualNote> getSelectedNotes() {
         return selectedNotes;
     }
 
-    public boolean isSelectedNotesComplete() {
-        return (pianoRoll.getPianoRollNotes().size() == selectedNotes.size());
+    public boolean toggleNoteSelected(VisualNote n) {
+        if(selectedNotes.remove(n)) {
+            patternEditEventSource.dispatch(AppConstants.SELECTED_NOTES);
+            return false;
+        }
+        selectedNotes.add(n);
+        pianoRoll.setInputNoteLength(n.lengthTicks);
+        patternEditEventSource.dispatch(AppConstants.SELECTED_NOTES);
+        return true;
     }
 
+    /* Select notes */
     public void clearSelectedNotes() {
         selectedNotes.clear();
-        pianoRoll.updateAllNotes();
+        pianoRoll.deselectAllNotes();
         patternEditEventSource.dispatch(AppConstants.SELECTED_NOTES);
     }
     
     public void selectAllNotes() {
         selectedNotes.addAll(pianoRoll.getPianoRollNotes());
-        pianoRoll.updateAllNotes();
+        pianoRoll.selectAllNotes();
+        patternEditEventSource.dispatch(AppConstants.SELECTED_NOTES);
+    }
+
+    public boolean isSelectedNotesComplete() {
+        return (pianoRoll.getPianoRollNotes().size() == selectedNotes.size());
+    }
+
+    public void deleteAllSelectedNotes() {
+        removeBatchFromPianoRollPattern(selectedNotes);
+        selectedNotes.clear();
         patternEditEventSource.dispatch(AppConstants.SELECTED_NOTES);
     }
 
@@ -482,32 +397,37 @@ public class ProjectPatternsFragment extends Fragment {
                 selectedNotes.add(note);
             }
         }
-        pianoRoll.updateAllNotes();
+        pianoRoll.syncSelectedNotes();
         patternEditEventSource.dispatch(AppConstants.SELECTED_NOTES);
     }
 
-    private void deleteNotesAfterTicks(long maxTicks) {
-        for(Instrument instrument : patternDerivedData.getInstrumentList()) {
-            List<VisualNote> toDelete = new ArrayList<>();
-            List<VisualNote> source = patternDerivedData.getNotesForInstrument(instrument);
-            // source.descendingIterator()
-            for(VisualNote note : source) {
-                if(note.startTicks + note.lengthTicks > maxTicks) {
-                    toDelete.add(note);
-                }
-            }
-            removeBatchFromPianoRollPattern(toDelete, source);
+    public PianoRoll.MusicRect getVisibleRect() {
+        return pianoRoll.getVisibleRect();
+    }
+
+    public void addPianoRollTapListener(PianoRollTapListener listener) {
+        pianoRollTapListeners.add(listener);
+    }
+
+    public void removePianoRollTapListener(PianoRollTapListener listener) {
+        pianoRollTapListeners.remove(listener);
+    }
+
+    public void dispatchPianoRollTap(MusicTime xTime, int keyNum) {
+        for(PianoRollTapListener fn : pianoRollTapListeners) {
+            fn.onSingleTap(xTime, keyNum);
         }
     }
 
+    /* Note properties */
     public void setNoteLength(MusicTime noteLength, boolean fromUser) {
         setNoteLength(noteLength.getTicks(), fromUser);
     }
 
     public void setNoteLength(long ticks, boolean fromUser) {
-        this.inputNoteLength.setTicks(ticks);
+        pianoRoll.setInputNoteLength(ticks);
         if(fromUser && selectedNotes.size() > 0) {
-            long lengthenTicks = inputNoteLength.getTicks() - selectedNotes.first().lengthTicks;
+            long lengthenTicks = ticks - selectedNotes.first().lengthTicks;
 
             for(VisualNote n : selectedNotes) {
                 removeFromPianoRollPattern(n, true);
@@ -553,26 +473,42 @@ public class ProjectPatternsFragment extends Fragment {
         }
     }
 
-    public double getTickWidth() {
-        return tickWidth;
+    public MusicTime getInputNoteLength() {
+        return pianoRoll.getInputNoteLength();
     }
 
-    public float getKeyHeight() {
-        return keyHeight;
+    /* Copy multiple */
+    public void copyMultiplePianoRollNotes(MusicTime interval, int count) {
+        List<VisualNote> toAdd = new ArrayList<>();
+        long intervalTicks = interval.getTicks();
+        long baseId = NoteId.createForScheduledNoteEvent(System.currentTimeMillis(), 0);
+        for(int i = 1; i <= count; i++) {
+            for(VisualNote src : selectedNotes) {
+                long startTicks = src.startTicks + intervalTicks * i;
+                VisualNote visualNote = new VisualNote(
+                        new ScheduledNoteEvent(startTicks, NoteEvent.NOTE_ON,
+                                src.eventOn.instrument, src.eventOn.keyNum, src.eventOn.velocity, baseId),
+                        new ScheduledNoteEvent(startTicks + src.lengthTicks, NoteEvent.NOTE_OFF,
+                                src.eventOff.instrument, src.eventOff.keyNum, src.eventOff.velocity, baseId)
+                );
+
+                toAdd.add(visualNote);
+                baseId = NoteId.createDuplicate(baseId);
+            }
+        }
+        addBatchToPianoRollPattern(toAdd);
     }
 
+    /* Snap length */
     public MusicTime getSnapLength() {
-        return snap;
+        return pianoRoll.getSnapLength();
     }
 
     public void setSnapLength(MusicTime snapLength) {
-        this.snap = snapLength;
+        pianoRoll.setSnapLength(snapLength);
     }
 
-    public MusicTime getInputNoteLength() {
-        return inputNoteLength;
-    }
-
+    /* Pattern length */
     public void setPatternLength(MusicTime inputLoopLength) {
         long prevLength = viewModel.getPianoRollPattern().getLoopLengthTicks();
         if(prevLength > inputLoopLength.getTicks()) {
@@ -582,28 +518,25 @@ public class ProjectPatternsFragment extends Fragment {
                 .getEditor(viewModel.getPianoRollPattern())) {
 
             editor.pattern.setLoopLengthTicks(inputLoopLength.getTicks());
-            pianoRoll.updateRollLength((int) (inputLoopLength.getTicks() * getTickWidth()));
+            updatePianoRollTicks(inputLoopLength.getTicks());
         }
     }
 
-    public void addPianoRollTapListener(PianoRollTapListener listener) {
-        pianoRollTapListeners.add(listener);
-    }
-
-    public void removePianoRollTapListener(PianoRollTapListener listener) {
-        pianoRollTapListeners.remove(listener);
-    }
-
-    public void dispatchPianoRollTap(int containerIndex, float x, float y) {
-        MusicTime xTime = new MusicTime((long) (x / tickWidth));
-        int keyIndex = (int) (y / keyHeight);
-        int keyNum = (9 - containerIndex) * 12 + (11 - keyIndex);
-
-        for(PianoRollTapListener fn : pianoRollTapListeners) {
-            fn.onSingleTap(xTime, keyNum);
+    private void deleteNotesAfterTicks(long maxTicks) {
+        for(Instrument instrument : patternDerivedData.getInstrumentList()) {
+            List<VisualNote> toDelete = new ArrayList<>();
+            List<VisualNote> source = patternDerivedData.getNotesForInstrument(instrument);
+            // source.descendingIterator()
+            for(VisualNote note : source) {
+                if(note.startTicks + note.lengthTicks > maxTicks) {
+                    toDelete.add(note);
+                }
+            }
+            removeBatchFromPianoRollPattern(toDelete, source);
         }
     }
 
+    /* Bottom bar */
     private void registerTempoInput(EditText tempoEditText) {
         this.tempoEditText = tempoEditText;
 
@@ -690,6 +623,7 @@ public class ProjectPatternsFragment extends Fragment {
         pianoRollPosition.postDelayed(tracker, 60);
     }
 
+    /* Child fragments */
     public void registerEditorFragmentNav(IconNavigationPanel panel) {
         panel.setOnItemSelectedListener(new IconNavigationPanel.OnItemSelectedListener() {
             @Override
@@ -765,18 +699,15 @@ public class ProjectPatternsFragment extends Fragment {
             return;
         }
 
-        if(prevWhich != null) {
-            Slide trIn = new Slide(Gravity.BOTTOM);
-            trIn.setPropagation(new NoTransitionPropagation());
-            fragment.setEnterTransition(trIn);
-            fragment.setReenterTransition(trIn);
-            if(which < prevWhich) {
-                trIn.setSlideEdge(Gravity.TOP);
-            }
-        }
-
         transaction.addToBackStack(null);
         if(fragment != null) {
+            if(prevWhich != null) {
+                if(which < prevWhich) {
+                    transaction.setCustomAnimations(R.anim.slide_in_from_top, R.anim.slide_out_to_bottom);
+                } else {
+                    transaction.setCustomAnimations(R.anim.slide_in_from_bottom, R.anim.slide_out_to_top);
+                }
+            }
             transaction.replace(R.id.pattern_edit_fragment_container, fragment);
             transaction.commit();
         }

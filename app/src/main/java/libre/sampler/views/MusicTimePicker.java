@@ -104,7 +104,7 @@ public class MusicTimePicker extends RelativeLayout {
         pickers[PICKER_INDEX_BARS].setOnValueChangedListener(new NumberPicker.OnValueChangeListener() {
             @Override
             public void onValueChange(NumberPicker picker, int oldVal, int newVal) {
-                tmpValue.setTicks(value.getTicks());
+                tmpValue.set(value);
                 tmpValue.bars = newVal;
                 setValue(tmpValue, PICKER_INDEX_BARS, true);
             }
@@ -113,7 +113,7 @@ public class MusicTimePicker extends RelativeLayout {
         pickers[PICKER_INDEX_SIXTEENTHS].setOnValueChangedListener(new NumberPicker.OnValueChangeListener() {
             @Override
             public void onValueChange(NumberPicker picker, int oldVal, int newVal) {
-                tmpValue.setTicks(value.getTicks());
+                tmpValue.set(value);
                 tmpValue.sixteenths = newVal;
                 if((System.currentTimeMillis() - lastRolloverMs) < 100 ||
                         scrollListeners[PICKER_INDEX_SIXTEENTHS].getScrollState() != SCROLL_STATE_IDLE) {
@@ -133,7 +133,7 @@ public class MusicTimePicker extends RelativeLayout {
             pickers[PICKER_INDEX_USER_TICKS].setOnValueChangedListener(new NumberPicker.OnValueChangeListener() {
                 @Override
                 public void onValueChange(NumberPicker picker, int oldVal, int newVal) {
-                    tmpValue.setTicks(value.getTicks());
+                    tmpValue.set(value);
                     tmpValue.userTicks = newVal;
                     if((System.currentTimeMillis() - lastRolloverMs) < 100 ||
                             scrollListeners[PICKER_INDEX_USER_TICKS].getScrollState() != SCROLL_STATE_IDLE) {
@@ -169,7 +169,7 @@ public class MusicTimePicker extends RelativeLayout {
         }
         isInitialSetValue = false;
 
-        value.setTicks(v.getTicks());
+        value.set(v);
         updateWrapEnabled();
         if(dispatchChange && externalListener != null) {
             externalListener.onValueChange(value);
@@ -181,7 +181,7 @@ public class MusicTimePicker extends RelativeLayout {
     }
 
     public void setMaxValue(MusicTime v) {
-        maxValue.setTicks(v.getTicks());
+        maxValue.set(v);
         if(value.getTicks() > maxValue.getTicks()) {
             setValue(v);
         } else {

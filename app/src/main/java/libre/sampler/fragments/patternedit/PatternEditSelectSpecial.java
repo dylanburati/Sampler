@@ -11,6 +11,7 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProviders;
 import libre.sampler.R;
+import libre.sampler.adapters.PianoRoll;
 import libre.sampler.fragments.ProjectPatternsFragment;
 import libre.sampler.models.ProjectViewModel;
 import libre.sampler.utils.AppConstants;
@@ -41,7 +42,7 @@ public class PatternEditSelectSpecial extends Fragment {
 
         topLeftLocked = false;
         bottomRightLocked = false;
-        ProjectPatternsFragment.MusicRect visible = patternsFragment.getVisibleRect();
+        PianoRoll.MusicRect visible = patternsFragment.getVisibleRect();
         inputLeft = visible.left;
         inputRight = visible.right;
         inputTop = visible.top;
