@@ -11,7 +11,9 @@
         android:id="@+id/piano_octave_label"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_margin="@dimen/margin2"
+        android:layout_marginTop="@dimen/margin3"
+        android:layout_marginLeft="@dimen/margin2"
+        android:layout_marginBottom="@dimen/margin2"
         android:fontFamily="sans-serif-medium" />
 
     <View
@@ -91,18 +93,17 @@
         android:layout_height="@dimen/piano_height_b"
         android:layout_alignTop="@id/piano_c"
         android:layout_toRightOf="@id/piano_c"
-        android:layout_marginLeft="@dimen/piano_keywidth_b2"
+        android:layout_marginLeft="@dimen/piano_keymargin_67"
         android:background="@color/piano_black_up"
         android:backgroundTint="@color/piano_key_black" />
-
 
     <View
         android:id="@+id/piano_d_sharp"
         android:layout_width="@dimen/piano_keywidth_b"
         android:layout_height="@dimen/piano_height_b"
         android:layout_alignTop="@id/piano_c"
-        android:layout_toLeftOf="@id/piano_e"
-        android:layout_marginRight="@dimen/piano_keywidth_b2"
+        android:layout_toRightOf="@id/piano_d"
+        android:layout_marginLeft="@dimen/piano_keymargin_33"
         android:background="@color/piano_black_up"
         android:backgroundTint="@color/piano_key_black" />
 
@@ -112,7 +113,7 @@
         android:layout_height="@dimen/piano_height_b"
         android:layout_alignTop="@id/piano_c"
         android:layout_toRightOf="@id/piano_f"
-        android:layout_marginLeft="@dimen/piano_keywidth_b3"
+        android:layout_marginLeft="@dimen/piano_keymargin_75"
         android:background="@color/piano_black_up"
         android:backgroundTint="@color/piano_key_black" />
 
@@ -122,7 +123,7 @@
         android:layout_height="@dimen/piano_height_b"
         android:layout_alignTop="@id/piano_c"
         android:layout_toRightOf="@id/piano_g"
-        android:layout_marginLeft="@dimen/piano_keywidth_b1"
+        android:layout_marginLeft="@dimen/piano_keymargin_50"
         android:background="@color/piano_black_up"
         android:backgroundTint="@color/piano_key_black" />
 
@@ -131,8 +132,8 @@
         android:layout_width="@dimen/piano_keywidth_b"
         android:layout_height="@dimen/piano_height_b"
         android:layout_alignTop="@id/piano_c"
-        android:layout_toLeftOf="@id/piano_b"
-        android:layout_marginRight="@dimen/piano_keywidth_b3"
+        android:layout_toRightOf="@id/piano_a"
+        android:layout_marginLeft="@dimen/piano_keymargin_25"
         android:background="@color/piano_black_up"
         android:backgroundTint="@color/piano_key_black" />
 

@@ -38,6 +38,12 @@ public class ProjectKeyboardFragment extends Fragment {
         }
     }
 
+    private final int[] KEY_IDS = new int[]{R.id.piano_c_sharp, R.id.piano_d_sharp, R.id.piano_f_sharp,
+            R.id.piano_g_sharp, R.id.piano_a_sharp, R.id.piano_c, R.id.piano_d,
+            R.id.piano_e, R.id.piano_f, R.id.piano_g, R.id.piano_a, R.id.piano_b};
+    private final int[] KEY_OFFSETS = new int[]{1, 3, 6, 8, 10, 0, 2, 4, 5, 7, 9, 11};
+    private float scrollBarHeight;
+
     private KeyData resolveKeyNum(View octaveContainer, float x, float y) {
         if(octaveContainer == null) {
             return new KeyData(null, -1);
@@ -47,22 +53,18 @@ public class ProjectKeyboardFragment extends Fragment {
             return new KeyData(null, -1);
         }
         ViewGroup vg = (ViewGroup) octaveContainer;
-        int[] resIds = new int[]{R.id.piano_c_sharp, R.id.piano_d_sharp, R.id.piano_f_sharp,
-                R.id.piano_g_sharp, R.id.piano_a_sharp, R.id.piano_c, R.id.piano_d,
-                R.id.piano_e, R.id.piano_f, R.id.piano_g, R.id.piano_a, R.id.piano_b};
-        int[] offsets = new int[]{1, 3, 6, 8, 10, 0, 2, 4, 5, 7, 9, 11};
 
         int keyNum = -1;
         View keyView = null;
-        for(int i = 0; i < 12; i++) {
-            keyView = vg.findViewById(resIds[i]);
+        for(int i = 0; i < KEY_IDS.length; i++) {
+            keyView = vg.findViewById(KEY_IDS[i]);
             Rect r = new Rect();
             keyView.getLocalVisibleRect(r);
             vg.offsetDescendantRectToMyCoords(keyView, r);
             pianoContainer.offsetDescendantRectToMyCoords(octaveContainer, r);
 
             if(r.contains((int) x, (int) y)) {
-                keyNum = (octave + 2) * 12 + offsets[i];
+                keyNum = (octave + 2) * 12 + KEY_OFFSETS[i];
                 break;
             }
         }
@@ -76,10 +78,10 @@ public class ProjectKeyboardFragment extends Fragment {
         pianoContainer = rootView.findViewById(R.id.piano_container);
         viewModel = ViewModelProviders.of(getActivity()).get(ProjectViewModel.class);
 
+        scrollBarHeight = getResources().getDimension(R.dimen.text_caption) + getResources().getDimension(R.dimen.margin2) * 3;
         pianoContainer.addOnItemTouchListener(new RecyclerView.OnItemTouchListener() {
             @Override
             public boolean onInterceptTouchEvent(@NonNull RecyclerView rv, @NonNull MotionEvent e) {
-                float scrollBarHeight = getResources().getDimension(R.dimen.text_caption) + getResources().getDimension(R.dimen.margin2) * 2;
                 if((e.getAction() == MotionEvent.ACTION_DOWN) && e.getY() > scrollBarHeight) {
                     return true;
                 }
@@ -139,7 +141,7 @@ public class ProjectKeyboardFragment extends Fragment {
             @Override
             public void onRequestDisallowInterceptTouchEvent(boolean disallowIntercept) {}
         });
-        pianoAdapter = new PianoAdapter();
+        pianoAdapter = new PianoAdapter(getResources());
         pianoContainer.setAdapter(pianoAdapter);
         return rootView;
     }

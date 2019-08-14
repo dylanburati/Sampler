@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <androidx.recyclerview.widget.RecyclerView
+    <libre.sampler.views.PianoRecyclerView
         android:id="@+id/piano_container"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -15,6 +15,6 @@
         android:scrollbars="horizontal"
         app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager">
 
-    </androidx.recyclerview.widget.RecyclerView>
+    </libre.sampler.views.PianoRecyclerView>
 
 </LinearLayout>

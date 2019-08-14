@@ -159,7 +159,7 @@ public class ProjectPatternsFragment extends Fragment {
         });
 
         pianoRollPosition = (TextView) rootView.findViewById(R.id.piano_roll_position);
-
+        updatePianoRollPosition();
         updatePlayPauseControls(getContext());
 
         registerEditorFragmentNav((IconNavigationPanel) rootView.findViewById(R.id.pattern_edit_nav));
@@ -632,8 +632,10 @@ public class ProjectPatternsFragment extends Fragment {
                 if(pianoRollPattern.isPlaying()) {
                     long totalTicks = checkpointTicks + (long) ((System.nanoTime() - checkpointNanos) / nanosPerTick);
                     long ticksInCurrentLoop = totalTicks % loopLengthTicks;
-                    pianoRollPosition.setText(MusicTime.ticksToString(ticksInCurrentLoop));
-                    pianoRollPosition.postDelayed(this, 30);
+                    if(pianoRollPosition != null) {
+                        pianoRollPosition.setText(MusicTime.ticksToString(ticksInCurrentLoop));
+                        pianoRollPosition.postDelayed(this, 30);
+                    }
                 }
             }
         };
