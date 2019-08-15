@@ -122,6 +122,7 @@ public class ProjectInstrumentsFragment extends Fragment {
                         }, 100);
                     }
                 } else if(event.action == InstrumentEvent.INSTRUMENT_KEYBOARD_SELECT) {
+                    updateSampleSpinner();
                     updateInstrumentEditor();
                 }
             }
@@ -169,6 +170,7 @@ public class ProjectInstrumentsFragment extends Fragment {
         sampleSpinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         sampleSpinner.setAdapter(sampleSpinnerAdapter);
 
+        updateSampleSpinner();
         updateInstrumentEditor();
     }
 
@@ -176,7 +178,11 @@ public class ProjectInstrumentsFragment extends Fragment {
         sampleSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                viewModel.setEditorSample(viewModel.getKeyboardInstrument().getSamples().get(position));
+                if(position == 0) {
+                    viewModel.setEditorSample(new GlobalSample(viewModel.getKeyboardInstrument()));
+                } else {
+                    viewModel.setEditorSample(viewModel.getKeyboardInstrument().getSamples().get(position - 1));
+                }
                 updateInstrumentEditor();
             }
 
@@ -196,6 +202,7 @@ public class ProjectInstrumentsFragment extends Fragment {
                     viewModel.setEditorSample(s);
                     viewModel.instrumentEventSource.dispatch(new InstrumentEvent(
                             InstrumentEvent.INSTRUMENT_PD_LOAD, viewModel.getKeyboardInstrument()));
+                    updateSampleSpinner();
                     updateInstrumentEditor();
                 }
             }
@@ -208,7 +215,7 @@ public class ProjectInstrumentsFragment extends Fragment {
                 File sampleFile = new File(path);
                 // todo support wildcard search: File.listFiles
                 Sample editorSample = viewModel.getEditorSample();
-                if(sampleFile.isFile() && sampleFile.canRead() && editorSample != null) {
+                if(sampleFile.isFile() && sampleFile.canRead() && editorSample != null && !(editorSample instanceof GlobalSample)) {
                     editorSample.setFilename(sampleFile.getAbsolutePath());
                     viewModel.instrumentEventSource.dispatch(new InstrumentEvent(
                             InstrumentEvent.INSTRUMENT_PD_LOAD, viewModel.getKeyboardInstrument()));
@@ -221,9 +228,9 @@ public class ProjectInstrumentsFragment extends Fragment {
             @Override
             public void onClick(View v) {
                 Sample toRemove = viewModel.getEditorSample();
-                if(toRemove != null) {
+                if(toRemove != null && !(toRemove instanceof GlobalSample)) {
                     Instrument keyboardInstrument = viewModel.getKeyboardInstrument();
-                    int currentSelection = sampleSpinner.getSelectedItemPosition();
+                    int currentSelection = sampleSpinner.getSelectedItemPosition() - 1;
                     if(currentSelection == keyboardInstrument.getSamples().size() - 1) {
                         if(keyboardInstrument.getSamples().size() > 1) {
                             viewModel.setEditorSample(keyboardInstrument.getSamples().get(currentSelection - 1));
@@ -234,6 +241,7 @@ public class ProjectInstrumentsFragment extends Fragment {
                         viewModel.setEditorSample(keyboardInstrument.getSamples().get(currentSelection + 1));
                     }
                     viewModel.getKeyboardInstrument().removeSample(toRemove);
+                    updateSampleSpinner();
                     updateInstrumentEditor();
                 }
             }
@@ -382,29 +390,30 @@ public class ProjectInstrumentsFragment extends Fragment {
         }
     }
 
-    private boolean updateSampleSpinner() {
+    private void updateSampleSpinner() {
         Instrument keyboardInstrument = viewModel.getKeyboardInstrument();
         if(keyboardInstrument == null) {
-            return false;
+            return;
         }
 
         List<Sample> sampleSpinnerItems = keyboardInstrument.getSamples();
         sampleSpinnerAdapter.clear();
+        if(sampleSpinnerItems.size() > 0) {
+            sampleSpinnerAdapter.add("Global");
+        }
         for(int i = 0; i < sampleSpinnerItems.size(); i++) {
             sampleSpinnerAdapter.add(String.format("%03d %s", i + 1, sampleSpinnerItems.get(i).filename));
         }
 
         Sample editorSample = viewModel.getEditorSample();
         if(editorSample != null) {
-            sampleSpinner.setSelection(sampleSpinnerItems.indexOf(editorSample));
-            ((EditText) rootView.findViewById(R.id.input_sample_paths)).setText(editorSample.filename);
+            sampleSpinner.setSelection(sampleSpinnerItems.indexOf(editorSample) + 1);
         }
-        return true;
     }
 
     private void updateInstrumentEditor() {
-        boolean projectReady = updateSampleSpinner();
-        if(!projectReady) {
+        Instrument keyboardInstrument = viewModel.getKeyboardInstrument();
+        if(keyboardInstrument == null) {
             return;
         }
 
@@ -420,13 +429,14 @@ public class ProjectInstrumentsFragment extends Fragment {
 
         final MyDecimalFormat fmt3 = new MyDecimalFormat(3, 6);
 
-        float iVol = viewModel.getKeyboardInstrument().getVolumeDecibels();
+        float iVol = keyboardInstrument.getVolumeDecibels();
         iVol = Math.max(-100, Math.min(0, iVol));
         ((EditText) rootView.findViewById(R.id.instrument_volume)).setText(fmt3.format(iVol));
         ((VerticalSlider) rootView.findViewById(R.id.instrument_volume_slider)).setProgress(SliderConverter.DECIBELS.toSlider(iVol));
 
         Sample editorSample = viewModel.getEditorSample();
         if(editorSample != null) {
+            ((EditText) rootView.findViewById(R.id.input_sample_paths)).setText(editorSample.filename);
             for(int id : textOnlyInputs) {
                 EditText ed = ((EditText) rootView.findViewById(id));
                 switch(id) {
@@ -583,6 +593,144 @@ public class ProjectInstrumentsFragment extends Fragment {
         public void select(Instrument instrument) {
             viewModel.setKeyboardInstrument(instrument);
             instrumentListAdapter.activateInstrument(instrument);
+        }
+    }
+
+    public static class GlobalSample extends Sample {
+        private Instrument instrument;
+        public GlobalSample(Instrument instrument) {
+            super("", 0);
+            this.instrument = instrument;
+            List<Sample> samples = instrument.getSamples();
+            if(samples.size() > 0) {
+                float VARIES = -4;  // not valid for any
+                float aVolume = samples.get(0).getVolume();
+                float aAttack = samples.get(0).attack;
+                float aDecay = samples.get(0).decay;
+                float aSustain = samples.get(0).sustain;
+                float aRelease = samples.get(0).release;
+                for(Sample s : samples.subList(1, samples.size())) {
+                    if(aVolume != s.getVolume()) {
+                        aVolume = VARIES;
+                    }
+                    if(aAttack != s.attack) {
+                        aAttack = VARIES;
+                    }
+                    if(aDecay != s.decay) {
+                        aDecay = VARIES;
+                    }
+                    if(aSustain != s.sustain) {
+                        aSustain = VARIES;
+                    }
+                    if(aRelease != s.release) {
+                        aRelease = VARIES;
+                    }
+                }
+                if(aVolume != VARIES) {
+                    super.setVolume(aVolume);
+                }
+                if(aAttack != VARIES) {
+                    super.setAttack(aAttack);
+                }
+                if(aDecay != VARIES) {
+                    super.setDecay(aDecay);
+                }
+                if(aSustain != VARIES) {
+                    super.setSustain(aSustain);
+                }
+                if(aRelease != VARIES) {
+                    super.setRelease(aRelease);
+                }
+            }
+        }
+
+        @Override
+        public boolean shouldDisplay(int field) {
+            if(field == Sample.FIELD_MIN_PITCH || field == Sample.FIELD_MAX_PITCH || field == Sample.FIELD_BASE_PITCH ||
+                    field == Sample.FIELD_MIN_VELOCITY || field == Sample.FIELD_MAX_VELOCITY) {
+                return false;
+            }
+            return super.shouldDisplay(field);
+        }
+
+        // @Override
+        // public void setLoopStart(float startTime) {
+        //     super.setLoopStart(startTime);
+        //     for(Sample s : instrument.getSamples()) {
+        //         s.setLoopStart(startTime);
+        //     }
+        // }
+        //
+        // @Override
+        // public void setLoopResume(float resumeTime) {
+        //     super.setLoopResume(resumeTime);
+        //     for(Sample s : instrument.getSamples()) {
+        //         s.setLoopResume(resumeTime);
+        //     }
+        // }
+        //
+        // @Override
+        // public void setLoopEnd(float endTime) {
+        //     super.setLoopEnd(endTime);
+        //     for(Sample s : instrument.getSamples()) {
+        //         s.setLoopEnd(endTime);
+        //     }
+        // }
+
+        @Override
+        public void setVolume(float volume) {
+            super.setVolume(volume);
+            for(Sample s : instrument.getSamples()) {
+                s.setVolume(volume);
+            }
+        }
+
+        @Override
+        public void setVolumeDecibels(float volumeDecibels) {
+            super.setVolumeDecibels(volumeDecibels);
+            for(Sample s : instrument.getSamples()) {
+                s.setVolumeDecibels(volumeDecibels);
+            }
+        }
+
+        @Override
+        public void setAttack(float attack) {
+            super.setAttack(attack);
+            for(Sample s : instrument.getSamples()) {
+                s.setAttack(attack);
+            }
+        }
+
+        @Override
+        public void setDecay(float decay) {
+            super.setDecay(decay);
+            for(Sample s : instrument.getSamples()) {
+                s.setDecay(decay);
+            }
+        }
+
+        @Override
+        public void setSustainDecibels(float sustainDecibels) {
+            super.setSustainDecibels(sustainDecibels);
+            for(Sample s : instrument.getSamples()) {
+                s.setSustainDecibels(sustainDecibels);
+            }
+        }
+
+        @Override
+        public void setSustain(float sustain) {
+            super.setSustain(sustain);
+            for(Sample s : instrument.getSamples()) {
+                s.setSustain(sustain);
+            }
+        }
+
+        @Override
+        public void setRelease(float release) {
+            super.setRelease(release);
+            for(Sample s : instrument.getSamples()) {
+                s.setRelease(release);
+            }
         }
     }
 }

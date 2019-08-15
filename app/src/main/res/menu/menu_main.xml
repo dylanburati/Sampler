@@ -11,7 +11,7 @@
         android:title="@string/appbar_delete"
         app:showAsAction="never" />
 
-    <item android:id="@+id/appbar_about"
-        android:title="@string/appbar_about"
+    <item android:id="@+id/appbar_clean"
+        android:title="@string/appbar_clean"
         app:showAsAction="never" />
 </menu>

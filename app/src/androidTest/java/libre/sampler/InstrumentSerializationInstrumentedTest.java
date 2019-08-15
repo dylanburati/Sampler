@@ -28,6 +28,7 @@ import libre.sampler.models.Instrument;
 import libre.sampler.models.Project;
 import libre.sampler.models.Sample;
 import libre.sampler.utils.IdStatus;
+import libre.sampler.utils.ProgressFraction;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
@@ -39,7 +40,7 @@ public class InstrumentSerializationInstrumentedTest {
     private static String toHexString(byte[] array) {
         StringBuilder builder = new StringBuilder();
         for(byte b : array) {
-            builder.append(Integer.toHexString(b & 0xFF));
+            builder.append(String.format("%02x", b & 0xFF));
         }
         return builder.toString();
     }
@@ -131,7 +132,16 @@ public class InstrumentSerializationInstrumentedTest {
         assertEquals("Wrong number of samples inserted", sampleFilenames.length, instrument1.getSamples().size());
 
         // Export to .zip
-        try(InstrumentSerializer serializer = new InstrumentSerializer(instrument1)) {
+        ProgressFraction progressFraction = new ProgressFraction() {
+            @Override
+            public void setProgressTotal(int total) {
+            }
+
+            @Override
+            public void setProgressCurrent(int current) {
+            }
+        };
+        try(InstrumentSerializer serializer = new InstrumentSerializer(instrument1, progressFraction)) {
             serializer.write(new File(tmpDirectory, "zip.zip"), false);
         } catch(IOException e) {
             e.printStackTrace();

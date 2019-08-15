@@ -121,7 +121,7 @@ public class ProjectPatternsFragment extends Fragment {
             viewModel.instrumentEventSource.dispatch(new InstrumentEvent(InstrumentEvent.INSTRUMENT_PD_LOAD, t));
         }
         if(!patternDerivedData.getInstrumentList().isEmpty()) {
-            viewModel.setPianoRollInstrument(patternDerivedData.getInstrumentList().get(0));
+            viewModel.setPianoRollInstrument(patternDerivedData.getInstrumentList().iterator().next());
         } else {
             viewModel.setPianoRollInstrument(viewModel.getKeyboardInstrument());
         }
@@ -221,8 +221,7 @@ public class ProjectPatternsFragment extends Fragment {
      * Called when the notes to be displayed are changed from somewhere other than the
      * PianoRoll.
      *
-     * <p>Changes to the properties of notes are handled by {@link PianoRoll#setNoteActivated} or
-     * {@link PianoRoll#updateAllNotes}
+     * <p>Changes to the properties of notes are handled by {@link PianoRoll#setNoteActivated}
      */
     private void setPianoRollNotes() {
         Instrument pianoRollInstrument = viewModel.getPianoRollInstrument();

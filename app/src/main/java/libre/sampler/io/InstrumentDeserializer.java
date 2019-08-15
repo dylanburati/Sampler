@@ -10,12 +10,14 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
+import java.security.DigestOutputStream;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.Enumeration;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Random;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
@@ -109,6 +111,30 @@ public class InstrumentDeserializer implements Closeable {
         }
     }
 
+    private final Random random = new Random();
+    private static String bytesToHexString(byte[] array, int stringLength) {
+        StringBuilder builder = new StringBuilder();
+        int end = (stringLength + 1) / 2;
+        for(int i = 0; i < end; i++) {
+            builder.append(String.format("%02x", array[i] & 0xFF));
+        }
+        builder.setLength(stringLength);
+        return builder.toString();
+    }
+
+    private String checksum(InputStream in) throws IOException {
+        try(DigestOutputStream outputStream = new DigestOutputStream(new NoOpOutputStream(), MessageDigest.getInstance("MD5"))) {
+            copy(in, outputStream);
+            outputStream.flush();
+            byte[] digest = outputStream.getMessageDigest().digest();
+            return "--" + bytesToHexString(digest, 6);
+        } catch(NoSuchAlgorithmException e) {
+            byte[] rand = new byte[6];
+            random.nextBytes(rand);
+            return "--" + bytesToHexString(rand, 6);
+        }
+    }
+
     public void read(File inFile, String extractPath) throws IOException {
         File extractDirectory = new File(extractPath);
         read(inFile, extractDirectory);
@@ -123,31 +149,26 @@ public class InstrumentDeserializer implements Closeable {
         this.zipFile = new ZipFile(inFile);
 
         ZipEntry jsonEntry = null;
-        File[] extractPathFiles = extractDirectory.listFiles();
-        List<String> extractPathFilenames = new ArrayList<>(extractPathFiles.length + zipFile.size());
-        for(File f : extractPathFiles) {
-            extractPathFilenames.add(f.getName());
-        }
 
         for(Enumeration<? extends ZipEntry> entries = zipFile.entries(); entries.hasMoreElements(); /* */) {
             ZipEntry entry = entries.nextElement();
             if("instrument.json".equals(entry.getName())) {
                 jsonEntry = entry;
             } else {
-                String basename = entry.getName();
-                int i = 1;
-                String filename = basename;
-                while(extractPathFilenames.contains(filename)) {
-                    filename = "" + i + basename;
-                    i++;
+                StringBuilder filenameBuilder = new StringBuilder(entry.getName());
+                int extensionIdx = filenameBuilder.lastIndexOf(".");
+                if(extensionIdx < 0) {
+                    extensionIdx = 0;
                 }
-                extractPathFilenames.add(filename);
+                filenameBuilder.insert(extensionIdx, checksum(zipFile.getInputStream(entry)));
+                String filename = filenameBuilder.toString();
 
                 File extractFile = new File(extractDirectory, filename);
-                extractFile.createNewFile();
                 entriesToFilenames.put(entry.getName(), extractFile.getAbsolutePath());
-                try(OutputStream outputStream = new FileOutputStream(extractFile)) {
-                    copy(zipFile.getInputStream(entry), outputStream);
+                if(extractFile.createNewFile()) {
+                    try(OutputStream outputStream = new FileOutputStream(extractFile, false)) {
+                        copy(zipFile.getInputStream(entry), outputStream);
+                    }
                 }
             }
         }
@@ -164,6 +185,13 @@ public class InstrumentDeserializer implements Closeable {
         }
         if(this.zipFile != null) {
             this.zipFile.close();
+        }
+    }
+
+    private static class NoOpOutputStream extends OutputStream {
+        @Override
+        public void write(int b) throws IOException {
+            // Prevent allocating extra memory for checksum calc.
         }
     }
 }

@@ -33,7 +33,7 @@
     <string name="delete">Delete</string>
     <string name="dialog_instrument_edit_title">Edit instrument</string>
     <string name="dialog_project_edit_submit">Done</string>
-    <string name="appbar_about">About</string>
+    <string name="appbar_clean">Clean files</string>
     <string name="action_refresh_midi">Refresh MIDI</string>
     <string name="project_saved">Saved project</string>
     <string name="play">PLAY</string>

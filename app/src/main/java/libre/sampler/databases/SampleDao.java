@@ -18,5 +18,8 @@ public interface SampleDao {
 
     @Query("DELETE FROM sample WHERE instrumentId IN (:instrumentIds)")
     void deleteAll(List<Integer> instrumentIds);
+
+    @Query("SELECT * FROM sample")
+    List<Sample> selectAll();
 }
 

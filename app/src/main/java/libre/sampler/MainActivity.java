@@ -21,6 +21,7 @@ import libre.sampler.adapters.ProjectListAdapter;
 import libre.sampler.dialogs.ProjectCreateDialog;
 import libre.sampler.models.MainViewModel;
 import libre.sampler.models.Project;
+import libre.sampler.tasks.CleanFilesTask;
 import libre.sampler.tasks.CreateProjectTask;
 import libre.sampler.tasks.DeleteProjectsTask;
 import libre.sampler.utils.AdapterLoader;
@@ -124,7 +125,9 @@ public class MainActivity extends AppCompatActivity implements ProjectCreateDial
                 }
             }));
             return true;
-        } else if(item.getItemId() == R.id.appbar_about) {
+        } else if(item.getItemId() == R.id.appbar_clean) {
+            DatabaseConnectionManager.initialize(this);
+            DatabaseConnectionManager.runTask(new CleanFilesTask(getDir("data", MODE_PRIVATE), this));
             return true;
         }
         return super.onOptionsItemSelected(item);
