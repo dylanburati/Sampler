@@ -42,5 +42,47 @@
             android:layout_width="wrap_content"
             android:layout_height="60sp"
             android:layout_below="@id/note_length_label" />
+
+        <LinearLayout
+            android:id="@+id/note_velocity_container"
+            android:layout_width="wrap_content"
+            android:layout_height="@dimen/volume_slider_height"
+            android:layout_below="@id/note_length_picker"
+            android:orientation="vertical"
+            android:paddingLeft="@dimen/margin2_dense"
+            android:paddingTop="@dimen/margin2"
+            android:paddingRight="@dimen/margin2_dense">
+
+            <libre.sampler.views.VerticalSlider
+                android:id="@+id/note_velocity_slider"
+                android:layout_width="wrap_content"
+                android:layout_height="0dp"
+                android:layout_gravity="center_horizontal"
+                android:layout_weight="1" />
+
+            <RelativeLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_weight="0">
+
+                <EditText
+                    android:id="@+id/note_velocity"
+                    android:layout_width="@dimen/instrument_editor_edittext_width"
+                    android:layout_height="wrap_content"
+                    android:imeOptions="actionDone"
+                    android:inputType="numberDecimal" />
+            </RelativeLayout>
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_weight="0"
+                android:gravity="center_horizontal|top"
+                android:labelFor="@id/note_velocity"
+                android:minLines="2"
+                android:text="@string/label_velocity" />
+        </LinearLayout>
     </RelativeLayout>
 </ScrollView>

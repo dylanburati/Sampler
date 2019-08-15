@@ -54,6 +54,7 @@ public class VerticalSlider extends View {
     private Drawable thumbDrawable;
 
     private boolean isDragging;
+    private float progress;
     private int position;
     private int maxPosition;
     private CopyOnWriteArrayList<OnProgressChangedListener> listeners;
@@ -288,26 +289,34 @@ public class VerticalSlider extends View {
         backgroundBar.set(progressX, seekBounds.top + thumbPadding,
                 progressX + barWidth, seekBounds.bottom - thumbPadding);
 
-        if(maxPosition > 0) {
-            position = position * backgroundBar.height() / maxPosition;
-        }
         maxPosition = backgroundBar.height();
         updateView();
     }
 
     private void setThumbPosition(int y) {
         this.position = Math.max(0, Math.min(maxPosition, backgroundBar.bottom - y));
+        this.progress = (float) position / maxPosition;
         dispatchProgressChanged(true);
     }
 
     // Called from controller code
     public void setProgress(float progress) {
-        this.position = Math.round(progress * maxPosition);
-        updateView();
+        this.progress = progress;
         dispatchProgressChanged(progress, false);
+        if(isLaidOut()) {
+            updateView();
+        } else {
+            post(new Runnable() {
+                @Override
+                public void run() {
+                    updateView();
+                }
+            });
+        }
     }
 
     private void updateView() {
+        this.position = Math.round(progress * maxPosition);
         progressBar.set(backgroundBar);
         if(maxPosition > 0) {
             progressBar.top = backgroundBar.bottom - position;
@@ -324,7 +333,6 @@ public class VerticalSlider extends View {
     }
 
     private void dispatchProgressChanged(boolean fromUser) {
-        float progress = position / (float) maxPosition;
         dispatchProgressChanged(progress, fromUser);
     }
 

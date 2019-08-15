@@ -473,6 +473,13 @@ public class ProjectPatternsFragment extends Fragment {
         }
     }
 
+    public void setNoteVelocity(int velocity) {
+        velocity = Math.min(127, Math.max(0, velocity));
+        for(VisualNote n : selectedNotes) {
+            n.eventOn.velocity = velocity;
+        }
+    }
+
     public MusicTime getInputNoteLength() {
         return pianoRoll.getInputNoteLength();
     }

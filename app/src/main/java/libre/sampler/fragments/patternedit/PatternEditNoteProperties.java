@@ -1,9 +1,11 @@
 package libre.sampler.fragments.patternedit;
 
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.EditText;
 import android.widget.TextView;
 
 import java.util.TreeSet;
@@ -14,9 +16,12 @@ import androidx.core.util.Consumer;
 import androidx.fragment.app.Fragment;
 import libre.sampler.R;
 import libre.sampler.fragments.ProjectPatternsFragment;
+import libre.sampler.listeners.StatefulTextWatcher;
+import libre.sampler.listeners.StatefulVerticalSliderChangeListener;
 import libre.sampler.utils.AppConstants;
 import libre.sampler.utils.MusicTime;
 import libre.sampler.views.MusicTimePicker;
+import libre.sampler.views.VerticalSlider;
 import libre.sampler.views.VisualNote;
 
 public class PatternEditNoteProperties extends Fragment {
@@ -37,6 +42,7 @@ public class PatternEditNoteProperties extends Fragment {
 
         initNoteStartPicker();
         initNoteLengthPicker();
+        initNoteVelocitySlider();
 
         patternsFragment.patternEditEventSource.add(TAG, new Consumer<String>() {
             @Override
@@ -45,6 +51,7 @@ public class PatternEditNoteProperties extends Fragment {
                     updateSelectedLabel();
                     updateNoteStartPicker();
                     updateNoteLengthPicker();
+                    updateNoteVelocitySlider();
                 }
             }
         });
@@ -91,11 +98,40 @@ public class PatternEditNoteProperties extends Fragment {
         updateNoteLengthPicker();
     }
 
+    private boolean preventDispatch = false;
+    private void initNoteVelocitySlider() {
+        VerticalSlider noteVelocitySlider = rootView.findViewById(R.id.note_velocity_slider);
+        EditText noteVelocityInput = rootView.findViewById(R.id.note_velocity);
+        noteVelocityInput.addTextChangedListener(new StatefulTextWatcher<VerticalSlider>(noteVelocitySlider) {
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                int val = Math.round(Float.parseFloat(s.toString()));
+                this.data.setProgress(val / 127f);
+                if(!preventDispatch) {
+                    patternsFragment.setNoteVelocity(val);
+                }
+            }
+        });
+        noteVelocitySlider.addListener(new StatefulVerticalSliderChangeListener<EditText>(noteVelocityInput) {
+            @Override
+            public void onProgressChanged(VerticalSlider v, float progress, boolean fromUser) {
+                if(fromUser) {
+                    int val = Math.round(progress * 127);
+                    this.data.setText(Integer.toString(val));
+                    patternsFragment.setNoteVelocity(val);
+                }
+            }
+        });
+
+        updateNoteVelocitySlider();
+    }
+
     private final MusicTime tmpNoteStart = new MusicTime(0L);
     private void updateNoteStartPicker() {
         int visibility = (selectedNotes.size() > 0) ? View.VISIBLE : View.GONE;
         noteStartPicker.setVisibility(visibility);
         rootView.findViewById(R.id.note_start_label).setVisibility(visibility);
+        rootView.findViewById(R.id.note_velocity_container).setVisibility(visibility);
 
         if(selectedNotes.size() > 0) {
             tmpNoteStart.setTicks(selectedNotes.first().startTicks);
@@ -106,6 +142,15 @@ public class PatternEditNoteProperties extends Fragment {
     private void updateNoteLengthPicker() {
         MusicTime inputNoteLength = patternsFragment.getInputNoteLength();
         noteLengthPicker.setValue(inputNoteLength);
+    }
+
+    private void updateNoteVelocitySlider() {
+        this.preventDispatch = true;
+        if(selectedNotes.size() == 1) {
+            int velocity = selectedNotes.first().eventOn.velocity;
+            ((EditText) rootView.findViewById(R.id.note_velocity)).setText(Integer.toString(velocity));
+        }
+        this.preventDispatch = false;
     }
 
     private void updateSelectedLabel() {
