@@ -20,12 +20,13 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.util.Consumer;
 import androidx.lifecycle.AndroidViewModel;
+import libre.sampler.publishers.EmptyEventSource;
 import libre.sampler.publishers.InstrumentEventSource;
 import libre.sampler.publishers.MidiEventDispatcher;
 import libre.sampler.publishers.NoteEventSource;
 import libre.sampler.publishers.PatternEventSource;
-import libre.sampler.publishers.ProjectEventSource;
 import libre.sampler.tasks.GetInstrumentsTask;
+import libre.sampler.utils.AppConstants;
 import libre.sampler.utils.DatabaseConnectionManager;
 import libre.sampler.views.VisualNote;
 
@@ -48,7 +49,7 @@ public class ProjectViewModel extends AndroidViewModel {
 
     private MidiEventDispatcher midiEventDispatcher;
 
-    public final ProjectEventSource projectEventSource = new ProjectEventSource();
+    public final EmptyEventSource loadEventSource = new EmptyEventSource();
     public final NoteEventSource noteEventSource = new NoteEventSource();
     public final InstrumentEventSource instrumentEventSource = new InstrumentEventSource();
     public final PatternEventSource patternEventSource = new PatternEventSource();
@@ -95,7 +96,7 @@ public class ProjectViewModel extends AndroidViewModel {
                                 project.registerPattern(pianoRollPattern);
                                 project.addPattern(pianoRollPattern);
                             }
-                            projectEventSource.dispatch(project);
+                            loadEventSource.dispatch(AppConstants.INSTRUMENTS_PATTERNS_LOADED);
                             if(keyboardInstrument != null) {
                                 instrumentEventSource.dispatch(new InstrumentEvent(
                                         InstrumentEvent.INSTRUMENT_KEYBOARD_SELECT, keyboardInstrument));

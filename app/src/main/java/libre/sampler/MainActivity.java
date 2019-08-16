@@ -9,6 +9,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import androidx.annotation.NonNull;
@@ -21,6 +22,7 @@ import libre.sampler.adapters.ProjectListAdapter;
 import libre.sampler.dialogs.ProjectCreateDialog;
 import libre.sampler.models.MainViewModel;
 import libre.sampler.models.Project;
+import libre.sampler.models.ProjectEvent;
 import libre.sampler.tasks.CleanFilesTask;
 import libre.sampler.tasks.CreateProjectTask;
 import libre.sampler.tasks.DeleteProjectsTask;
@@ -28,7 +30,7 @@ import libre.sampler.utils.AdapterLoader;
 import libre.sampler.utils.AppConstants;
 import libre.sampler.utils.DatabaseConnectionManager;
 
-public class MainActivity extends AppCompatActivity implements ProjectCreateDialog.ProjectCreateDialogListener {
+public class MainActivity extends AppCompatActivity {
     public static final String TAG = "MainActivity";
     private RecyclerView projectListView;
     private ProjectListAdapter projectListAdapter;
@@ -53,24 +55,24 @@ public class MainActivity extends AppCompatActivity implements ProjectCreateDial
                 }
             }
         });
+        viewModel.projectEventSource.add(TAG, new Consumer<ProjectEvent>() {
+            @Override
+            public void accept(ProjectEvent event) {
+                if(event.action == ProjectEvent.PROJECT_CREATE) {
+                    DatabaseConnectionManager.initialize(MainActivity.this);
+                    DatabaseConnectionManager.runTask(new CreateProjectTask(event.project));
+                    AdapterLoader.insertItem(MainActivity.this.projectListAdapter, 0, event.project);
+                }
+            }
+        });
         isAdapterLoaded = false;
         updateAdapter(viewModel.getProjects());
     }
 
     private void initUI() {
         this.projectListView = (RecyclerView) findViewById(R.id.main_data);
-        this.projectListAdapter = new ProjectListAdapter(new ArrayList<Project>(), new Consumer<Project>() {
-            @Override
-            public void accept(Project project) {
-                Intent intent = new Intent(MainActivity.this, ProjectActivity.class);
-                intent.setAction(Intent.ACTION_VIEW);
-                intent.putExtra(Intent.EXTRA_TITLE, project.name);
-                intent.putExtra(AppConstants.TAG_EXTRA_PROJECT_ID, project.id);
-                if(intent.resolveActivity(getPackageManager()) != null) {
-                    startActivity(intent);
-                }
-            }
-        });
+        this.projectListAdapter = new ProjectListAdapter(new ArrayList<Project>(),
+                new MyProjectActionConsumer());
         projectListView.setAdapter(this.projectListAdapter);
     }
 
@@ -100,6 +102,7 @@ public class MainActivity extends AppCompatActivity implements ProjectCreateDial
     protected void onDestroy() {
         super.onDestroy();
         viewModel.loadEventSource.remove(TAG);
+        viewModel.projectEventSource.remove(TAG);
     }
 
     @Override
@@ -150,14 +153,6 @@ public class MainActivity extends AppCompatActivity implements ProjectCreateDial
     }
 
     @Override
-    public void onProjectCreate(String projectName) {
-        final Project toAdd = new Project(projectName, System.currentTimeMillis());
-        DatabaseConnectionManager.initialize(this);
-        DatabaseConnectionManager.runTask(new CreateProjectTask(toAdd));
-        AdapterLoader.insertItem(this.projectListAdapter, 0, toAdd);
-    }
-
-    @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         switch(requestCode) {
             case AppConstants.PERM_REQUEST_READ_EXTERNAL_STORAGE:
@@ -168,6 +163,34 @@ public class MainActivity extends AppCompatActivity implements ProjectCreateDial
                 break;
             default:
                 break;
+        }
+    }
+
+    private class MyProjectActionConsumer implements ProjectListAdapter.ProjectActionConsumer {
+        @Override
+        public void startRename(Project project) {
+
+        }
+
+        @Override
+        public void open(Project project) {
+            Intent intent = new Intent(MainActivity.this, ProjectActivity.class);
+            intent.setAction(Intent.ACTION_VIEW);
+            intent.putExtra(Intent.EXTRA_TITLE, project.name);
+            intent.putExtra(AppConstants.TAG_EXTRA_PROJECT_ID, project.id);
+            if(intent.resolveActivity(getPackageManager()) != null) {
+                startActivity(intent);
+            }
+        }
+
+        @Override
+        public void delete(final Project project) {
+            DatabaseConnectionManager.runTask(new DeleteProjectsTask(Collections.singletonList(project), new Runnable() {
+                @Override
+                public void run() {
+                    AdapterLoader.removeItem(projectListAdapter, project);
+                }
+            }));
         }
     }
 }

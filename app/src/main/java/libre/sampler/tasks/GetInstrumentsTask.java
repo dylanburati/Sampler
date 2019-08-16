@@ -50,7 +50,6 @@ public class GetInstrumentsTask extends AsyncTask<Void, Void, GetInstrumentsTask
         Project proj = null;
         Map<Integer, Instrument> projInstrumentsMap = new HashMap<>();
         List<Pattern> projPatterns = new ArrayList<>();
-        // List<ScheduledNoteEvent> tmp = DatabaseConnectionManager.getInstance().scheduledNoteEventDao().getAll();
 
         List<ProjectDao.ProjectWithRelations> relations = DatabaseConnectionManager.getInstance().projectDao().getWithRelations(projectId);
         for(ProjectDao.ProjectWithRelations prj : relations) {
@@ -78,7 +77,6 @@ public class GetInstrumentsTask extends AsyncTask<Void, Void, GetInstrumentsTask
                 }
                 List<PatternDao.PatternWithRelations> patternData = DatabaseConnectionManager.getInstance().patternDao().getWithRelations(patternIds);
                 for(PatternDao.PatternWithRelations r : patternData) {
-                    // DatabaseConnectionManager.getInstance().patternDao().delete(r.pattern);
                     Collections.sort(r.scheduledNoteEvents, new Comparator<ScheduledNoteEvent>() {
                         @Override
                         public int compare(ScheduledNoteEvent o1, ScheduledNoteEvent o2) {

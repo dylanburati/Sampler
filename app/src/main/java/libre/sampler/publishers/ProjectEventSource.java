@@ -1,10 +1,10 @@
 package libre.sampler.publishers;
 
-import libre.sampler.models.Project;
+import libre.sampler.models.ProjectEvent;
 
-public class ProjectEventSource extends MapEventSource<Project> {
+public class ProjectEventSource extends MapEventSource<ProjectEvent> {
     @Override
-    public void dispatch(Project project) {
-        super.dispatch(project);
+    public void dispatch(ProjectEvent event) {
+        super.dispatch(event);
     }
 }

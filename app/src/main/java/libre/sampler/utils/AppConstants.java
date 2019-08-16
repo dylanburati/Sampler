@@ -24,6 +24,7 @@ public class AppConstants {
     public static final String PROJECTS_LOADED = "projectsLoaded";
     public static final String SELECTED_NOTES = "selectedNotes";
     public static final String PIANO_ROLL_NOTES = "pianoRollNotes";
+    public static final String INSTRUMENTS_PATTERNS_LOADED = "instrumentsPatternsLoaded";
 
     public static final int PATTERN_EDITOR_BASE = 0;
     public static final int PATTERN_EDITOR_NOTE_PROPERTIES = 1;

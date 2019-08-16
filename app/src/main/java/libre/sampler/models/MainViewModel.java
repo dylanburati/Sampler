@@ -8,14 +8,17 @@ import androidx.annotation.NonNull;
 import androidx.core.util.Consumer;
 import androidx.lifecycle.AndroidViewModel;
 import libre.sampler.publishers.EmptyEventSource;
+import libre.sampler.publishers.ProjectEventSource;
 import libre.sampler.tasks.GetProjectsTask;
 import libre.sampler.utils.AppConstants;
 import libre.sampler.utils.DatabaseConnectionManager;
 
 public class MainViewModel extends AndroidViewModel {
     private List<Project> projects;
+    private Project dialogProject;
 
     public final EmptyEventSource loadEventSource = new EmptyEventSource();
+    public final ProjectEventSource projectEventSource = new ProjectEventSource();
 
     public MainViewModel(@NonNull Application application) {
         super(application);
@@ -34,5 +37,13 @@ public class MainViewModel extends AndroidViewModel {
         }
 
         return projects;
+    }
+
+    public Project getDialogProject() {
+        return dialogProject;
+    }
+
+    public void setDialogProject(Project dialogProject) {
+        this.dialogProject = dialogProject;
     }
 }

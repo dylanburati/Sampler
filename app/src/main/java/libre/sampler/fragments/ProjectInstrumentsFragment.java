@@ -36,6 +36,7 @@ import libre.sampler.models.Project;
 import libre.sampler.models.ProjectViewModel;
 import libre.sampler.models.Sample;
 import libre.sampler.utils.AdapterLoader;
+import libre.sampler.utils.AppConstants;
 import libre.sampler.utils.MyDecimalFormat;
 import libre.sampler.utils.SliderConverter;
 import libre.sampler.views.VerticalSlider;
@@ -82,10 +83,12 @@ public class ProjectInstrumentsFragment extends Fragment {
         instrumentListAdapter = new InstrumentListAdapter(new ArrayList<Instrument>(),
                 new MyInstrumentActionConsumer());
         instrumentListView.setAdapter(instrumentListAdapter);
-        viewModel.projectEventSource.add(TAG, new Consumer<Project>() {
+        viewModel.loadEventSource.add(TAG, new Consumer<String>() {
             @Override
-            public void accept(Project project) {
-                loadAdapter();
+            public void accept(String eventName) {
+                if(eventName.equals(AppConstants.INSTRUMENTS_PATTERNS_LOADED)) {
+                    loadAdapter();
+                }
             }
         });
         viewModel.instrumentEventSource.add(TAG, new Consumer<InstrumentEvent>() {
@@ -149,7 +152,7 @@ public class ProjectInstrumentsFragment extends Fragment {
         this.rootView = null;
         this.instrumentListView = null;
         this.sampleSpinner = null;
-        viewModel.projectEventSource.remove(TAG);
+        viewModel.loadEventSource.remove(TAG);
         viewModel.instrumentEventSource.remove(TAG);
     }
 

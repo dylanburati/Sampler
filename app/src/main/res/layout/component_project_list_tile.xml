@@ -5,10 +5,6 @@
     android:layout_height="wrap_content"
     android:background="@color/colorBackground"
     android:layout_marginBottom="1dp"
-    android:paddingLeft="@dimen/margin4"
-    android:paddingTop="@dimen/margin3"
-    android:paddingRight="@dimen/margin4"
-    android:paddingBottom="@dimen/margin3"
     android:foreground="?attr/selectableItemBackground"
     android:clickable="true"
     android:focusable="true">
@@ -17,6 +13,9 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:id="@+id/text"
+        android:paddingLeft="@dimen/margin4"
+        android:paddingTop="@dimen/margin3"
+        android:paddingBottom="@dimen/margin3"
         android:layout_weight="1" />
 
     <TextView
@@ -24,5 +23,8 @@
         android:layout_height="wrap_content"
         android:id="@+id/mtime"
         android:layout_gravity="end"
+        android:paddingRight="@dimen/margin4"
+        android:paddingTop="@dimen/margin3"
+        android:paddingBottom="@dimen/margin3"
         android:textAlignment="viewEnd" />
 </LinearLayout>
