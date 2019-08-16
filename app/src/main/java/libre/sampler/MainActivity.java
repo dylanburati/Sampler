@@ -20,6 +20,7 @@ import androidx.lifecycle.ViewModelProviders;
 import androidx.recyclerview.widget.RecyclerView;
 import libre.sampler.adapters.ProjectListAdapter;
 import libre.sampler.dialogs.ProjectCreateDialog;
+import libre.sampler.dialogs.ProjectEditDialog;
 import libre.sampler.models.MainViewModel;
 import libre.sampler.models.Project;
 import libre.sampler.models.ProjectEvent;
@@ -57,11 +58,23 @@ public class MainActivity extends AppCompatActivity {
         });
         viewModel.projectEventSource.add(TAG, new Consumer<ProjectEvent>() {
             @Override
-            public void accept(ProjectEvent event) {
+            public void accept(final ProjectEvent event) {
                 if(event.action == ProjectEvent.PROJECT_CREATE) {
                     DatabaseConnectionManager.initialize(MainActivity.this);
                     DatabaseConnectionManager.runTask(new CreateProjectTask(event.project));
-                    AdapterLoader.insertItem(MainActivity.this.projectListAdapter, 0, event.project);
+                    AdapterLoader.insertItem(projectListAdapter, 0, event.project);
+                } else if(event.action == ProjectEvent.PROJECT_EDIT) {
+                    int changeIdx = projectListAdapter.items.indexOf(event.project);
+                    if(changeIdx != -1) {
+                        projectListAdapter.notifyItemChanged(changeIdx);
+                    }
+                    DatabaseConnectionManager.initialize(MainActivity.this);
+                    DatabaseConnectionManager.execute(new Runnable() {
+                        @Override
+                        public void run() {
+                            DatabaseConnectionManager.getInstance().projectDao().updateAll(event.project);
+                        }
+                    });
                 }
             }
         });
@@ -169,7 +182,9 @@ public class MainActivity extends AppCompatActivity {
     private class MyProjectActionConsumer implements ProjectListAdapter.ProjectActionConsumer {
         @Override
         public void startRename(Project project) {
-
+            viewModel.setDialogProject(project);
+            ProjectEditDialog dialog = new ProjectEditDialog();
+            dialog.show(getSupportFragmentManager(), "ProjectEditDialog");
         }
 
         @Override
