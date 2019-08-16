@@ -5,8 +5,10 @@ import android.content.res.Configuration;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.view.GestureDetector;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.EditorInfo;
@@ -26,6 +28,7 @@ import java.util.TreeSet;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.util.Consumer;
+import androidx.core.view.GestureDetectorCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
@@ -75,6 +78,7 @@ public class ProjectPatternsFragment extends Fragment {
     private EditText tempoEditText;
     private ImageView patternStop;
     private ImageView patternPlay;
+    private LinearLayout pianoRollOctaveLabels;
 
     @Nullable
     @Override
@@ -104,7 +108,7 @@ public class ProjectPatternsFragment extends Fragment {
 
         pianoRoll = new PianoRoll(this, (LinearLayout) rootView.findViewById(R.id.piano_roll));
         pianoRollTimeLabels = rootView.findViewById(R.id.piano_roll_time_labels);
-        LinearLayout pianoRollOctaveLabels = rootView.findViewById(R.id.piano_roll_octave_labels);
+        pianoRollOctaveLabels = rootView.findViewById(R.id.piano_roll_octave_labels);
         LabelHelper.refreshSegmented(pianoRollOctaveLabels, 0, 8,
                 R.layout.component_piano_roll_octave_label,
                 new LabelHelper.LabelSelector() {
@@ -127,6 +131,37 @@ public class ProjectPatternsFragment extends Fragment {
         }
         updatePianoRollTicks(viewModel.getPianoRollPattern().getLoopLengthTicks());
         setPianoRollNotes();
+
+        GestureDetector.SimpleOnGestureListener thinKeyboardListener = new GestureDetector.SimpleOnGestureListener() {
+            @Override
+            public boolean onDown(MotionEvent e) {
+                return true;
+            }
+
+            @Override
+            public boolean onSingleTapUp(MotionEvent e) {
+                final int keyNum = pianoRoll.resolveKeyNum(0, e.getY());
+                final NoteEvent noteEvent = new NoteEvent(NoteEvent.NOTE_ON, viewModel.getPianoRollInstrument(), keyNum, 100,
+                        NoteId.createForKeyboard(e.getDownTime(), 0));
+                viewModel.noteEventSource.dispatch(noteEvent);
+                pianoRollOctaveLabels.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        NoteEvent eventOff = new NoteEvent(NoteEvent.NOTE_OFF, noteEvent.instrument, keyNum, 100,
+                                noteEvent.eventId);
+                        viewModel.noteEventSource.dispatch(eventOff);
+                    }
+                }, 250);
+                return true;
+            }
+        };
+        final GestureDetectorCompat gestureDetector = new GestureDetectorCompat(getContext(), thinKeyboardListener);
+        pianoRollOctaveLabels.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                return gestureDetector.onTouchEvent(event);
+            }
+        });
 
         patternStop = (ImageView) rootView.findViewById(R.id.pattern_stop);
         patternStop.setOnClickListener(new View.OnClickListener() {
@@ -181,6 +216,7 @@ public class ProjectPatternsFragment extends Fragment {
     public void onDestroyView() {
         pianoRoll = null;
         super.onDestroyView();
+        this.pianoRollOctaveLabels = null;
         this.pianoRollTimeLabels = null;
         this.patternPlay = null;
         this.patternStop = null;

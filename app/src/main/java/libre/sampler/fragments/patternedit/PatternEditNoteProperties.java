@@ -1,7 +1,6 @@
 package libre.sampler.fragments.patternedit;
 
 import android.os.Bundle;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -105,7 +104,11 @@ public class PatternEditNoteProperties extends Fragment {
         noteVelocityInput.addTextChangedListener(new StatefulTextWatcher<VerticalSlider>(noteVelocitySlider) {
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
-                int val = Math.round(Float.parseFloat(s.toString()));
+                int val = 0;
+                try {
+                    val = Math.round(Float.parseFloat(s.toString()));
+                } catch(NumberFormatException ignored) {
+                }
                 this.data.setProgress(val / 127f);
                 if(!preventDispatch) {
                     patternsFragment.setNoteVelocity(val);
