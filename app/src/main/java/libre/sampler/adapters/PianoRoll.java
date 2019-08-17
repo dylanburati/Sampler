@@ -1,11 +1,11 @@
 package libre.sampler.adapters;
 
 import android.content.res.Resources;
-import android.graphics.Color;
 import android.graphics.Rect;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 
@@ -82,7 +82,7 @@ public class PianoRoll {
         
         notePane.removeAllViews();
         for(VisualNote n : pianoRollNotes) {
-            if(n.containerIndex == containerIndex) {
+            if(n.getContainerIndex() == containerIndex) {
                 displayNote(notePane, n, controller.getSelectedNotes().contains(n));
             }
         }
@@ -103,27 +103,30 @@ public class PianoRoll {
 
     private void displayNote(RelativeLayout notePane, VisualNote note, boolean isSelected) {
         RelativeLayout.LayoutParams layoutParams = new RelativeLayout.LayoutParams(
-                (int) (note.lengthTicks * tickWidth), (int) keyHeight);
-        layoutParams.leftMargin = (int) (note.startTicks * tickWidth);
-        layoutParams.topMargin = (int) (note.keyIndex * keyHeight);
+                (int) (note.getLengthTicks() * tickWidth), (int) keyHeight);
+        layoutParams.leftMargin = (int) (note.getStartTicks() * tickWidth);
+        layoutParams.topMargin = (int) (note.getKeyIndex() * keyHeight);
         View view = viewPool.remove(note.tag);
-        if(view == null) {
+        if(view != null && view.getParent() == notePane) {
+            // view attached in correct row
+            view.setActivated(isSelected);
+            view.setLayoutParams(layoutParams);
+        } else {
+            if(view != null) {
+                ((ViewGroup) view.getParent()).removeView(view);
+            }
             view = new View(notePane.getContext());
-            view.setBackgroundColor(Color.WHITE);
+            view.setBackground(notePane.getResources().getDrawable(R.drawable.piano_roll_note));
             view.setAlpha(0.8f);
             view.setBackgroundTintList(notePane.getResources().getColorStateList(R.color.piano_roll_note));
             view.setTag(note.tag);
             view.setActivated(isSelected);
             notePane.addView(view, layoutParams);
-        } else {
-            // view still attached
-            view.setActivated(isSelected);
-            view.setLayoutParams(layoutParams);
         }
     }
 
     public void setNoteActivated(VisualNote note, boolean isSelected) {
-        RelativeLayout notePane = noteContainerList.get(note.containerIndex);
+        RelativeLayout notePane = noteContainerList.get(note.getContainerIndex());
         if(notePane == null) {
             return;
         }
@@ -134,7 +137,7 @@ public class PianoRoll {
     }
 
     public void removeNote(VisualNote note, boolean willAddBack) {
-        RelativeLayout notePane = noteContainerList.get(note.containerIndex);
+        RelativeLayout notePane = noteContainerList.get(note.getContainerIndex());
         if(notePane == null) {
             return;
         }
@@ -148,7 +151,7 @@ public class PianoRoll {
     }
 
     public void addNote(VisualNote note, boolean isSelected) {
-        RelativeLayout notePane = noteContainerList.get(note.containerIndex);
+        RelativeLayout notePane = noteContainerList.get(note.getContainerIndex());
         if(notePane == null) {
             return;
         }
@@ -198,7 +201,7 @@ public class PianoRoll {
         ListIterator<VisualNote> reversed = pianoRollNotes.listIterator(pianoRollNotes.size());
         while(reversed.hasPrevious()) {
             VisualNote n = reversed.previous();
-            if(n.containerIndex == containerIdx && n.keyIndex == keyIndex) {
+            if(n.getContainerIndex() == containerIdx && n.getKeyIndex() == keyIndex) {
                 View view = notePane.findViewWithTag(n.tag);
                 view.getLocalVisibleRect(tmpRect);
                 notePane.offsetDescendantRectToMyCoords(view, tmpRect);

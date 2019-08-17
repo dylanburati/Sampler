@@ -7,10 +7,6 @@ public class VisualNote implements Comparable<VisualNote> {
     public final ScheduledNoteEvent eventOff;
     public Long tag;
 
-    public long startTicks;
-    public long lengthTicks;
-    public int containerIndex;
-    public int keyIndex;
     public int modificationCount;
 
     public VisualNote(ScheduledNoteEvent eventOn, ScheduledNoteEvent eventOff) {
@@ -18,18 +14,60 @@ public class VisualNote implements Comparable<VisualNote> {
         this.eventOff = eventOff;
 
         this.tag = eventOn.noteId;
-        this.startTicks = eventOn.offsetTicks;
-        this.lengthTicks = eventOff.offsetTicks - eventOn.offsetTicks;
-        this.containerIndex = 9 - (eventOn.keyNum / 12);
-        this.keyIndex = 11 - (eventOn.keyNum % 12);
     }
 
     @Override
     public int compareTo(VisualNote o) {
-        int cmp = Long.compare(startTicks, o.startTicks);
+        int cmp = Long.compare(getStartTicks(), o.getStartTicks());
         if(cmp != 0) {
             return cmp;
         }
         return Long.compare(tag, o.tag);
+    }
+
+    public long getStartTicks() {
+        return eventOn.offsetTicks;
+    }
+
+    public void moveTicks(long moveTicks) {
+        this.eventOn.offsetTicks += moveTicks;
+        this.eventOff.offsetTicks += moveTicks;
+    }
+
+    public long getLengthTicks() {
+        return getEndTicks() - getStartTicks();
+    }
+
+    public void setLengthTicks(long lengthTicks) {
+        this.eventOff.offsetTicks = this.eventOn.offsetTicks + lengthTicks;
+    }
+
+    public long getEndTicks() {
+        return this.eventOff.offsetTicks;
+    }
+
+    public int getContainerIndex() {
+        return 9 - (getKeyNum() / 12);
+    }
+
+    public int getKeyIndex() {
+        return 11 - (getKeyNum() % 12);
+    }
+
+    public int getKeyNum() {
+        return eventOn.keyNum;
+    }
+
+    public void setKeyNum(int keyNum) {
+        this.eventOn.keyNum = keyNum;
+        this.eventOff.keyNum = keyNum;
+    }
+
+    public int getVelocity() {
+        return eventOn.velocity;
+    }
+
+    public void setVelocity(int velocity) {
+        this.eventOn.velocity = velocity;
     }
 }

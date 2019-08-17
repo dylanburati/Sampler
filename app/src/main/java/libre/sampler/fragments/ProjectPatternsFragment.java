@@ -393,7 +393,7 @@ public class ProjectPatternsFragment extends Fragment {
             return false;
         }
         selectedNotes.add(n);
-        pianoRoll.setInputNoteLength(n.lengthTicks);
+        pianoRoll.setInputNoteLength(n.getLengthTicks());
         patternEditEventSource.dispatch(AppConstants.SELECTED_NOTES);
         return true;
     }
@@ -427,8 +427,8 @@ public class ProjectPatternsFragment extends Fragment {
         long rightTicks = right.getTicks();
         long leftTicks = left.getTicks();
         for(VisualNote note : pianoRoll.getPianoRollNotes()) {
-            if(note.eventOn.keyNum <= top && note.eventOn.keyNum >= bottom &&
-                    note.startTicks <= rightTicks && (note.startTicks + note.lengthTicks >= leftTicks)) {
+            if(note.getKeyNum() <= top && note.getKeyNum() >= bottom &&
+                    note.getStartTicks() <= rightTicks && (note.getEndTicks() >= leftTicks)) {
 
                 selectedNotes.add(note);
             }
@@ -456,19 +456,20 @@ public class ProjectPatternsFragment extends Fragment {
     }
 
     /* Note properties */
-    public void setNoteLength(MusicTime noteLength, boolean fromUser) {
-        setNoteLength(noteLength.getTicks(), fromUser);
+    public void setNoteLength(MusicTime noteLength) {
+        setNoteLength(noteLength.getTicks());
     }
 
-    public void setNoteLength(long ticks, boolean fromUser) {
+    public void setNoteLength(long ticks) {
         pianoRoll.setInputNoteLength(ticks);
-        if(fromUser && selectedNotes.size() > 0) {
-            long lengthenTicks = ticks - selectedNotes.first().lengthTicks;
+        if(selectedNotes.size() > 0) {
+            long patternTicks = viewModel.getPianoRollPattern().getLoopLengthTicks();
+            // long lengthenTicks = ticks - selectedNotes.first().lengthTicks;
 
             for(VisualNote n : selectedNotes) {
                 removeFromPianoRollPattern(n, true);
-                n.lengthTicks += lengthenTicks;
-                n.eventOff.offsetTicks = n.startTicks + n.lengthTicks;
+                long lengthTicks = Math.min(patternTicks - n.getStartTicks(), ticks);
+                n.setLengthTicks(lengthTicks);
 
                 final VisualNote noteRef = n;
                 final int modCount = ++n.modificationCount;
@@ -488,13 +489,13 @@ public class ProjectPatternsFragment extends Fragment {
         if(selectedNotes.size() == 0) {
             return;
         }
-        long moveTicks = noteStart.getTicks() - selectedNotes.first().startTicks;
+        long reqMoveTicks = noteStart.getTicks() - selectedNotes.first().getStartTicks();
+        long patternTicks = viewModel.getPianoRollPattern().getLoopLengthTicks();
 
         for(VisualNote n : selectedNotes) {
             removeFromPianoRollPattern(n, true);
-            n.startTicks += moveTicks;
-            n.eventOn.offsetTicks = n.startTicks;
-            n.eventOff.offsetTicks = n.startTicks + n.lengthTicks;
+            long moveTicks = Math.min(reqMoveTicks, patternTicks - n.getEndTicks());
+            n.moveTicks(moveTicks);
 
             final VisualNote noteRef = n;
             final int modCount = ++n.modificationCount;
@@ -509,15 +510,39 @@ public class ProjectPatternsFragment extends Fragment {
         }
     }
 
+    public MusicTime getInputNoteLength() {
+        return pianoRoll.getInputNoteLength();
+    }
+
     public void setNoteVelocity(int velocity) {
         velocity = Math.min(127, Math.max(0, velocity));
         for(VisualNote n : selectedNotes) {
-            n.eventOn.velocity = velocity;
+            n.setVelocity(velocity);
         }
     }
 
-    public MusicTime getInputNoteLength() {
-        return pianoRoll.getInputNoteLength();
+    public void transposeSelectedNotes(int semitones) {
+        if(selectedNotes.size() == 0) {
+            return;
+        }
+
+        for(VisualNote n : selectedNotes) {
+            removeFromPianoRollPattern(n, true);
+            int keyNum = Math.max(AppConstants.PIANO_ROLL_BOTTOM_KEYNUM,
+                    Math.min(AppConstants.PIANO_ROLL_TOP_KEYNUM, n.getKeyNum() + semitones));
+            n.setKeyNum(keyNum);
+
+            final VisualNote noteRef = n;
+            final int modCount = ++n.modificationCount;
+            pianoRoll.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    if(noteRef.modificationCount == modCount) {
+                        addToPianoRollPattern(noteRef);
+                    }
+                }
+            }, 100);
+        }
     }
 
     /* Copy multiple */
@@ -527,12 +552,13 @@ public class ProjectPatternsFragment extends Fragment {
         long baseId = NoteId.createForScheduledNoteEvent(System.currentTimeMillis(), 0);
         for(int i = 1; i <= count; i++) {
             for(VisualNote src : selectedNotes) {
-                long startTicks = src.startTicks + intervalTicks * i;
+                long startTicks = src.getStartTicks() + intervalTicks * i;
+                long endTicks = src.getEndTicks() + intervalTicks * i;
                 VisualNote visualNote = new VisualNote(
                         new ScheduledNoteEvent(startTicks, NoteEvent.NOTE_ON,
-                                src.eventOn.instrument, src.eventOn.keyNum, src.eventOn.velocity, baseId),
-                        new ScheduledNoteEvent(startTicks + src.lengthTicks, NoteEvent.NOTE_OFF,
-                                src.eventOff.instrument, src.eventOff.keyNum, src.eventOff.velocity, baseId)
+                                src.eventOn.instrument, src.getKeyNum(), src.getVelocity(), baseId),
+                        new ScheduledNoteEvent(endTicks, NoteEvent.NOTE_OFF,
+                                src.eventOff.instrument, src.getKeyNum(), 0, baseId)
                 );
 
                 toAdd.add(visualNote);
@@ -572,7 +598,7 @@ public class ProjectPatternsFragment extends Fragment {
             List<VisualNote> source = patternDerivedData.getNotesForInstrument(instrument);
             // source.descendingIterator()
             for(VisualNote note : source) {
-                if(note.startTicks + note.lengthTicks > maxTicks) {
+                if(note.getEndTicks() > maxTicks) {
                     toDelete.add(note);
                 }
             }

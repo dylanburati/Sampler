@@ -118,13 +118,13 @@ public class PatternEditCopyMultiple extends Fragment {
         if(selectedNotes.size() == 0) {
             return 0;
         }
-        return selectedNotes.first().startTicks;
+        return selectedNotes.first().getStartTicks();
     }
 
     private long getSelectionEndTicks() {
         long end = 0;
         for(VisualNote n : selectedNotes) {
-            long noteEnd = n.startTicks + n.lengthTicks;
+            long noteEnd = n.getEndTicks();
             if(noteEnd > end) {
                 end = noteEnd;
             }

@@ -1,9 +1,11 @@
 package libre.sampler.fragments.patternedit;
 
+import android.graphics.Typeface;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
@@ -31,6 +33,7 @@ public class PatternEditNoteProperties extends Fragment {
     private View rootView;
     private MusicTimePicker noteStartPicker;
     private MusicTimePicker noteLengthPicker;
+    private int inputVelocity = -1;
 
     @Nullable
     @Override
@@ -42,6 +45,7 @@ public class PatternEditNoteProperties extends Fragment {
         initNoteStartPicker();
         initNoteLengthPicker();
         initNoteVelocitySlider();
+        initNoteTransposeButtons();
 
         patternsFragment.patternEditEventSource.add(TAG, new Consumer<String>() {
             @Override
@@ -90,7 +94,7 @@ public class PatternEditNoteProperties extends Fragment {
         noteLengthPicker.setOnValueChangedListener(new MusicTimePicker.OnValueChangedListener() {
             @Override
             public void onValueChange(MusicTime value) {
-                patternsFragment.setNoteLength(value, true);
+                patternsFragment.setNoteLength(value);
             }
         });
 
@@ -104,14 +108,13 @@ public class PatternEditNoteProperties extends Fragment {
         noteVelocityInput.addTextChangedListener(new StatefulTextWatcher<VerticalSlider>(noteVelocitySlider) {
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
-                int val = 0;
                 try {
-                    val = Math.round(Float.parseFloat(s.toString()));
+                    inputVelocity = Math.round(Float.parseFloat(s.toString()));
+                    this.data.setProgress(inputVelocity / 127f);
+                    if(!preventDispatch) {
+                        patternsFragment.setNoteVelocity(inputVelocity);
+                    }
                 } catch(NumberFormatException ignored) {
-                }
-                this.data.setProgress(val / 127f);
-                if(!preventDispatch) {
-                    patternsFragment.setNoteVelocity(val);
                 }
             }
         });
@@ -119,14 +122,32 @@ public class PatternEditNoteProperties extends Fragment {
             @Override
             public void onProgressChanged(VerticalSlider v, float progress, boolean fromUser) {
                 if(fromUser) {
-                    int val = Math.round(progress * 127);
-                    this.data.setText(Integer.toString(val));
-                    patternsFragment.setNoteVelocity(val);
+                    inputVelocity = Math.round(progress * 127);
+                    this.data.setText(Integer.toString(inputVelocity));
+                    patternsFragment.setNoteVelocity(inputVelocity);
                 }
             }
         });
 
         updateNoteVelocitySlider();
+    }
+
+    private static final int[] TRANSPOSE_BTN_IDS = new int[]{
+            R.id.note_transpose_minus_12, R.id.note_transpose_minus_1,
+            R.id.note_transpose_plus_1, R.id.note_transpose_plus_12
+    };
+    private static final int[] TRANSPOSE_BTN_VALUES = new int[]{-12, -1, +1, +12};
+    private void initNoteTransposeButtons() {
+        for(int i = 0; i < TRANSPOSE_BTN_IDS.length; i++) {
+            Button b = (Button) rootView.findViewById(TRANSPOSE_BTN_IDS[i]);
+            final int val = TRANSPOSE_BTN_VALUES[i];
+            b.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    patternsFragment.transposeSelectedNotes(val);
+                }
+            });
+        }
     }
 
     private final MusicTime tmpNoteStart = new MusicTime(0L);
@@ -135,9 +156,10 @@ public class PatternEditNoteProperties extends Fragment {
         noteStartPicker.setVisibility(visibility);
         rootView.findViewById(R.id.note_start_label).setVisibility(visibility);
         rootView.findViewById(R.id.note_velocity_container).setVisibility(visibility);
+        rootView.findViewById(R.id.note_transpose_container).setVisibility(visibility);
 
         if(selectedNotes.size() > 0) {
-            tmpNoteStart.setTicks(selectedNotes.first().startTicks);
+            tmpNoteStart.setTicks(selectedNotes.first().getStartTicks());
             noteStartPicker.setValue(tmpNoteStart);
         }
     }
@@ -149,10 +171,30 @@ public class PatternEditNoteProperties extends Fragment {
 
     private void updateNoteVelocitySlider() {
         this.preventDispatch = true;
-        if(selectedNotes.size() == 1) {
-            int velocity = selectedNotes.first().eventOn.velocity;
-            ((EditText) rootView.findViewById(R.id.note_velocity)).setText(Integer.toString(velocity));
+        boolean velocitiesDiffer = false;
+        int velocity = 100;
+        if(selectedNotes.size() > 0) {
+            int i = 0;
+            for(VisualNote n : selectedNotes) {
+                if(i == 0) {
+                    velocity = n.getVelocity();
+                } else if(n.getVelocity() != velocity) {
+                    velocitiesDiffer = true;
+                    break;
+                }
+
+                i++;
+            }
         }
+
+        if(velocitiesDiffer) {
+            inputVelocity = 100;
+            ((TextView) rootView.findViewById(R.id.note_velocity_label)).setTypeface(Typeface.defaultFromStyle(Typeface.ITALIC));
+        } else {
+            inputVelocity = velocity;
+            ((TextView) rootView.findViewById(R.id.note_velocity_label)).setTypeface(Typeface.defaultFromStyle(Typeface.NORMAL));
+        }
+        ((EditText) rootView.findViewById(R.id.note_velocity)).setText(Integer.toString(inputVelocity));
         this.preventDispatch = false;
     }
 

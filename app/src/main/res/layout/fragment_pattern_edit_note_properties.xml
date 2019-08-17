@@ -75,14 +75,57 @@
             </RelativeLayout>
 
             <TextView
+                android:id="@+id/note_velocity_label"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_horizontal"
                 android:layout_weight="0"
                 android:gravity="center_horizontal|top"
                 android:labelFor="@id/note_velocity"
-                android:minLines="2"
                 android:text="@string/label_velocity" />
         </LinearLayout>
+
+        <GridLayout
+            android:id="@+id/note_transpose_container"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:columnCount="2"
+            android:layout_toRightOf="@id/note_velocity_container"
+            android:layout_alignTop="@id/note_velocity_container"
+            android:layout_marginTop="@dimen/margin3"
+            android:layout_marginLeft="@dimen/margin2_dense">
+
+            <TextView
+                android:id="@+id/note_transpose_label"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_columnSpan="2"
+                android:layout_marginBottom="@dimen/margin2_dense"
+                android:text="@string/transpose" />
+
+            <Button
+                android:id="@+id/note_transpose_minus_1"
+                android:layout_width="48dp"
+                android:layout_height="wrap_content"
+                android:text="-1" />
+
+            <Button
+                android:id="@+id/note_transpose_plus_1"
+                android:layout_width="48dp"
+                android:layout_height="wrap_content"
+                android:text="+1" />
+
+            <Button
+                android:id="@+id/note_transpose_minus_12"
+                android:layout_width="48dp"
+                android:layout_height="wrap_content"
+                android:text="-12" />
+
+            <Button
+                android:id="@+id/note_transpose_plus_12"
+                android:layout_width="48dp"
+                android:layout_height="wrap_content"
+                android:text="+12" />
+        </GridLayout>
     </RelativeLayout>
 </ScrollView>
