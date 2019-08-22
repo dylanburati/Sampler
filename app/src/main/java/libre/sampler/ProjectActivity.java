@@ -172,7 +172,7 @@ public class ProjectActivity extends AppCompatActivity {
             PdBase.setReceiver(pdReceiver);
             initPdReceiverListeners();
             if(!PdBase.exists("voices")) {
-                InputStream in = res.openRawResource(R.raw.pd_test);
+                InputStream in = res.openRawResource(R.raw.pd_sampler);
                 patchFile = IoUtils.extractResource(in, "test.pd", getCacheDir());
                 pdPatchHandle = PdBase.openPatch(patchFile);
             }

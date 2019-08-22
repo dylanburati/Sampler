@@ -18,8 +18,8 @@ public class AppConstants {
 
     public static final long NANOS_PER_MILLI = 1000000;
 
-    public static final int PD_NUM_VOICES = 96;
-    public static final int PD_NUM_SAMPLES = 48;
+    public static final int PD_NUM_VOICES = 64;
+    public static final int PD_NUM_SAMPLES = 64;
 
     public static final String PROJECTS_LOADED = "projectsLoaded";
     public static final String SELECTED_NOTES = "selectedNotes";
