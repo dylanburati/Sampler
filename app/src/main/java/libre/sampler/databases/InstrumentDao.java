@@ -28,6 +28,10 @@ public interface InstrumentDao {
     void deleteAll(List<Integer> projectIds);
 
     @Transaction
+    @Query("SELECT * from instrument")
+    List<InstrumentWithRelations> getAllWithRelations();
+
+    @Transaction
     @Query("SELECT * FROM instrument WHERE id = :instrumentId")
     List<InstrumentWithRelations> getWithRelations(int instrumentId);
 

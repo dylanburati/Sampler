@@ -25,7 +25,7 @@ import libre.sampler.publishers.InstrumentEventSource;
 import libre.sampler.publishers.MidiEventDispatcher;
 import libre.sampler.publishers.NoteEventSource;
 import libre.sampler.publishers.PatternEventSource;
-import libre.sampler.tasks.GetInstrumentsTask;
+import libre.sampler.tasks.LoadProjectTask;
 import libre.sampler.utils.AppConstants;
 import libre.sampler.utils.DatabaseConnectionManager;
 import libre.sampler.views.VisualNote;
@@ -56,6 +56,7 @@ public class ProjectViewModel extends AndroidViewModel {
 
     public ProjectViewModel(@NonNull Application application) {
         super(application);
+        DatabaseConnectionManager.initialize(application);
     }
 
     public void setProjectId(int projectId) {
@@ -70,8 +71,7 @@ public class ProjectViewModel extends AndroidViewModel {
             }
 
             isGetProjectTaskRunning = true;
-            DatabaseConnectionManager.initialize(getApplication());
-            DatabaseConnectionManager.runTask(new GetInstrumentsTask(projectId,
+            DatabaseConnectionManager.runTask(new LoadProjectTask(projectId,
                     new Consumer<Project>() {
                         @Override
                         public void accept(Project project) {

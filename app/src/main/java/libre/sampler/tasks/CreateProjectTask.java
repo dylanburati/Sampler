@@ -7,9 +7,11 @@ import libre.sampler.utils.DatabaseConnectionManager;
 
 public class CreateProjectTask extends AsyncTask<Void, Void, Integer> {
     private Project project;
+    private Runnable onCompleted;
 
-    public CreateProjectTask(Project project) {
+    public CreateProjectTask(Project project, Runnable onCompleted) {
         this.project = project;
+        this.onCompleted = onCompleted;
     }
 
     @Override
@@ -20,5 +22,6 @@ public class CreateProjectTask extends AsyncTask<Void, Void, Integer> {
     @Override
     protected void onPostExecute(Integer id) {
         this.project.setProjectId(id);
+        if(this.onCompleted != null) this.onCompleted.run();
     }
 }

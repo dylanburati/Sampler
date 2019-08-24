@@ -1,8 +1,8 @@
 package libre.sampler.utils;
 
 public class AppConstants {
+    public static final String TAG_EXTRA_ACTION_TYPE = "libre.sampler.tags.EXTRA_ACTION_TYPE";
     public static final String TAG_EXTRA_PROJECT_ID = "libre.sampler.tags.EXTRA_PROJECT_ID";
-    public static final String TAG_SHARED_PREFS = "libre.sampler.tags.SHARED_PREFS";
     public static final String PREF_DEFAULT_SAMPLE_PATH = "default_sample_path";
     public static final String PREF_DEFAULT_INSTRUMENT_EXPORT_PATH = "default_instrument_export_path";
 
@@ -22,6 +22,7 @@ public class AppConstants {
     public static final int PD_NUM_SAMPLES = 64;
 
     public static final String PROJECTS_LOADED = "projectsLoaded";
+    public static final String ALL_INSTRUMENTS_LOADED = "allInstrumentsLoaded";
     public static final String SELECTED_NOTES = "selectedNotes";
     public static final String PIANO_ROLL_NOTES = "pianoRollNotes";
     public static final String INSTRUMENTS_PATTERNS_LOADED = "instrumentsPatternsLoaded";

@@ -83,6 +83,7 @@ public class Project {
             }
         }
 
+        instrumentIdStatus.require(IdStatus.SELF);
         instrumentIdStatus.set(IdStatus.CHILDREN_DB);
     }
 

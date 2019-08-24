@@ -20,7 +20,7 @@ import libre.sampler.models.Sample;
 import libre.sampler.models.ScheduledNoteEvent;
 import libre.sampler.utils.DatabaseConnectionManager;
 
-public class GetInstrumentsTask extends AsyncTask<Void, Void, GetInstrumentsTask.ProjectData> {
+public class LoadProjectTask extends AsyncTask<Void, Void, LoadProjectTask.ProjectData> {
     private int projectId;
     private Consumer<Project> projectCallback;
     private Consumer<List<Instrument>> instrumentCallback;
@@ -38,7 +38,7 @@ public class GetInstrumentsTask extends AsyncTask<Void, Void, GetInstrumentsTask
         }
     }
 
-    public GetInstrumentsTask(int projectId, Consumer<Project> projectCallback, Consumer<List<Instrument>> instrumentCallback, Consumer<List<Pattern>> patternCallback) {
+    public LoadProjectTask(int projectId, Consumer<Project> projectCallback, Consumer<List<Instrument>> instrumentCallback, Consumer<List<Pattern>> patternCallback) {
         this.projectId = projectId;
         this.projectCallback = projectCallback;
         this.instrumentCallback = instrumentCallback;
@@ -47,52 +47,58 @@ public class GetInstrumentsTask extends AsyncTask<Void, Void, GetInstrumentsTask
 
     @Override
     protected ProjectData doInBackground(Void... voids) {
-        Project proj = null;
+        Project project = null;
+        List<Integer> instrumentIds = new ArrayList<>();
+        List<Integer> patternIds = new ArrayList<>();
+
         Map<Integer, Instrument> projInstrumentsMap = new HashMap<>();
         List<Pattern> projPatterns = new ArrayList<>();
 
         List<ProjectDao.ProjectWithRelations> relations = DatabaseConnectionManager.getInstance().projectDao().getWithRelations(projectId);
         for(ProjectDao.ProjectWithRelations prj : relations) {
             if(prj.project.id == projectId) {
-                proj = prj.project;
-                List<Integer> instrumentIds = new ArrayList<>();
+                project = prj.project;
                 for(Instrument t : prj.instruments) {
                     instrumentIds.add(t.id);
                 }
-                List<InstrumentDao.InstrumentWithRelations> sampleData = DatabaseConnectionManager.getInstance().instrumentDao().getWithRelations(instrumentIds);
-                for(InstrumentDao.InstrumentWithRelations r : sampleData) {
-                    Collections.sort(r.samples, new Comparator<Sample>() {
-                        @Override
-                        public int compare(Sample o1, Sample o2) {
-                            return Integer.compare(o1.id, o2.id);
-                        }
-                    });
-                    r.instrument.setSamples(r.samples);
-                    projInstrumentsMap.put(r.instrument.id, r.instrument);
-                }
-
-                List<Integer> patternIds = new ArrayList<>();
                 for(Pattern p : prj.patterns) {
                     patternIds.add(p.id);
                 }
-                List<PatternDao.PatternWithRelations> patternData = DatabaseConnectionManager.getInstance().patternDao().getWithRelations(patternIds);
-                for(PatternDao.PatternWithRelations r : patternData) {
-                    Collections.sort(r.scheduledNoteEvents, new Comparator<ScheduledNoteEvent>() {
-                        @Override
-                        public int compare(ScheduledNoteEvent o1, ScheduledNoteEvent o2) {
-                            return Long.compare(o1.offsetTicks, o2.offsetTicks);
-                        }
-                    });
-                    for(ScheduledNoteEvent e : r.scheduledNoteEvents) {
-                        Instrument t = projInstrumentsMap.get(e.instrumentId);
-                        if(t != null) {
-                            e.setInstrument(t);
-                        }
-                    }
-                    r.pattern.setEvents(r.scheduledNoteEvents);
-                    projPatterns.add(r.pattern);
+                break;
+            }
+        }
+        if(project == null) {
+            throw new AssertionError("Database query did not find the project");
+        }
+
+        List<InstrumentDao.InstrumentWithRelations> sampleData = DatabaseConnectionManager.getInstance().instrumentDao().getWithRelations(instrumentIds);
+        for(InstrumentDao.InstrumentWithRelations r : sampleData) {
+            Collections.sort(r.samples, new Comparator<Sample>() {
+                @Override
+                public int compare(Sample o1, Sample o2) {
+                    return Integer.compare(o1.id, o2.id);
+                }
+            });
+            r.instrument.setSamples(r.samples);
+            projInstrumentsMap.put(r.instrument.id, r.instrument);
+        }
+
+        List<PatternDao.PatternWithRelations> patternData = DatabaseConnectionManager.getInstance().patternDao().getWithRelations(patternIds);
+        for(PatternDao.PatternWithRelations r : patternData) {
+            Collections.sort(r.scheduledNoteEvents, new Comparator<ScheduledNoteEvent>() {
+                @Override
+                public int compare(ScheduledNoteEvent o1, ScheduledNoteEvent o2) {
+                    return Long.compare(o1.offsetTicks, o2.offsetTicks);
+                }
+            });
+            for(ScheduledNoteEvent e : r.scheduledNoteEvents) {
+                Instrument t = projInstrumentsMap.get(e.instrumentId);
+                if(t != null) {
+                    e.setInstrument(t);
                 }
             }
+            r.pattern.setEvents(r.scheduledNoteEvents);
+            projPatterns.add(r.pattern);
         }
 
         List<Instrument> projInstruments = new ArrayList<>(projInstrumentsMap.values());
@@ -102,7 +108,7 @@ public class GetInstrumentsTask extends AsyncTask<Void, Void, GetInstrumentsTask
                 return Integer.compare(o1.id, o2.id);
             }
         });
-        return new ProjectData(proj, projInstruments, projPatterns);
+        return new ProjectData(project, projInstruments, projPatterns);
     }
 
     @Override

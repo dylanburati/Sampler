@@ -1,6 +1,5 @@
 package libre.sampler.tasks;
 
-import android.content.Context;
 import android.os.AsyncTask;
 
 import java.util.List;
@@ -9,10 +8,10 @@ import androidx.core.util.Consumer;
 import libre.sampler.models.Project;
 import libre.sampler.utils.DatabaseConnectionManager;
 
-public class GetProjectsTask extends AsyncTask<Void, Void, List<Project>> {
+public class ListProjectsTask extends AsyncTask<Void, Void, List<Project>> {
     private Consumer<List<Project>> onCompleted;
 
-    public GetProjectsTask(Consumer<List<Project>> onCompleted) {
+    public ListProjectsTask(Consumer<List<Project>> onCompleted) {
         this.onCompleted = onCompleted;
     }
 
