@@ -48,6 +48,7 @@ public class MainProjectsFragment extends Fragment {
 
     private boolean willShowDialogCreateProject;
     private boolean isAdapterLoaded;
+    private View rootView;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -58,7 +59,7 @@ public class MainProjectsFragment extends Fragment {
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        this.projectListView = (RecyclerView) inflater.inflate(R.layout.fragment_main_projects, container, false);
+        rootView = inflater.inflate(R.layout.fragment_main_projects, container, false);
 
         viewModel = ViewModelProviders.of(getActivity()).get(MainViewModel.class);
         ActionBar actionBar = ((MainActivity) getActivity()).getSupportActionBar();
@@ -94,7 +95,7 @@ public class MainProjectsFragment extends Fragment {
         isAdapterLoaded = false;
         updateAdapter();
 
-        return projectListView;
+        return rootView;
     }
 
     @Override
@@ -108,12 +109,14 @@ public class MainProjectsFragment extends Fragment {
     @Override
     public void onDestroyView() {
         super.onDestroyView();
+        this.rootView = null;
         this.projectListView = null;
         viewModel.loadEventSource.remove(TAG);
         viewModel.projectEventSource.remove(TAG);
     }
 
     private void initUI() {
+        this.projectListView = rootView.findViewById(R.id.projects_select);
         this.projectListAdapter = new ProjectListAdapter(new ArrayList<Project>(),
                 new MyProjectActionConsumer());
         projectListView.setAdapter(this.projectListAdapter);

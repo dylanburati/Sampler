@@ -607,9 +607,15 @@ public class ProjectPatternsFragment extends Fragment {
     }
 
     /* Bottom bar */
-    private void registerTempoInput(EditText tempoEditText) {
+    private void registerTempoInput(final EditText tempoEditText) {
         this.tempoEditText = tempoEditText;
 
+        tempoEditText.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+            @Override
+            public void onFocusChange(View v, boolean hasFocus) {
+                tempoEditText.setCursorVisible(hasFocus);
+            }
+        });
         tempoEditText.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
@@ -636,6 +642,7 @@ public class ProjectPatternsFragment extends Fragment {
 
                         editor.pattern.setTempo(inputTempo);
                     }
+                    ((View) tempoEditText.getParent()).requestFocus();
                     updatePianoRollPosition();
                 }
                 return false;

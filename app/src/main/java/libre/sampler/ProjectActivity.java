@@ -277,8 +277,6 @@ public class ProjectActivity extends AppCompatActivity {
             return true;
         } else if(item.getItemId() == R.id.appbar_refresh_midi) {
             refreshMidiConnection();
-        } else if(item.getItemId() == R.id.appbar_export) {
-            Log.d("ProjectActivity", "export");
         }
         return super.onOptionsItemSelected(item);
     }

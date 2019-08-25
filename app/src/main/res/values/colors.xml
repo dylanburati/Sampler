@@ -3,7 +3,8 @@
     <color name="colorPrimary">#82B1FF</color>
     <color name="colorPrimaryDark">#000000</color>
     <color name="colorAccent">#00B0FF</color>
-    <color name="colorBackground">@color/material_grey_900</color>
+    <color name="colorBackground">#111111</color>
+    <color name="colorBackgroundLighter">#282828</color>
     <color name="colorOnBackground">#FFFFFF</color>
 
     <color name="piano_white_up">#FFFFFF</color>
@@ -19,5 +20,4 @@
     <color name="colorError">#FFD32F2F</color>
     <color name="colorReplace">#FF2196F3</color>
     <color name="colorBorderOnBackground">#4FFFFFFF</color>
-    <color name="colorPrimaryLighter">#92D0FF</color>
 </resources>

@@ -32,8 +32,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
-                    android:layout_alignParentTop="true"
-                    android:background="#27FFFFFF">
+                    android:background="#44373741">
 
                     <TextView
                         android:layout_width="wrap_content"
@@ -78,7 +77,7 @@
                             android:layout_height="match_parent"
                             android:layout_alignParentLeft="true"
                             android:layout_alignParentTop="true"
-                            android:background="#19FFFFFF"
+                            android:background="#7737373A"
                             android:orientation="vertical">
                         </LinearLayout>
 
@@ -113,6 +112,7 @@
         android:layout_width="match_parent"
         android:layout_height="@dimen/pattern_footer_height"
         android:layout_weight="0"
+        android:focusable="true"
         android:background="@drawable/border_top"
         android:orientation="horizontal">
 
@@ -168,6 +168,7 @@
             android:padding="0dp"
             android:gravity="center_horizontal"
             android:background="@android:color/transparent"
+            android:cursorVisible="false"
             android:inputType="numberDecimal"
             android:imeOptions="actionDone"
             android:textSize="@dimen/text_title"

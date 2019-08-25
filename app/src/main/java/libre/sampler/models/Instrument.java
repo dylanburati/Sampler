@@ -17,8 +17,6 @@ public class Instrument {
     @Ignore
     private List<Sample> samples = new ArrayList<>();
     @Ignore
-    private String firstFilename;
-    @Ignore
     private int nextSampleId;
     @Ignore
     private IdStatus idStatus = new IdStatus("Instrument,Sample");
@@ -47,12 +45,8 @@ public class Instrument {
 
     public void setSamples(List<Sample> samples) {
         this.samples = samples;
-        this.firstFilename = null;
         for(Sample s : samples) {
             s.instrumentId = this.id;
-            if(firstFilename == null) {
-                firstFilename = s.filename;
-            }
             if(s.id >= nextSampleId) {
                 nextSampleId = s.id + 1;
             }
@@ -67,9 +61,6 @@ public class Instrument {
         s.instrumentId = this.id;
         samples.add(s);
 
-        if(firstFilename == null) {
-            firstFilename = s.filename;
-        }
         nextSampleId++;
 
         idStatus.require(IdStatus.SELF);
@@ -80,11 +71,8 @@ public class Instrument {
     public void addSample(Sample s) {
         s.instrumentId = this.id;
         s.id = nextSampleId;
-
         samples.add(s);
-        if(firstFilename == null) {
-            firstFilename = s.filename;
-        }
+
         nextSampleId++;
 
         idStatus.require(IdStatus.SELF);
@@ -107,10 +95,6 @@ public class Instrument {
             }
         }
         return retval;
-    }
-
-    public String firstFilename() {
-        return firstFilename;
     }
 
     public float getVolume() {

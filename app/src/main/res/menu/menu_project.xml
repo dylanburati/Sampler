@@ -13,9 +13,4 @@
         android:id="@+id/appbar_refresh_midi"
         android:title="@string/action_refresh_midi"
         app:showAsAction="never" />
-
-    <item
-        android:id="@+id/appbar_export"
-        android:title="@string/action_export"
-        app:showAsAction="never" />
 </menu>

@@ -45,7 +45,7 @@ public class MainDetailFragment extends Fragment {
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        rootView = inflater.inflate(R.layout.activity_project_detail, container, false);
+        rootView = inflater.inflate(R.layout.fragment_main_detail, container, false);
 
         ActionBar actionBar = ((MainActivity) getActivity()).getSupportActionBar();
         if(actionBar != null) {
@@ -128,6 +128,7 @@ public class MainDetailFragment extends Fragment {
         if(item.getItemId() == R.id.action_cancel) {
             FragmentManager fm = getFragmentManager();
             if(fm != null && fm.getBackStackEntryCount() > 0) fm.popBackStack();
+            return true;
         } else if(item.getItemId() == R.id.action_done) {
             if(viewModel.getDialogActionType() == ProjectEvent.PROJECT_CREATE) {
                 final Project toAdd = createProject();
