@@ -1,6 +1,5 @@
 package libre.sampler.adapters;
 
-import android.content.res.Resources;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
@@ -89,7 +88,6 @@ public class InstrumentListAdapter extends RecyclerView.Adapter<InstrumentListAd
     @Override
     public void onBindViewHolder(@NonNull final ViewHolder holder, int position) {
         viewHolderSet.add(holder);
-        Resources res = holder.rootView.getResources();
         if(holder.viewType == 0) {
             holder.rootView.setOnClickListener(new View.OnClickListener() {
                 @Override

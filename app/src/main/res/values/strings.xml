@@ -96,6 +96,7 @@
     <string name="transpose">Transpose</string>
     <string name="project_could_not_create">Could not create project</string>
     <string name="project_could_not_edit">Please try again</string>
+    <string name="add_instruments">Add instruments</string>
     <plurals name="selected_notes_label">
         <item quantity="one">%d note selected</item>
         <item quantity="other">%d notes selected</item>

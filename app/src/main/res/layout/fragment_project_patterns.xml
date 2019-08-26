@@ -112,7 +112,6 @@
         android:layout_width="match_parent"
         android:layout_height="@dimen/pattern_footer_height"
         android:layout_weight="0"
-        android:focusable="true"
         android:background="@drawable/border_top"
         android:orientation="horizontal">
 

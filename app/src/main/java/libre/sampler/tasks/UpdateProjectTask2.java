@@ -1,26 +1,25 @@
 package libre.sampler.tasks;
 
 import android.os.AsyncTask;
-import android.util.Log;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import libre.sampler.databases.InstrumentDao;
-import libre.sampler.databases.PatternDao;
 import libre.sampler.databases.ProjectDao;
 import libre.sampler.databases.SampleDao;
-import libre.sampler.databases.ScheduledNoteEventDao;
 import libre.sampler.models.Instrument;
-import libre.sampler.models.Pattern;
 import libre.sampler.models.Project;
 import libre.sampler.utils.DatabaseConnectionManager;
 
-public class UpdateProjectTask extends AsyncTask<Void, Void, Void> {
+public class UpdateProjectTask2 extends AsyncTask<Void, Void, Void> {
     private Project project;
     private Runnable onCompleted;
 
-    public UpdateProjectTask(Project project, Runnable onCompleted) {
+    /**
+     * Does not update the patterns or scheduled note events.
+     */
+    public UpdateProjectTask2(Project project, Runnable onCompleted) {
         this.project = project;
         this.onCompleted = onCompleted;
     }
@@ -30,8 +29,6 @@ public class UpdateProjectTask extends AsyncTask<Void, Void, Void> {
         ProjectDao projectDao = DatabaseConnectionManager.getInstance().projectDao();
         InstrumentDao instrumentDao = DatabaseConnectionManager.getInstance().instrumentDao();
         SampleDao sampleDao = DatabaseConnectionManager.getInstance().sampleDao();
-        PatternDao patternDao = DatabaseConnectionManager.getInstance().patternDao();
-        ScheduledNoteEventDao scheduledNoteEventDao = DatabaseConnectionManager.getInstance().scheduledNoteEventDao();
 
         projectDao.updateAll(project);
         List<ProjectDao.ProjectWithRelations> data = projectDao.getWithRelations(project.id);
@@ -43,22 +40,11 @@ public class UpdateProjectTask extends AsyncTask<Void, Void, Void> {
                 }
                 sampleDao.deleteAll(instrumentIds);
                 instrumentDao.deleteAll(project.id);
-
-                List<Integer> patternIds = new ArrayList<>();
-                for(Pattern p : d.patterns) {
-                    patternIds.add(p.id);
-                }
-                scheduledNoteEventDao.deleteAll(patternIds);
-                patternDao.deleteAll(project.id);
             }
         }
         instrumentDao.insertAll(project.getInstruments());
         for(Instrument t : project.getInstruments()) {
             sampleDao.insertAll(t.getSamples());
-        }
-        patternDao.insertAll(project.getPatterns());
-        for(Pattern p : project.getPatterns()) {
-            scheduledNoteEventDao.insertAll(p.getEventsDeepCopy());
         }
         return null;
     }

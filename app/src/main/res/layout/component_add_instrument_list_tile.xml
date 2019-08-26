@@ -4,6 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:background="@drawable/border_tile_bottom"
+    android:foreground="?attr/selectableItemBackground"
     android:paddingBottom="1dp"
     android:clickable="true"
     android:focusable="true">
@@ -13,25 +14,19 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_weight="1"
-        android:foreground="?attr/selectableItemBackground"
-        android:paddingLeft="@dimen/margin4"
+        android:paddingLeft="32dp"
         android:paddingTop="@dimen/margin3"
         android:paddingBottom="@dimen/margin3"
         android:textColor="@color/activatable_text" />
 
-    <LinearLayout
+    <CheckBox
+        android:id="@+id/checkbox"
         android:layout_width="wrap_content"
-        android:layout_height="match_parent"
-        android:id="@+id/more_vert_menu"
-        android:foreground="?attr/selectableItemBackground">
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_vertical"
+        android:layout_marginLeft="@dimen/margin3_dense"
+        android:layout_marginRight="@dimen/margin3" />
 
-        <View
-            android:layout_width="24dp"
-            android:layout_height="24dp"
-            android:layout_gravity="center_vertical"
-            android:layout_marginLeft="@dimen/margin3_dense"
-            android:layout_marginRight="@dimen/margin3_dense"
-            android:background="@drawable/ic_more_vert" />
-
-    </LinearLayout>
 </LinearLayout>
+
+

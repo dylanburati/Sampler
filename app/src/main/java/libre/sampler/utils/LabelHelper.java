@@ -33,8 +33,6 @@ public class LabelHelper {
 
             if(willInflate) {
                 labelContainer.addView(v, viewIndex);
-            } else {
-                v.requestLayout();
             }
         }
         while(childCount > count + startIndex) {

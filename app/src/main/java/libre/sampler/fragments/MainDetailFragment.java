@@ -10,6 +10,7 @@ import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import androidx.annotation.NonNull;
@@ -19,8 +20,10 @@ import androidx.core.util.Consumer;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.lifecycle.ViewModelProviders;
+import androidx.recyclerview.widget.RecyclerView;
 import libre.sampler.MainActivity;
 import libre.sampler.R;
+import libre.sampler.adapters.AddInstrumentListAdapter;
 import libre.sampler.models.Instrument;
 import libre.sampler.models.MainViewModel;
 import libre.sampler.models.Project;
@@ -32,6 +35,9 @@ public class MainDetailFragment extends Fragment {
 
     private View rootView;
     private EditText nameInputView;
+    private RecyclerView addInstrumentsView;
+    private AddInstrumentListAdapter addInstrumentsAdapter;
+
     private boolean isAdapterLoaded;
     private MainViewModel viewModel;
 
@@ -57,7 +63,8 @@ public class MainDetailFragment extends Fragment {
         viewModel.loadEventSource.add(TAG, new Consumer<String>() {
             @Override
             public void accept(String eventName) {
-                if(eventName.equals(AppConstants.ALL_INSTRUMENTS_LOADED)) {
+                if(eventName.equals(AppConstants.ALL_INSTRUMENTS_LOADED) ||
+                        eventName.equals(AppConstants.PROJECTS_LOADED)) {
                     updateUI();
                 }
             }
@@ -79,19 +86,26 @@ public class MainDetailFragment extends Fragment {
 
     private void initUI() {
         nameInputView = rootView.findViewById(R.id.input_name);
+        addInstrumentsView = rootView.findViewById(R.id.add_instruments_select);
+        addInstrumentsAdapter = new AddInstrumentListAdapter();
+        addInstrumentsView.setAdapter(addInstrumentsAdapter);
     }
 
     private void updateUI() {
         List<Instrument> instruments = viewModel.getInstruments();
-        Project project = viewModel.getDialogProject();
-        if(instruments == null || isAdapterLoaded) {
+        List<Project> projects = viewModel.getProjects();
+        Project dialogProject = viewModel.getDialogProject();
+        if(projects == null || instruments == null || isAdapterLoaded) {
             return;
         }
 
+        List<Project> otherProjects = new ArrayList<>(projects);
+        otherProjects.remove(dialogProject);
+        addInstrumentsAdapter.setProjectsAndInstruments(otherProjects, instruments);
         isAdapterLoaded = true;
-        if(project != null) {
+        if(dialogProject != null) {
             // update fields
-            nameInputView.setText(project.name);
+            nameInputView.setText(dialogProject.name);
         }
     }
 
@@ -114,7 +128,6 @@ public class MainDetailFragment extends Fragment {
         }
 
         toEdit.name = nameInputView.getText().toString();
-
         return true;
     }
 
@@ -133,13 +146,13 @@ public class MainDetailFragment extends Fragment {
             if(viewModel.getDialogActionType() == ProjectEvent.PROJECT_CREATE) {
                 final Project toAdd = createProject();
                 if(toAdd != null) {
-                    viewModel.addNewProject(toAdd);
+                    viewModel.addNewProject(toAdd, addInstrumentsAdapter.getSelectedInstruments());
                 } else {
                     Toast.makeText(getContext(), R.string.project_could_not_create, Toast.LENGTH_SHORT).show();
                 }
             } else if(viewModel.getDialogActionType() == ProjectEvent.PROJECT_EDIT) {
                 if(editProject()) {
-                    viewModel.updateProject(viewModel.getDialogProject());
+                    viewModel.updateProject(viewModel.getDialogProject(), addInstrumentsAdapter.getSelectedInstruments());
                 } else {
                     Toast.makeText(getContext(), R.string.project_could_not_edit, Toast.LENGTH_SHORT).show();
                 }

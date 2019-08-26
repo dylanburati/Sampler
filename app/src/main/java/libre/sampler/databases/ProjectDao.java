@@ -38,6 +38,10 @@ public interface ProjectDao {
     @Query("SELECT * FROM project WHERE id IN (:projectIds)")
     List<ProjectWithRelations> getWithRelations(List<Integer> projectIds);
 
+    @Transaction
+    @Query("SELECT * FROM project")
+    List<ProjectWithRelations> getAllWithRelations();
+
     static class ProjectWithRelations {
         @Embedded
         public Project project;

@@ -12,5 +12,5 @@
         android:id="@+id/action_done"
         android:title="@string/done"
         android:icon="@drawable/ic_check"
-        app:showAsAction="withText|ifRoom" />
+        app:showAsAction="ifRoom" />
 </menu>

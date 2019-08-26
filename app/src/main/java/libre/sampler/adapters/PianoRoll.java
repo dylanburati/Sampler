@@ -77,8 +77,9 @@ public class PianoRoll {
     private void bindRow(@NonNull RelativeLayout notePane, int position) {
         int containerIndex = position;
 
-        notePane.getLayoutParams().width = rollWidth;
-        notePane.requestLayout();
+        ViewGroup.LayoutParams layoutParams = notePane.getLayoutParams();
+        layoutParams.width = rollWidth;
+        notePane.setLayoutParams(layoutParams);
         
         notePane.removeAllViews();
         for(VisualNote n : pianoRollNotes) {
@@ -188,8 +189,9 @@ public class PianoRoll {
         this.rollTicks = ticks;
         this.rollWidth = (int) (ticks * tickWidth);
         for(RelativeLayout notePane : noteContainerList) {
-            notePane.getLayoutParams().width = rollWidth;
-            notePane.requestLayout();
+            ViewGroup.LayoutParams layoutParams = notePane.getLayoutParams();
+            layoutParams.width = rollWidth;
+            notePane.setLayoutParams(layoutParams);
         }
     }
 

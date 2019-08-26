@@ -54,6 +54,31 @@ public class Sample {
         this.displayFlags |= FIELD_MIN_PITCH | FIELD_MAX_PITCH;
     }
 
+    public Sample(Sample other) {
+        this.id = -1;
+        this.sampleIndex = -1;
+        this.instrumentId = -1;
+
+        this.filename = other.filename;
+        this.volume = other.volume;
+        this.minPitch = other.minPitch;
+        this.maxPitch = other.maxPitch;
+        this.minVelocity = other.minVelocity;
+        this.maxVelocity = other.maxVelocity;
+        this.attack = other.attack;
+        this.decay = other.decay;
+        this.sustain = other.sustain;
+        this.release = other.release;
+        this.basePitch = other.basePitch;
+        this.startTime = other.startTime;
+        this.resumeTime = other.resumeTime;
+        this.endTime = other.endTime;
+        this.shouldUseDefaultLoopStart = other.shouldUseDefaultLoopStart;
+        this.shouldUseDefaultLoopResume = other.shouldUseDefaultLoopResume;
+        this.shouldUseDefaultLoopEnd = other.shouldUseDefaultLoopEnd;
+        this.displayFlags = other.displayFlags;
+    }
+
     public void setFilename(String filename) {
         this.filename = filename;
         this.sampleIndex = -1;

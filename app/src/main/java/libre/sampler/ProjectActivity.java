@@ -310,7 +310,7 @@ public class ProjectActivity extends AppCompatActivity {
         return patternThread.isSuspended;
     }
 
-    private static class UpdateProjectTaskCallback implements Consumer<Void> {
+    private static class UpdateProjectTaskCallback implements Runnable {
         private final WeakReference<Context> contextRef;
 
         public UpdateProjectTaskCallback(WeakReference<Context> context) {
@@ -318,7 +318,7 @@ public class ProjectActivity extends AppCompatActivity {
         }
 
         @Override
-        public void accept(Void result) {
+        public void run() {
             if(this.contextRef.get() != null) {
                 Toast.makeText(this.contextRef.get(), R.string.project_saved, Toast.LENGTH_SHORT).show();
             }

@@ -123,11 +123,11 @@ public class IconNavigationPanel extends RelativeLayout {
         double underflow = 0.5 * (view.getPaddingTop() + view.getPaddingBottom());
         int h = (int) (view.getHeight() - underflow);
         int t = (int) (view.getTop() + 0.5 * underflow);
-        navIndicator.getLayoutParams().height = h;
-        navIndicator.requestLayout();
+        LayoutParams layoutParams = (LayoutParams) navIndicator.getLayoutParams();
+        layoutParams.height = h;
+        layoutParams.topMargin = t;
+        navIndicator.setLayoutParams(layoutParams);
         TransitionManager.beginDelayedTransition(this, new ChangeBounds().setDuration(150));
-        ((LayoutParams) navIndicator.getLayoutParams()).topMargin = t;
-        navIndicator.requestLayout();
 
         if(externalListener != null) {
             externalListener.onSelect(view);

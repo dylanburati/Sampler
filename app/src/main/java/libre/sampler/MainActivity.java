@@ -21,9 +21,11 @@ public class MainActivity extends AppCompatActivity {
 
         viewModel = ViewModelProviders.of(this).get(MainViewModel.class);
 
-        getSupportFragmentManager().beginTransaction()
-                .replace(R.id.main_fragment_root, new MainProjectsFragment())
-                .commit();
+        if(savedInstanceState == null) {
+            getSupportFragmentManager().beginTransaction()
+                    .replace(R.id.main_fragment_root, new MainProjectsFragment())
+                    .commit();
+        }
     }
 
     public void openDetailFragment(int dialogActionType, Project dialogProject) {

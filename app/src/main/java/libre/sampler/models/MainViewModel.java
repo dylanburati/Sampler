@@ -2,6 +2,8 @@ package libre.sampler.models;
 
 import android.app.Application;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
@@ -14,6 +16,7 @@ import libre.sampler.tasks.CreateProjectTask;
 import libre.sampler.tasks.DeleteProjectsTask;
 import libre.sampler.tasks.ListProjectsTask;
 import libre.sampler.tasks.LoadInstrumentsTask;
+import libre.sampler.tasks.UpdateProjectTask2;
 import libre.sampler.utils.AppConstants;
 import libre.sampler.utils.DatabaseConnectionManager;
 import libre.sampler.utils.ModelState;
@@ -94,12 +97,13 @@ public class MainViewModel extends AndroidViewModel {
         this.dialogActionType = dialogActionType;
     }
 
-    public void addNewProject(final Project toAdd) {
-        if(this.projectsState == ModelState.LOADED) {
-            DatabaseConnectionManager.runTask(new CreateProjectTask(toAdd, new Runnable() {
+    public void addNewProject(final Project toAdd, final Collection<Instrument> instruments) {
+        if(this.projectsState == ModelState.LOADED && this.allInstrumentsState == ModelState.LOADED) {
+            DatabaseConnectionManager.runTask(new CreateProjectTask(toAdd, instruments, new Runnable() {
                 @Override
                 public void run() {
                     MainViewModel.this.projects.add(0, toAdd);
+                    MainViewModel.this.allInstruments.addAll(toAdd.getInstruments());
                     projectEventSource.dispatch(new ProjectEvent(ProjectEvent.PROJECT_CREATE, toAdd));
                 }
             }));
@@ -118,13 +122,31 @@ public class MainViewModel extends AndroidViewModel {
         }
     }
 
-    public void updateProject(final Project project) {
-        DatabaseConnectionManager.execute(new Runnable() {
-            @Override
-            public void run() {
-                DatabaseConnectionManager.getInstance().projectDao().updateAll(project);
-                projectEventSource.dispatch(new ProjectEvent(ProjectEvent.PROJECT_EDIT, project));
+    public void updateProject(final Project project, final Collection<Instrument> instruments) {
+        if(this.projectsState == ModelState.LOADED && this.allInstrumentsState == ModelState.LOADED) {
+            List<Instrument> dbInstruments = new ArrayList<>();
+            for(Instrument t : allInstruments) {
+                if(t.projectId == project.id) {
+                    dbInstruments.add(t);
+                }
             }
-        });
+            project.setInstruments(dbInstruments);
+            for(Instrument t : instruments) {
+                Instrument tCopy = new Instrument(t.name);
+                project.registerInstrument(tCopy);
+                tCopy.setVolume(t.getVolume());
+                for(Sample s : t.getSamples()) {
+                    tCopy.addSample(new Sample(s));
+                }
+                project.addInstrument(tCopy);
+                this.allInstruments.add(tCopy);
+            }
+            DatabaseConnectionManager.runTask(new UpdateProjectTask2(project, new Runnable() {
+                @Override
+                public void run() {
+                    projectEventSource.dispatch(new ProjectEvent(ProjectEvent.PROJECT_EDIT, project));
+                }
+            }));
+        }
     }
 }

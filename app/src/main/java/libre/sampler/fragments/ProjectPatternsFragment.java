@@ -114,7 +114,9 @@ public class ProjectPatternsFragment extends Fragment {
                 new LabelHelper.LabelSelector() {
                     @Override
                     public void setup(int index, TextView outLabel) {
-                        outLabel.getLayoutParams().height = LabelHelper.getLabelSize(octaveHeight, index);
+                        ViewGroup.LayoutParams layoutParams = outLabel.getLayoutParams();
+                        layoutParams.height = LabelHelper.getLabelSize(octaveHeight, index);
+                        outLabel.setLayoutParams(layoutParams);
                         outLabel.setText(String.format("C%d", 8 - index));
                     }
                 });
@@ -277,11 +279,13 @@ public class ProjectPatternsFragment extends Fragment {
                 new LabelHelper.LabelSelector() {
                     @Override
                     public void setup(int index, TextView outLabel) {
+                        ViewGroup.LayoutParams layoutParams = outLabel.getLayoutParams();
                         if(index < labelCount - 1) {
-                            outLabel.getLayoutParams().width = LabelHelper.getLabelSize(barWidth, index);
+                            layoutParams.width = LabelHelper.getLabelSize(barWidth, index);
                         } else {
-                            outLabel.getLayoutParams().width = px - (int) Math.round(barWidth * (labelCount - 1));
+                            layoutParams.width = px - (int) Math.round(barWidth * (labelCount - 1));
                         }
+                        outLabel.setLayoutParams(layoutParams);
                         outLabel.setText(String.format("%d", index));
                     }
                 });
@@ -610,12 +614,6 @@ public class ProjectPatternsFragment extends Fragment {
     private void registerTempoInput(final EditText tempoEditText) {
         this.tempoEditText = tempoEditText;
 
-        tempoEditText.setOnFocusChangeListener(new View.OnFocusChangeListener() {
-            @Override
-            public void onFocusChange(View v, boolean hasFocus) {
-                tempoEditText.setCursorVisible(hasFocus);
-            }
-        });
         tempoEditText.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
@@ -642,7 +640,6 @@ public class ProjectPatternsFragment extends Fragment {
 
                         editor.pattern.setTempo(inputTempo);
                     }
-                    ((View) tempoEditText.getParent()).requestFocus();
                     updatePianoRollPosition();
                 }
                 return false;
