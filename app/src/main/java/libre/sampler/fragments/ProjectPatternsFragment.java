@@ -1,7 +1,6 @@
 package libre.sampler.fragments;
 
 import android.content.Context;
-import android.content.res.Configuration;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -86,20 +85,6 @@ public class ProjectPatternsFragment extends Fragment {
         View rootView = inflater.inflate(R.layout.fragment_project_patterns, container, false);
         viewModel = ViewModelProviders.of(getActivity()).get(ProjectViewModel.class);
         projectActivity = ((ProjectActivity) getActivity());
-
-        // if landscape and not tablet, put piano roll on left instead of top
-        if(getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE &&
-                getResources().getDisplayMetrics().widthPixels < getResources().getDimensionPixelOffset(R.dimen.split_screen_direction_threshold)) {
-            LinearLayout patternsBody = rootView.findViewById(R.id.patterns_body);
-            patternsBody.setOrientation(LinearLayout.HORIZONTAL);
-            int nChildren = patternsBody.getChildCount();
-            for(int i = 0; i < nChildren; i++) {
-                ViewGroup.LayoutParams params = patternsBody.getChildAt(i).getLayoutParams();
-                params.height = ViewGroup.LayoutParams.MATCH_PARENT;
-                params.width = 0;
-                patternsBody.getChildAt(i).setLayoutParams(params);
-            }
-        }
 
         final float octaveHeight = getResources().getDimension(R.dimen.piano_roll_colheight);
         this.inputTempo = viewModel.getPianoRollPattern().getTempo();
@@ -196,8 +181,6 @@ public class ProjectPatternsFragment extends Fragment {
         });
 
         pianoRollPosition = (TextView) rootView.findViewById(R.id.piano_roll_position);
-        updatePianoRollPosition();
-        updatePlayPauseControls(getContext());
 
         registerEditorFragmentNav((IconNavigationPanel) rootView.findViewById(R.id.pattern_edit_nav));
         setEditorFragment(AppConstants.PATTERN_EDITOR_BASE);
@@ -207,6 +190,7 @@ public class ProjectPatternsFragment extends Fragment {
 
     @Override
     public void onResume() {
+        updatePianoRollPosition();
         updatePlayPauseControls(getContext());
         for(Instrument t : patternDerivedData.getInstrumentList()) {
             viewModel.instrumentEventSource.dispatch(new InstrumentEvent(InstrumentEvent.INSTRUMENT_PD_LOAD, t));

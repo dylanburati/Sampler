@@ -270,7 +270,6 @@ public class ProjectActivity extends AppCompatActivity {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         if(item.getItemId() == R.id.appbar_save) {
-            viewModel.getProject().mtime = System.currentTimeMillis();
             patternThread.savePatterns(viewModel.getProject());
             DatabaseConnectionManager.runTask(new UpdateProjectTask(viewModel.getProject(),
                     new UpdateProjectTaskCallback(new WeakReference<Context>(this))));

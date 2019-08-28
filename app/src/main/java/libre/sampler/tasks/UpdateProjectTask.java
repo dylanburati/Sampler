@@ -1,7 +1,6 @@
 package libre.sampler.tasks;
 
 import android.os.AsyncTask;
-import android.util.Log;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -22,6 +21,7 @@ public class UpdateProjectTask extends AsyncTask<Void, Void, Void> {
 
     public UpdateProjectTask(Project project, Runnable onCompleted) {
         this.project = project;
+        project.mtime = System.currentTimeMillis();
         this.onCompleted = onCompleted;
     }
 

@@ -21,6 +21,7 @@ public class UpdateProjectTask2 extends AsyncTask<Void, Void, Void> {
      */
     public UpdateProjectTask2(Project project, Runnable onCompleted) {
         this.project = project;
+        project.mtime = System.currentTimeMillis();
         this.onCompleted = onCompleted;
     }
 

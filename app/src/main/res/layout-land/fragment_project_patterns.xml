@@ -8,13 +8,14 @@
 
     <HorizontalScrollView
         android:id="@+id/piano_roll_container"
-        android:layout_width="match_parent"
+        android:layout_width="0dp"
         android:layout_height="0dp"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toTopOf="@+id/pattern_edit_container"
+        app:layout_constraintBottom_toTopOf="@+id/patterns_footer"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintVertical_chainStyle="spread"
-        app:layout_constraintVertical_weight="1"
+        app:layout_constraintEnd_toStartOf="@+id/pattern_edit_container"
+        app:layout_constraintHorizontal_chainStyle="spread"
+        app:layout_constraintHorizontal_weight="1"
         android:orientation="vertical"
         android:scrollbars="none">
 
@@ -85,15 +86,17 @@
 
     <RelativeLayout
         android:id="@+id/pattern_edit_container"
-        android:layout_width="match_parent"
+        android:layout_width="0dp"
         android:layout_height="0dp"
-        app:layout_constraintTop_toBottomOf="@id/piano_roll_container"
+        app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toTopOf="@+id/patterns_footer"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintVertical_weight="1"
+        app:layout_constraintStart_toEndOf="@id/piano_roll_container"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_weight="1"
         android:focusable="true"
         android:orientation="vertical"
-        android:background="@drawable/border_top">
+        android:paddingLeft="@dimen/border_width"
+        android:background="@drawable/border_left">
 
         <include
             android:id="@+id/pattern_edit_nav"
