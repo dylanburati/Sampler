@@ -270,7 +270,6 @@ public class ProjectActivity extends AppCompatActivity {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         if(item.getItemId() == R.id.appbar_save) {
-            patternThread.savePatterns(viewModel.getProject());
             DatabaseConnectionManager.runTask(new UpdateProjectTask(viewModel.getProject(),
                     new UpdateProjectTaskCallback(new WeakReference<Context>(this))));
             return true;
@@ -352,8 +351,8 @@ public class ProjectActivity extends AppCompatActivity {
                             Log.d("NoteEventConsumer", String.format("NOTE_ON : voiceIndex=%d id1=%x id2=%d", voiceIndex, noteEvent.eventId.first, noteEvent.eventId.second));
                             PdBase.sendList("note", voiceIndex, noteEvent.keyNum,
                                     /*velocity*/   adjVelocity,
-                                    /*ADSR*/       s.attack, s.decay, s.sustain, s.release,
-                                    /*sampleInfo*/ s.sampleIndex, s.getLoopStart(), s.getLoopResume(), s.getLoopEnd(), s.sampleRate, s.basePitch);
+                                    /*ADSR*/       s.getAttack(), s.getDecay(), s.getSustain(), s.getRelease(),
+                                    /*sampleInfo*/ s.sampleIndex, s.getLoopStart(), s.getLoopResume(), s.getLoopEnd(), s.getSampleRate(), s.getBasePitch());
                         } else if(noteEvent.action == NoteEvent.NOTE_OFF) {
                             int voiceIndex = pdVoiceBindings.releaseBinding(noteEvent, s.id);
                             if(voiceIndex == -1) {
@@ -362,8 +361,8 @@ public class ProjectActivity extends AppCompatActivity {
                             Log.d("NoteEventConsumer", String.format("NOTE_OFF: voiceIndex=%d id1=%x id2=%d", voiceIndex, noteEvent.eventId.first, noteEvent.eventId.second));
                             PdBase.sendList("note", voiceIndex, noteEvent.keyNum,
                                     /*velocity*/   0,
-                                    /*ADSR*/       s.attack, s.decay, s.sustain, s.release,
-                                    /*sampleInfo*/ s.sampleIndex, s.getLoopStart(), s.getLoopResume(), s.getLoopEnd(), s.sampleRate, s.basePitch);
+                                    /*ADSR*/       s.getAttack(), s.getDecay(), s.getSustain(), s.getRelease(),
+                                    /*sampleInfo*/ s.sampleIndex, s.getLoopStart(), s.getLoopResume(), s.getLoopEnd(), s.getSampleRate(), s.getBasePitch());
                         } else if(noteEvent.action == NoteEvent.CLOSE) {
                             int voiceIndex = pdVoiceBindings.releaseBinding(noteEvent, s.id);
                             if(voiceIndex == -1) {
@@ -371,8 +370,8 @@ public class ProjectActivity extends AppCompatActivity {
                             }
                             PdBase.sendList("note", voiceIndex, noteEvent.keyNum,
                                     /*velocity*/   0,
-                                    /*ADSR*/       s.attack, s.decay, s.sustain, 0,
-                                    /*sampleInfo*/ s.sampleIndex, s.getLoopStart(), s.getLoopResume(), s.getLoopEnd(), s.sampleRate, s.basePitch);
+                                    /*ADSR*/       s.getAttack(), s.getDecay(), s.getSustain(), 0,
+                                    /*sampleInfo*/ s.sampleIndex, s.getLoopStart(), s.getLoopResume(), s.getLoopEnd(), s.getSampleRate(), s.getBasePitch());
                         }
                     }
                 } catch(IOException e) {

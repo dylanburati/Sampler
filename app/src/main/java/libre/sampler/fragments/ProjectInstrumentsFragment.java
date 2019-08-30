@@ -291,13 +291,13 @@ public class ProjectInstrumentsFragment extends Fragment {
                             editorSample.setMaxVelocity((int) val);
                             break;
                         case R.id.position_start:
-                            editorSample.setLoopStart(val);
+                            editorSample.setStartTime(val);
                             break;
                         case R.id.position_end:
-                            editorSample.setLoopEnd(val);
+                            editorSample.setEndTime(val);
                             break;
                         case R.id.position_resume:
-                            editorSample.setLoopResume(val);
+                            editorSample.setResumeTime(val);
                             break;
                         default:
                             break;
@@ -406,7 +406,7 @@ public class ProjectInstrumentsFragment extends Fragment {
             sampleSpinnerAdapter.add("Global");
         }
         for(int i = 0; i < sampleSpinnerItems.size(); i++) {
-            sampleSpinnerAdapter.add(String.format("%03d %s", i + 1, sampleSpinnerItems.get(i).filename));
+            sampleSpinnerAdapter.add(String.format("%03d %s", i + 1, sampleSpinnerItems.get(i).getDisplayName()));
         }
 
         Sample editorSample = viewModel.getEditorSample();
@@ -446,56 +446,56 @@ public class ProjectInstrumentsFragment extends Fragment {
                 switch(id) {
                     case R.id.pitch_min:
                         if(editorSample.shouldDisplay(Sample.FIELD_MIN_PITCH)) {
-                            ed.setText(String.format("%d", editorSample.minPitch));
+                            ed.setText(String.format("%d", editorSample.getMinPitch()));
                         } else {
                             ed.setText("");
                         }
                         break;
                     case R.id.pitch_max:
                         if(editorSample.shouldDisplay(Sample.FIELD_MAX_PITCH)) {
-                            ed.setText(String.format("%d", editorSample.maxPitch));
+                            ed.setText(String.format("%d", editorSample.getMaxPitch()));
                         } else {
                             ed.setText("");
                         }
                         break;
                     case R.id.pitch_base:
                         if(editorSample.shouldDisplay(Sample.FIELD_BASE_PITCH)) {
-                            ed.setText(String.format("%d", editorSample.basePitch));
+                            ed.setText(String.format("%d", editorSample.getBasePitch()));
                         } else {
                             ed.setText("");
                         }
                         break;
                     case R.id.velocity_min:
                         if(editorSample.shouldDisplay(Sample.FIELD_MIN_VELOCITY)) {
-                            ed.setText(String.format("%d", editorSample.minVelocity));
+                            ed.setText(String.format("%d", editorSample.getMinVelocity()));
                         } else {
                             ed.setText("");
                         }
                         break;
                     case R.id.velocity_max:
                         if(editorSample.shouldDisplay(Sample.FIELD_MAX_VELOCITY)) {
-                            ed.setText(String.format("%d", editorSample.maxVelocity));
+                            ed.setText(String.format("%d", editorSample.getMaxVelocity()));
                         } else {
                             ed.setText("");
                         }
                         break;
                     case R.id.position_start:
-                        if(!editorSample.shouldUseDefaultLoopStart) {
-                            ed.setText(fmt3.format(editorSample.startTime));
+                        if(editorSample.shouldDisplay(Sample.FIELD_LOOP_START)) {
+                            ed.setText(fmt3.format(editorSample.getStartTime()));
                         } else {
                             ed.setText("");
                         }
                         break;
                     case R.id.position_end:
-                        if(!editorSample.shouldUseDefaultLoopResume) {
-                            ed.setText(fmt3.format(editorSample.endTime));
+                        if(editorSample.shouldDisplay(Sample.FIELD_LOOP_END)) {
+                            ed.setText(fmt3.format(editorSample.getEndTime()));
                         } else {
                             ed.setText("");
                         }
                         break;
                     case R.id.position_resume:
-                        if(!editorSample.shouldUseDefaultLoopEnd) {
-                            ed.setText(fmt3.format(editorSample.resumeTime));
+                        if(editorSample.shouldDisplay(Sample.FIELD_LOOP_RESUME)) {
+                            ed.setText(fmt3.format(editorSample.getResumeTime()));
                         } else {
                             ed.setText("");
                         }
@@ -516,12 +516,12 @@ public class ProjectInstrumentsFragment extends Fragment {
                         slider.setProgress(SliderConverter.DECIBELS.toSlider(sVol));
                         break;
                     case R.id.sample_attack:
-                        ed.setText(fmt3.format(editorSample.attack));
-                        slider.setProgress(SliderConverter.MILLISECONDS.toSlider(editorSample.attack));
+                        ed.setText(fmt3.format(editorSample.getAttack()));
+                        slider.setProgress(SliderConverter.MILLISECONDS.toSlider(editorSample.getAttack()));
                         break;
                     case R.id.sample_decay:
-                        ed.setText(fmt3.format(editorSample.decay));
-                        slider.setProgress(SliderConverter.MILLISECONDS.toSlider(editorSample.decay));
+                        ed.setText(fmt3.format(editorSample.getDecay()));
+                        slider.setProgress(SliderConverter.MILLISECONDS.toSlider(editorSample.getDecay()));
                         break;
                     case R.id.sample_sustain:
                         float sus = editorSample.getSustainDecibels();
@@ -530,8 +530,8 @@ public class ProjectInstrumentsFragment extends Fragment {
                         slider.setProgress(SliderConverter.DECIBELS.toSlider(sus));
                         break;
                     case R.id.sample_release:
-                        ed.setText(fmt3.format(editorSample.release));
-                        slider.setProgress(SliderConverter.MILLISECONDS.toSlider(editorSample.release));
+                        ed.setText(fmt3.format(editorSample.getRelease()));
+                        slider.setProgress(SliderConverter.MILLISECONDS.toSlider(editorSample.getRelease()));
                         break;
                     default:
                         break;

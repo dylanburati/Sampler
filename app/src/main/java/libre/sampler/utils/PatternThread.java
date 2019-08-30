@@ -8,7 +8,6 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import libre.sampler.models.NoteEvent;
 import libre.sampler.models.Pattern;
-import libre.sampler.models.Project;
 import libre.sampler.publishers.NoteEventSource;
 
 import static libre.sampler.utils.AppConstants.NANOS_PER_MILLI;
@@ -181,17 +180,6 @@ public class PatternThread extends Thread {
             } else {
                 // Log.d("PatternThread", "Skipped");
             }
-        }
-    }
-
-    public void savePatterns(Project prj) {
-        lock.lock();
-        try {
-            for(Pattern p : prj.getPatterns()) {
-                p.prepareEventsDeepCopy();
-            }
-        } finally {
-            lock.unlock();
         }
     }
 

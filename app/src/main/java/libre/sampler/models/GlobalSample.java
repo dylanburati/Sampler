@@ -11,29 +11,29 @@ public class GlobalSample extends Sample {
         if(samples.size() > 0) {
             float VARIES = -4;  // not valid for any
             Sample s1 = samples.get(0);
-            float aLoopStart = s1.shouldUseDefaultLoopStart ? VARIES : s1.getLoopStart();
-            float aLoopEnd = s1.shouldUseDefaultLoopEnd ? VARIES : s1.getLoopEnd();
-            float aLoopResume = s1.shouldUseDefaultLoopResume ? VARIES : s1.getLoopResume();
+            float aStartTime = s1.getStartTime();
+            float aEndTime = s1.getEndTime();
+            float aResumeTime = s1.getLoopResume();
             float aVolume = s1.getVolume();
-            float aAttack = s1.attack;
-            float aDecay = s1.decay;
-            float aSustain = s1.sustain;
-            float aRelease = s1.release;
+            float aAttack = s1.getAttack();
+            float aDecay = s1.getDecay();
+            float aSustain = s1.getSustain();
+            float aRelease = s1.getRelease();
 
             for(Sample s : samples.subList(1, samples.size())) {
-                if(aLoopStart != s.getLoopStart()) aLoopStart = VARIES;
-                if(aLoopEnd != s.getLoopEnd()) aLoopEnd = VARIES;
-                if(aLoopResume != s.getLoopResume()) aLoopResume = VARIES;
+                if(aStartTime != s.getStartTime()) aStartTime = VARIES;
+                if(aEndTime != s.getEndTime()) aEndTime = VARIES;
+                if(aResumeTime != s.getResumeTime()) aResumeTime = VARIES;
                 if(aVolume != s.getVolume()) aVolume = VARIES;
-                if(aAttack != s.attack) aAttack = VARIES;
-                if(aDecay != s.decay) aDecay = VARIES;
-                if(aSustain != s.sustain) aSustain = VARIES;
-                if(aRelease != s.release) aRelease = VARIES;
+                if(aAttack != s.getAttack()) aAttack = VARIES;
+                if(aDecay != s.getDecay()) aDecay = VARIES;
+                if(aSustain != s.getSustain()) aSustain = VARIES;
+                if(aRelease != s.getRelease()) aRelease = VARIES;
             }
 
-            if(aLoopStart != VARIES) super.setLoopStart(aLoopStart);
-            if(aLoopEnd != VARIES) super.setLoopEnd(aLoopEnd);
-            if(aLoopResume != VARIES) super.setLoopResume(aLoopResume);
+            if(aStartTime != VARIES) super.setStartTime(aStartTime);
+            if(aEndTime != VARIES) super.setEndTime(aEndTime);
+            if(aResumeTime != VARIES) super.setResumeTime(aResumeTime);
             if(aVolume != VARIES) super.setVolume(aVolume);
             if(aAttack != VARIES) super.setAttack(aAttack);
             if(aDecay != VARIES) super.setDecay(aDecay);
@@ -52,26 +52,26 @@ public class GlobalSample extends Sample {
     }
 
     @Override
-    public void setLoopStart(float startTime) {
-        super.setLoopStart(startTime);
+    public void setStartTime(float startTime) {
+        super.setStartTime(startTime);
         for(Sample s : instrument.getSamples()) {
-            s.setLoopStart(startTime);
+            s.setStartTime(startTime);
         }
     }
 
     @Override
-    public void setLoopResume(float resumeTime) {
-        super.setLoopResume(resumeTime);
+    public void setResumeTime(float resumeTime) {
+        super.setResumeTime(resumeTime);
         for(Sample s : instrument.getSamples()) {
-            s.setLoopResume(resumeTime);
+            s.setResumeTime(resumeTime);
         }
     }
 
     @Override
-    public void setLoopEnd(float endTime) {
-        super.setLoopEnd(endTime);
+    public void setEndTime(float endTime) {
+        super.setEndTime(endTime);
         for(Sample s : instrument.getSamples()) {
-            s.setLoopEnd(endTime);
+            s.setEndTime(endTime);
         }
     }
 
@@ -129,5 +129,10 @@ public class GlobalSample extends Sample {
         for(Sample s : instrument.getSamples()) {
             s.setRelease(release);
         }
+    }
+
+    @Override
+    public String getDisplayName() {
+        return "Global";
     }
 }

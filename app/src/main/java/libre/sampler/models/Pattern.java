@@ -26,8 +26,6 @@ public class Pattern {
     private List<ScheduledNoteEvent> events;
     @Ignore
     private IdStatus idStatus = new IdStatus("Pattern,ScheduledNoteEvent");
-    @Ignore
-    private ScheduledNoteEvent[] eventsDeepCopy;
 
     private double nanosPerTick;
     private long loopLengthTicks;
@@ -91,18 +89,10 @@ public class Pattern {
         idStatus.set(IdStatus.CHILDREN_DB);
     }
 
-    public List<ScheduledNoteEvent> getEvents() {
-        return events;
-    }
-
-    public void prepareEventsDeepCopy() {
+    public List<ScheduledNoteEvent> getEventsDeepCopy() {
         synchronized(scheduler) {
-            eventsDeepCopy = events.toArray(new ScheduledNoteEvent[0]);
+            return new ArrayList<>(events);
         }
-    }
-
-    public ScheduledNoteEvent[] getEventsDeepCopy() {
-        return eventsDeepCopy;
     }
 
     public long getLoopLengthTicks() {

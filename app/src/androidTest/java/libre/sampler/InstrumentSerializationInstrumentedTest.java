@@ -172,21 +172,18 @@ public class InstrumentSerializationInstrumentedTest {
             assertTrue("Deserialization gave wrong sample ID - already used", sample2Ids.add(sample2.id));
 
             assertEquals("Properties of samples differ", sample1.getVolume(), sample2.getVolume(), 1e-7);
-            assertEquals("Properties of samples differ", sample1.minPitch, sample2.minPitch);
-            assertEquals("Properties of samples differ", sample1.maxPitch, sample2.maxPitch);
-            assertEquals("Properties of samples differ", sample1.minVelocity, sample2.minVelocity);
-            assertEquals("Properties of samples differ", sample1.maxVelocity, sample2.maxVelocity);
-            assertEquals("Properties of samples differ", sample1.attack, sample2.attack, 1e-7);
-            assertEquals("Properties of samples differ", sample1.decay, sample2.decay, 1e-7);
-            assertEquals("Properties of samples differ", sample1.sustain, sample2.sustain, 1e-7);
-            assertEquals("Properties of samples differ", sample1.release, sample2.release, 1e-7);
-            assertEquals("Properties of samples differ", sample1.basePitch, sample2.basePitch);
-            assertEquals("Properties of samples differ", sample1.startTime, sample2.startTime, 1e-7);
-            assertEquals("Properties of samples differ", sample1.resumeTime, sample2.resumeTime, 1e-7);
-            assertEquals("Properties of samples differ", sample1.endTime, sample2.endTime, 1e-7);
-            assertEquals("Properties of samples differ", sample1.shouldUseDefaultLoopStart, sample2.shouldUseDefaultLoopStart);
-            assertEquals("Properties of samples differ", sample1.shouldUseDefaultLoopResume, sample2.shouldUseDefaultLoopResume);
-            assertEquals("Properties of samples differ", sample1.shouldUseDefaultLoopEnd, sample2.shouldUseDefaultLoopEnd);
+            assertEquals("Properties of samples differ", sample1.getMinPitch(), sample2.getMinPitch());
+            assertEquals("Properties of samples differ", sample1.getMaxPitch(), sample2.getMaxPitch());
+            assertEquals("Properties of samples differ", sample1.getMinVelocity(), sample2.getMinVelocity());
+            assertEquals("Properties of samples differ", sample1.getMaxVelocity(), sample2.getMaxVelocity());
+            assertEquals("Properties of samples differ", sample1.getAttack(), sample2.getAttack(), 1e-7);
+            assertEquals("Properties of samples differ", sample1.getDecay(), sample2.getDecay(), 1e-7);
+            assertEquals("Properties of samples differ", sample1.getSustain(), sample2.getSustain(), 1e-7);
+            assertEquals("Properties of samples differ", sample1.getRelease(), sample2.getRelease(), 1e-7);
+            assertEquals("Properties of samples differ", sample1.getBasePitch(), sample2.getBasePitch());
+            assertEquals("Properties of samples differ", sample1.getStartTime(), sample2.getStartTime(), 1e-7);
+            assertEquals("Properties of samples differ", sample1.getResumeTime(), sample2.getResumeTime(), 1e-7);
+            assertEquals("Properties of samples differ", sample1.getEndTime(), sample2.getEndTime(), 1e-7);
             assertEquals("Properties of samples differ", sample1.displayFlags, sample2.displayFlags);
 
             // Ensure that the sample file was compressed and extracted correctly

@@ -35,7 +35,7 @@ public class SampleBindingList {
             if(samples.add(s)) {
                 s.sampleIndex = this.sampleIndex;
                 if(isInfoLoaded) {
-                    s.setSampleInfo(firstSample.sampleLength, firstSample.sampleRate);
+                    s.setSampleInfo(firstSample.getSampleLength(), firstSample.getSampleRate());
                 }
             }
         }

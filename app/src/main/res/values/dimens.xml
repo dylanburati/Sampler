@@ -3,7 +3,6 @@
     <dimen name="margin2">8dp</dimen>
     <dimen name="margin3">16dp</dimen>
     <dimen name="margin4">24dp</dimen>
-    <dimen name="margin5">48dp</dimen>
     <dimen name="fab_margin">@dimen/margin3</dimen>
     <dimen name="margin3_dense">12dp</dimen>
     <dimen name="margin2_dense">6dp</dimen>

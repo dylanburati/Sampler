@@ -46,37 +46,33 @@ public class InstrumentDeserializer implements Closeable {
             } else if(nextName.equals("volume")) {
                 sample.setVolume((float) reader.nextDouble());
             } else if(nextName.equals("minPitch")) {
-                sample.minPitch = reader.nextInt();
+                sample.setMinPitch(reader.nextInt());
             } else if(nextName.equals("maxPitch")) {
-                sample.maxPitch = reader.nextInt();
+                sample.setMaxPitch(reader.nextInt());
             } else if(nextName.equals("minVelocity")) {
-                sample.minVelocity = reader.nextInt();
+                sample.setMinVelocity(reader.nextInt());
             } else if(nextName.equals("maxVelocity")) {
-                sample.maxVelocity = reader.nextInt();
+                sample.setMaxVelocity(reader.nextInt());
             } else if(nextName.equals("attack")) {
-                sample.attack = (float) reader.nextDouble();
+                sample.setAttack((float) reader.nextDouble());
             } else if(nextName.equals("decay")) {
-                sample.decay = (float) reader.nextDouble();
+                sample.setDecay((float) reader.nextDouble());
             } else if(nextName.equals("sustain")) {
-                sample.sustain = (float) reader.nextDouble();
+                sample.setSustain((float) reader.nextDouble());
             } else if(nextName.equals("release")) {
-                sample.release = (float) reader.nextDouble();
+                sample.setRelease((float) reader.nextDouble());
             } else if(nextName.equals("basePitch")) {
-                sample.basePitch = reader.nextInt();
+                sample.setBasePitch(reader.nextInt());
             } else if(nextName.equals("startTime")) {
-                sample.startTime = (float) reader.nextDouble();
+                sample.setStartTime((float) reader.nextDouble());
             } else if(nextName.equals("resumeTime")) {
-                sample.resumeTime = (float) reader.nextDouble();
+                sample.setResumeTime((float) reader.nextDouble());
             } else if(nextName.equals("endTime")) {
-                sample.endTime = (float) reader.nextDouble();
-            } else if(nextName.equals("shouldUseDefaultLoopStart")) {
-                sample.shouldUseDefaultLoopStart = reader.nextBoolean();
-            } else if(nextName.equals("shouldUseDefaultLoopResume")) {
-                sample.shouldUseDefaultLoopResume = reader.nextBoolean();
-            } else if(nextName.equals("shouldUseDefaultLoopEnd")) {
-                sample.shouldUseDefaultLoopEnd = reader.nextBoolean();
+                sample.setResumeTime((float) reader.nextDouble());
             } else if(nextName.equals("displayFlags")) {
                 sample.displayFlags = reader.nextInt();
+            } else {
+                reader.skipValue();
             }
         }
         reader.endObject();

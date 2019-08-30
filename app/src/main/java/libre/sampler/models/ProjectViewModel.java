@@ -171,7 +171,7 @@ public class ProjectViewModel extends AndroidViewModel {
         Map<Long, ScheduledNoteEvent> eventOnMap = new HashMap<>();
         Set<Long> eventOffKeySet = new HashSet<>();
 
-        for(ScheduledNoteEvent event : pattern.getEvents()) {
+        for(ScheduledNoteEvent event : pattern.getEventsDeepCopy()) {
             if(event.action == NoteEvent.NOTE_ON) {
                 ScheduledNoteEvent prevVal = eventOnMap.put(event.noteId, event);
                 if(prevVal != null) {
