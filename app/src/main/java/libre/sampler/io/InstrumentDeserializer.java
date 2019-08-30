@@ -11,7 +11,6 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.security.DigestOutputStream;
-import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -23,6 +22,7 @@ import java.util.zip.ZipFile;
 
 import libre.sampler.models.Instrument;
 import libre.sampler.models.Sample;
+import libre.sampler.utils.MD5OutputStream;
 
 public class InstrumentDeserializer implements Closeable {
     private Instrument toCreate;
@@ -68,7 +68,7 @@ public class InstrumentDeserializer implements Closeable {
             } else if(nextName.equals("resumeTime")) {
                 sample.setResumeTime((float) reader.nextDouble());
             } else if(nextName.equals("endTime")) {
-                sample.setResumeTime((float) reader.nextDouble());
+                sample.setEndTime((float) reader.nextDouble());
             } else if(nextName.equals("displayFlags")) {
                 sample.displayFlags = reader.nextInt();
             } else {
@@ -110,7 +110,7 @@ public class InstrumentDeserializer implements Closeable {
     private final Random random = new Random();
     private static String bytesToHexString(byte[] array, int stringLength) {
         StringBuilder builder = new StringBuilder();
-        int end = (stringLength + 1) / 2;
+        int end = Math.min(array.length, (stringLength + 1) / 2);
         for(int i = 0; i < end; i++) {
             builder.append(String.format("%02x", array[i] & 0xFF));
         }
@@ -119,7 +119,7 @@ public class InstrumentDeserializer implements Closeable {
     }
 
     private String checksum(InputStream in) throws IOException {
-        try(DigestOutputStream outputStream = new DigestOutputStream(new NoOpOutputStream(), MessageDigest.getInstance("MD5"))) {
+        try(DigestOutputStream outputStream = new MD5OutputStream()) {
             copy(in, outputStream);
             outputStream.flush();
             byte[] digest = outputStream.getMessageDigest().digest();
@@ -181,13 +181,6 @@ public class InstrumentDeserializer implements Closeable {
         }
         if(this.zipFile != null) {
             this.zipFile.close();
-        }
-    }
-
-    private static class NoOpOutputStream extends OutputStream {
-        @Override
-        public void write(int b) throws IOException {
-            // Prevent allocating extra memory for checksum calc.
         }
     }
 }

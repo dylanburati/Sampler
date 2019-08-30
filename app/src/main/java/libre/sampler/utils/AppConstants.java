@@ -3,6 +3,7 @@ package libre.sampler.utils;
 public class AppConstants {
     public static final String TAG_EXTRA_ACTION_TYPE = "libre.sampler.tags.EXTRA_ACTION_TYPE";
     public static final String TAG_EXTRA_PROJECT_ID = "libre.sampler.tags.EXTRA_PROJECT_ID";
+    public static final String TAG_EXTRA_PROJECT_DISCARD = "libre.sampler.tags.EXTRA_PROJECT_DISCARD";
     public static final String PREF_DEFAULT_SAMPLE_PATH = "default_sample_path";
     public static final String PREF_DEFAULT_INSTRUMENT_EXPORT_PATH = "default_instrument_export_path";
 

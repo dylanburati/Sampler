@@ -15,17 +15,15 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginBottom="@dimen/margin2"
-        android:layout_marginLeft="@dimen/margin1"
-        android:text="@string/dialog_project_create_title"
+        android:text="@string/dialog_project_leave_title"
         android:textSize="@dimen/text_title"
-        app:fontFamily="sans-serif-medium"
-        android:layout_marginStart="@dimen/margin1" />
+        app:fontFamily="sans-serif-medium" />
 
-    <EditText
+    <TextView
         android:id="@+id/input_name"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:inputType="textPersonName"
-        android:hint="@string/name_hint" />
+        android:textSize="@dimen/text_subheading"
+        android:text="@string/project_leave" />
 
 </LinearLayout>

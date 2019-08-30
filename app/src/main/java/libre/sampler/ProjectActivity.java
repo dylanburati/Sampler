@@ -25,12 +25,15 @@ import java.io.InputStream;
 import java.lang.ref.WeakReference;
 import java.util.List;
 
+import androidx.activity.OnBackPressedCallback;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.util.Consumer;
 import androidx.lifecycle.ViewModelProviders;
 import androidx.viewpager.widget.ViewPager;
 import libre.sampler.adapters.ProjectFragmentAdapter;
+import libre.sampler.dialogs.ProjectLeaveDialog;
 import libre.sampler.listeners.PdFloatListener;
 import libre.sampler.listeners.PdListListener;
 import libre.sampler.models.InstrumentEvent;
@@ -51,6 +54,7 @@ public class ProjectActivity extends AppCompatActivity {
     public static final String TAG = "ProjectActivity";
     private ViewPager pager;
     private ProjectFragmentAdapter fragmentAdapter;
+    private OnBackPressedCallback backPressedCallback;
 
     private PatternThread patternThread;
 
@@ -96,6 +100,16 @@ public class ProjectActivity extends AppCompatActivity {
         viewModel.tryGetProject();
 
         refreshMidiConnection();
+
+        backPressedCallback = new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                this.setEnabled(false);
+                supportNavigateUpTo(getSupportParentActivityIntent());
+                this.setEnabled(true);
+            }
+        };
+        getOnBackPressedDispatcher().addCallback(this, backPressedCallback);
     }
 
     private void attachEventListeners() {
@@ -255,6 +269,7 @@ public class ProjectActivity extends AppCompatActivity {
     protected void onDestroy() {
         super.onDestroy();
         unbindService(pdConnection);
+        backPressedCallback = null;
         viewModel.instrumentEventSource.remove(TAG);
         viewModel.noteEventSource.remove(TAG);
         viewModel.patternEventSource.remove(TAG);
@@ -268,8 +283,20 @@ public class ProjectActivity extends AppCompatActivity {
     }
 
     @Override
+    public void supportNavigateUpTo(@NonNull Intent upIntent) {
+        if(viewModel.projectHasUnsavedChanges() && !upIntent.getBooleanExtra(AppConstants.TAG_EXTRA_PROJECT_DISCARD, false)) {
+            ProjectLeaveDialog dialog = new ProjectLeaveDialog();
+            dialog.setUpIntent(upIntent);
+            dialog.show(getSupportFragmentManager(), "ProjectLeaveDialog");
+        } else {
+            super.supportNavigateUpTo(upIntent);
+        }
+    }
+
+    @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         if(item.getItemId() == R.id.appbar_save) {
+            viewModel.updateProjectHash();
             DatabaseConnectionManager.runTask(new UpdateProjectTask(viewModel.getProject(),
                     new UpdateProjectTaskCallback(new WeakReference<Context>(this))));
             return true;
@@ -308,7 +335,7 @@ public class ProjectActivity extends AppCompatActivity {
         return patternThread.isSuspended;
     }
 
-    private static class UpdateProjectTaskCallback implements Runnable {
+    public static class UpdateProjectTaskCallback implements Runnable {
         private final WeakReference<Context> contextRef;
 
         public UpdateProjectTaskCallback(WeakReference<Context> context) {

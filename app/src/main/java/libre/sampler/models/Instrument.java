@@ -1,11 +1,13 @@
 package libre.sampler.models;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
 import androidx.room.Entity;
 import androidx.room.Ignore;
 import libre.sampler.utils.IdStatus;
+import libre.sampler.utils.MD5OutputStream;
 
 @Entity(tableName = "instrument", primaryKeys = {"projectId", "id"})
 public class Instrument {
@@ -115,6 +117,15 @@ public class Instrument {
         } else {
             // dB to amplitude
             this.volume = (float) Math.pow(10, volumeDecibels / 20.0);
+        }
+    }
+
+    public void writeHashCodes(MD5OutputStream outputStream) throws IOException {
+        outputStream.writeInt(id);
+        outputStream.writeInt(projectId);
+        outputStream.writeInt(Float.floatToIntBits(volume));
+        for(Sample s : samples) {
+            outputStream.writeInt(s.valueHash());
         }
     }
 }

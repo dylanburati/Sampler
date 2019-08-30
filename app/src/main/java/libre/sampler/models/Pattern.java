@@ -1,5 +1,6 @@
 package libre.sampler.models;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -9,6 +10,7 @@ import androidx.room.Entity;
 import androidx.room.Ignore;
 import libre.sampler.utils.IdStatus;
 import libre.sampler.utils.LoopScheduler;
+import libre.sampler.utils.MD5OutputStream;
 import libre.sampler.utils.MusicTime;
 
 @Entity(tableName = "pattern", primaryKeys = {"projectId", "id"})
@@ -258,6 +260,17 @@ public class Pattern {
                     return;
                 }
             }
+        }
+    }
+
+    public void writeHashCodes(MD5OutputStream outputStream) throws IOException {
+        outputStream.writeInt(id);
+        outputStream.writeInt(projectId);
+        outputStream.writeInt(name.hashCode());
+        outputStream.writeInt(Float.floatToIntBits((float) nanosPerTick));
+        outputStream.writeInt((int) (loopLengthTicks % 0x80000000L));
+        for(ScheduledNoteEvent e : getEventsDeepCopy()) {
+            outputStream.writeInt(e.valueHash());
         }
     }
 

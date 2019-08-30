@@ -1,5 +1,7 @@
 package libre.sampler.models;
 
+import java.io.IOException;
+import java.security.NoSuchAlgorithmException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -15,6 +17,7 @@ import androidx.room.TypeConverters;
 import libre.sampler.databases.ProjectSettingsConverter;
 import libre.sampler.utils.AppConstants;
 import libre.sampler.utils.IdStatus;
+import libre.sampler.utils.MD5OutputStream;
 
 @Entity(tableName = "project")
 public class Project {
@@ -215,5 +218,25 @@ public class Project {
             }
         }
         return true;
+    }
+
+    public byte[] valueHash() {
+        try(MD5OutputStream outputStream = new MD5OutputStream()) {
+            outputStream.writeInt(id);
+            outputStream.writeInt(name.hashCode());
+            for(Map.Entry<String, Object> entry : settings.entrySet()) {
+                outputStream.writeInt(entry.hashCode());
+            }
+            for(Instrument t : getInstruments()) {
+                t.writeHashCodes(outputStream);
+            }
+            for(Pattern p : getPatterns()) {
+                p.writeHashCodes(outputStream);
+            }
+            outputStream.flush();
+            return outputStream.getMessageDigest().digest();
+        } catch(IOException | NoSuchAlgorithmException e) {
+            return new byte[16];
+        }
     }
 }

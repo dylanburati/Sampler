@@ -97,6 +97,9 @@
     <string name="project_could_not_create">Could not create project</string>
     <string name="project_could_not_edit">Please try again</string>
     <string name="add_instruments">Add instruments</string>
+    <string name="project_leave">This project has unsaved changes.</string>
+    <string name="discard">Discard</string>
+    <string name="dialog_project_leave_title">Save before leaving?</string>
     <plurals name="selected_notes_label">
         <item quantity="one">%d note selected</item>
         <item quantity="other">%d notes selected</item>

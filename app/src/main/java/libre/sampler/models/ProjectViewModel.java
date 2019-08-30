@@ -9,6 +9,7 @@ import android.os.Handler;
 import android.util.Log;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -28,6 +29,7 @@ import libre.sampler.publishers.PatternEventSource;
 import libre.sampler.tasks.LoadProjectTask;
 import libre.sampler.utils.AppConstants;
 import libre.sampler.utils.DatabaseConnectionManager;
+import libre.sampler.utils.ModelState;
 import libre.sampler.views.VisualNote;
 
 public class ProjectViewModel extends AndroidViewModel {
@@ -35,7 +37,8 @@ public class ProjectViewModel extends AndroidViewModel {
     // public String projectName = "";
 
     private Project project;
-    private boolean isGetProjectTaskRunning;
+    private ModelState projectState = ModelState.INVALID;
+    private byte[] projectHash;
 
     private Instrument keyboardInstrument;
     private Sample editorSample;
@@ -44,7 +47,6 @@ public class ProjectViewModel extends AndroidViewModel {
     private Pattern pianoRollPattern;
     private HashMap<Pattern, PatternDerivedData> patternDerivedDataCache = new HashMap<>();
 
-    private Instrument createDialogInstrument;
     private Instrument dialogInstrument;
 
     private MidiEventDispatcher midiEventDispatcher;
@@ -65,12 +67,12 @@ public class ProjectViewModel extends AndroidViewModel {
 
     @Nullable
     public Project tryGetProject() {
-        if(project == null && !isGetProjectTaskRunning) {
+        if(project == null && projectState == ModelState.INVALID) {
             if(projectId < 0) {
                 throw new AssertionError("Project ID not set");
             }
 
-            isGetProjectTaskRunning = true;
+            projectState = ModelState.LOADING;
             DatabaseConnectionManager.runTask(new LoadProjectTask(projectId,
                     new Consumer<Project>() {
                         @Override
@@ -101,7 +103,8 @@ public class ProjectViewModel extends AndroidViewModel {
                                 instrumentEventSource.dispatch(new InstrumentEvent(
                                         InstrumentEvent.INSTRUMENT_KEYBOARD_SELECT, keyboardInstrument));
                             }
-                            isGetProjectTaskRunning = false;
+                            projectHash = project.valueHash();
+                            projectState = ModelState.LOADED;
                         }
                     }));
         }
@@ -112,6 +115,23 @@ public class ProjectViewModel extends AndroidViewModel {
     @NonNull
     public Project getProject() {
         return Objects.requireNonNull(project);
+    }
+
+    public boolean projectHasUnsavedChanges() {
+        if(projectState == ModelState.LOADED) {
+            byte[] currentHash = project.valueHash();
+
+            if(projectHash == null) {
+                return true;
+            }
+
+            return !Arrays.equals(projectHash, currentHash);
+        }
+        return false;
+    }
+
+    public void updateProjectHash() {
+        projectHash = project.valueHash();
     }
 
     public Instrument getKeyboardInstrument() {

@@ -61,4 +61,18 @@ public class ScheduledNoteEvent {
         return String.format("ScheduledNoteEvent(id=%d, instrumentId=%d, noteId=%016x, offsetTicks=%d)",
                 this.id, this.instrumentId, this.noteId, this.offsetTicks);
     }
+
+    public int valueHash() {
+        int hashCode = 0;
+        hashCode ^= id;
+        hashCode ^= patternId;
+        hashCode ^= (int) (offsetTicks % 0x80000000L);
+        hashCode ^= instrumentId;
+        hashCode ^= (action << 20);
+        hashCode ^= (keyNum << 16);
+        hashCode ^= (velocity << 8);
+        hashCode ^= (int) (noteId % 0x80000000L);
+
+        return hashCode;
+    }
 }
