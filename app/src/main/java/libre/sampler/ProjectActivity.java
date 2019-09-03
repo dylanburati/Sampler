@@ -60,8 +60,6 @@ public class ProjectActivity extends AppCompatActivity {
 
     private PdService pdService = null;
     private MyPdDispatcher pdReceiver;
-    private PdFloatListener voiceFreeListener;
-    private PdListListener sampleInfoListener;
     private final ServiceConnection pdConnection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
@@ -181,14 +179,17 @@ public class ProjectActivity extends AppCompatActivity {
         pdVoiceBindings = new VoiceBindingList(AppConstants.PD_NUM_VOICES);
 
         Resources res = getResources();
-        File patchFile = null;
+        File patchFileInner = null;
+        File patchFileOuter = null;
         try {
             PdBase.setReceiver(pdReceiver);
             initPdReceiverListeners();
             if(!PdBase.exists("voices")) {
-                InputStream in = res.openRawResource(R.raw.pd_sampler);
-                patchFile = IoUtils.extractResource(in, "test.pd", getCacheDir());
-                pdPatchHandle = PdBase.openPatch(patchFile);
+                InputStream in = res.openRawResource(R.raw.voice_abstraction);
+                patchFileInner = IoUtils.extractResource(in, "voice_abstraction.pd", getCacheDir());
+                in = res.openRawResource(R.raw.pd_sampler);
+                patchFileOuter = IoUtils.extractResource(in, "pd_sampler.pd", getCacheDir());
+                pdPatchHandle = PdBase.openPatch(patchFileOuter);
             }
             pdService.initAudio(AudioParameters.suggestSampleRate(), 0, 2, 8);
             pdService.startAudio();
@@ -196,12 +197,12 @@ public class ProjectActivity extends AppCompatActivity {
         } catch (IOException e) {
             finish();
         } finally {
-            if(patchFile != null) patchFile.delete();
+            if(patchFileInner != null) patchFileInner.delete();
+            if(patchFileOuter != null) patchFileOuter.delete();
         }
     }
 
     private void initPdReceiverListeners() {
-        // PdBase.subscribe("voice_free");
         pdReceiver.addListener("voice_free", new PdFloatListener() {
             @Override
             public void receiveFloat(String source, float x) {

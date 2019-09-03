@@ -103,6 +103,7 @@ public class MainProjectsFragment extends Fragment {
         super.onResume();
         if(willShowDialogCreateProject) {
             ((MainActivity) getActivity()).openDetailFragment(ProjectEvent.PROJECT_CREATE, null);
+            willShowDialogCreateProject = false;
         }
     }
 
