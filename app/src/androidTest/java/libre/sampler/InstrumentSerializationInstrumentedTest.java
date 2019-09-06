@@ -152,8 +152,9 @@ public class InstrumentSerializationInstrumentedTest {
         Instrument instrument2 = new Instrument(null);
         project.registerInstrument(instrument2);
         project.addInstrument(instrument2);
-        try(InstrumentDeserializer deserializer = new InstrumentDeserializer(instrument2)) {
-            deserializer.read(new File(tmpDirectory, "zip.zip"), tmpDirectory);
+        try {
+            InstrumentDeserializer deserializer = new InstrumentDeserializer(instrument2);
+            deserializer.read(new FileInputStream(new File(tmpDirectory, "zip.zip")), tmpDirectory);
         } catch(IOException e) {
             e.printStackTrace();
             fail("Deserialization failed");
@@ -217,9 +218,9 @@ public class InstrumentSerializationInstrumentedTest {
         if(!deleteRecursively(tmpDirectory)) {
             Log.w("InstrumentSerializationTest", tmpDirectory.getAbsolutePath() + " not deleted after test");
         }
-        Log.i("InstrumentSerializationTest", String.format("%-12s%s", "Filename", "MD5"));
+        Log.i("InstrumentSerializationTest", String.format("%-16s%s", "Filename", "MD5"));
         for(Map.Entry<String, byte[]> entry : checksums.entrySet()) {
-            Log.i("InstrumentSerializationTest", String.format("%-12s%s", entry.getKey(), toHexString(entry.getValue())));
+            Log.i("InstrumentSerializationTest", String.format("%-16s%s", entry.getKey(), toHexString(entry.getValue())));
         }
     }
 }

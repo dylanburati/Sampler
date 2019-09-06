@@ -60,13 +60,15 @@
 
     <com.google.android.material.textfield.TextInputLayout
         android:id="@+id/input_import_path_container"
-        android:layout_width="match_parent"
+        android:visibility="gone"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginTop="@dimen/margin3_dense"
+        android:layout_marginRight="@dimen/margin2"
         android:hint="@string/import_path_hint"
-        android:visibility="gone"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/import_checkbox">
+        app:layout_constraintTop_toBottomOf="@+id/import_checkbox"
+        app:layout_constraintEnd_toStartOf="@+id/browse_button"
+        app:layout_constraintStart_toStartOf="parent">
 
         <EditText
             android:id="@+id/input_import_path"
@@ -75,21 +77,33 @@
             android:inputType="textPersonName" />
     </com.google.android.material.textfield.TextInputLayout>
 
+    <ImageButton
+        android:id="@+id/browse_button"
+        android:visibility="gone"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/ic_folder"
+        android:baseline="32dp"
+        android:backgroundTint="@color/colorAccentDarker"
+        app:layout_constraintBaseline_toBaselineOf="@+id/input_import_path_container"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@id/input_import_path_container" />
+
     <Button
         android:id="@+id/cancel_button"
         style="?attr/buttonBarNegativeButtonStyle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        app:layout_constraintEnd_toStartOf="@+id/submit_button"
+        android:text="@string/cancel"
         app:layout_constraintBaseline_toBaselineOf="@+id/submit_button"
-        android:text="@string/cancel" />
+        app:layout_constraintEnd_toStartOf="@+id/submit_button" />
 
     <Button
         android:id="@+id/submit_button"
         style="?attr/buttonBarPositiveButtonStyle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:text="@string/create"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/input_import_path_container"
-        android:text="@string/create" />
+        app:layout_constraintTop_toBottomOf="@+id/input_import_path_container" />
 </androidx.constraintlayout.widget.ConstraintLayout>

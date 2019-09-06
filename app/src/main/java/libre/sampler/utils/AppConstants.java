@@ -1,7 +1,7 @@
 package libre.sampler.utils;
 
 public class AppConstants {
-    public static final String TAG_EXTRA_ACTION_TYPE = "libre.sampler.tags.EXTRA_ACTION_TYPE";
+    public static final String TAG_EXTRA_REQUEST_CODE = "libre.sampler.tags.EXTRA_REQUEST_CODE";
     public static final String TAG_EXTRA_PROJECT_ID = "libre.sampler.tags.EXTRA_PROJECT_ID";
     public static final String TAG_EXTRA_PROJECT_DISCARD = "libre.sampler.tags.EXTRA_PROJECT_DISCARD";
     public static final String PREF_DEFAULT_SAMPLE_PATH = "default_sample_path";
@@ -42,4 +42,6 @@ public class AppConstants {
     public static final String ERROR_EXPORT_ZIP_EXISTS = "File exists";
     public static final String SUCCESS_EXPORT_INSTRUMENT = "Instrument exported";
     public static final String SUCCESS_IMPORT_INSTRUMENT = "Instrument imported";
+
+    public static final int FILE_REQUEST_INSTRUMENT_CREATE = 1;
 }

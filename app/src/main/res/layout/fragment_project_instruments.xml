@@ -119,7 +119,6 @@
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@+id/input_sample_paths"
                     app:layout_constraintHorizontal_chainStyle="packed" />
-                <!--android:backgroundTint="#ff4caf50"-->
 
                 <Button
                     android:id="@+id/sample_replace"
@@ -131,7 +130,6 @@
                     app:layout_constraintEnd_toStartOf="@+id/sample_delete"
                     app:layout_constraintHorizontal_bias="0.5"
                     app:layout_constraintStart_toEndOf="@+id/sample_add" />
-                <!--android:backgroundTint="@color/colorReplace"-->
 
                 <Button
                     android:id="@+id/sample_delete"

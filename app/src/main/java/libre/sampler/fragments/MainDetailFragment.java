@@ -8,6 +8,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import java.util.ArrayList;
@@ -35,6 +36,7 @@ public class MainDetailFragment extends Fragment {
 
     private View rootView;
     private EditText nameInputView;
+    private TextView addInstrumentsLabel;
     private RecyclerView addInstrumentsView;
     private AddInstrumentListAdapter addInstrumentsAdapter;
 
@@ -86,6 +88,7 @@ public class MainDetailFragment extends Fragment {
 
     private void initUI() {
         nameInputView = rootView.findViewById(R.id.input_name);
+        addInstrumentsLabel = rootView.findViewById(R.id.add_instruments_label);
         addInstrumentsView = rootView.findViewById(R.id.add_instruments_select);
         addInstrumentsAdapter = new AddInstrumentListAdapter();
         addInstrumentsView.setAdapter(addInstrumentsAdapter);
@@ -101,11 +104,14 @@ public class MainDetailFragment extends Fragment {
 
         List<Project> otherProjects = new ArrayList<>(projects);
         otherProjects.remove(dialogProject);
-        addInstrumentsAdapter.setProjectsAndInstruments(otherProjects, instruments);
-        isAdapterLoaded = true;
-        if(dialogProject != null) {
-            // update fields
-            nameInputView.setText(dialogProject.name);
+        addInstrumentsLabel.setVisibility(otherProjects.isEmpty() ? View.GONE : View.VISIBLE);
+        if(!otherProjects.isEmpty()) {
+            addInstrumentsAdapter.setProjectsAndInstruments(otherProjects, instruments);
+            isAdapterLoaded = true;
+            if(dialogProject != null) {
+                // update fields
+                nameInputView.setText(dialogProject.name);
+            }
         }
     }
 

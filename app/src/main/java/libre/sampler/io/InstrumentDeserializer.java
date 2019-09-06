@@ -2,7 +2,8 @@ package libre.sampler.io;
 
 import android.util.JsonReader;
 
-import java.io.Closeable;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -12,22 +13,21 @@ import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.security.DigestOutputStream;
 import java.security.NoSuchAlgorithmException;
-import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Random;
 import java.util.zip.ZipEntry;
-import java.util.zip.ZipFile;
+import java.util.zip.ZipInputStream;
 
 import libre.sampler.models.Instrument;
 import libre.sampler.models.Sample;
 import libre.sampler.utils.MD5OutputStream;
 
-public class InstrumentDeserializer implements Closeable {
+public class InstrumentDeserializer {
     private Instrument toCreate;
     private Map<String, String> entriesToFilenames;
-    private ZipFile zipFile;
+    private ZipInputStream zipFile;
     private JsonReader jsonReader;
 
     public InstrumentDeserializer(Instrument toCreate) {
@@ -118,9 +118,9 @@ public class InstrumentDeserializer implements Closeable {
         return builder.toString();
     }
 
-    private String checksum(InputStream in) throws IOException {
+    private String checksum(ByteArrayOutputStream in) throws IOException {
         try(DigestOutputStream outputStream = new MD5OutputStream()) {
-            copy(in, outputStream);
+            in.writeTo(outputStream);
             outputStream.flush();
             byte[] digest = outputStream.getMessageDigest().digest();
             return "--" + bytesToHexString(digest, 6);
@@ -131,56 +131,52 @@ public class InstrumentDeserializer implements Closeable {
         }
     }
 
-    public void read(File inFile, String extractPath) throws IOException {
-        File extractDirectory = new File(extractPath);
-        read(inFile, extractDirectory);
-    }
-
-    public void read(File inFile, File extractDirectory) throws IOException {
+    public void read(InputStream inputStream, File extractDirectory) throws IOException {
         extractDirectory.mkdir();
         if(!extractDirectory.isDirectory()) {
             throw new IOException(String.format("Extract directory does not exist (%s)",
                     extractDirectory.getAbsolutePath()));
         }
-        this.zipFile = new ZipFile(inFile);
 
-        ZipEntry jsonEntry = null;
+        this.zipFile = new ZipInputStream(inputStream);
+        ByteArrayInputStream jsonInputStream = null;
+        try {
+            ZipEntry entry = null;
+            while((entry = zipFile.getNextEntry()) != null) {
+                ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+                copy(zipFile, byteArrayOutputStream);
+                try {
+                    if("instrument.json".equals(entry.getName())) {
+                        jsonInputStream = new ByteArrayInputStream(byteArrayOutputStream.toByteArray());
+                    } else {
+                        StringBuilder filenameBuilder = new StringBuilder(entry.getName());
+                        int extensionIdx = filenameBuilder.lastIndexOf(".");
+                        if(extensionIdx < 0) {
+                            extensionIdx = 0;
+                        }
+                        filenameBuilder.insert(extensionIdx, checksum(byteArrayOutputStream));
+                        String filename = filenameBuilder.toString();
 
-        for(Enumeration<? extends ZipEntry> entries = zipFile.entries(); entries.hasMoreElements(); /* */) {
-            ZipEntry entry = entries.nextElement();
-            if("instrument.json".equals(entry.getName())) {
-                jsonEntry = entry;
-            } else {
-                StringBuilder filenameBuilder = new StringBuilder(entry.getName());
-                int extensionIdx = filenameBuilder.lastIndexOf(".");
-                if(extensionIdx < 0) {
-                    extensionIdx = 0;
-                }
-                filenameBuilder.insert(extensionIdx, checksum(zipFile.getInputStream(entry)));
-                String filename = filenameBuilder.toString();
-
-                File extractFile = new File(extractDirectory, filename);
-                entriesToFilenames.put(entry.getName(), extractFile.getAbsolutePath());
-                if(extractFile.createNewFile()) {
-                    try(OutputStream outputStream = new FileOutputStream(extractFile, false)) {
-                        copy(zipFile.getInputStream(entry), outputStream);
+                        File extractFile = new File(extractDirectory, filename);
+                        entriesToFilenames.put(entry.getName(), extractFile.getAbsolutePath());
+                        if(extractFile.createNewFile()) {
+                            try(OutputStream outputStream = new FileOutputStream(extractFile, false)) {
+                                byteArrayOutputStream.writeTo(outputStream);
+                            }
+                        }
                     }
+                } finally {
+                    zipFile.closeEntry();
+                    byteArrayOutputStream.close();
                 }
             }
-        }
 
-        InputStream jsonInputStream = this.zipFile.getInputStream(jsonEntry);
-        this.jsonReader = new JsonReader(new InputStreamReader(jsonInputStream, StandardCharsets.UTF_8));
-        readJson(this.jsonReader);
-    }
-
-    @Override
-    public void close() throws IOException {
-        if(this.jsonReader != null) {
-            this.jsonReader.close();
-        }
-        if(this.zipFile != null) {
-            this.zipFile.close();
+            this.jsonReader = new JsonReader(new InputStreamReader(jsonInputStream, StandardCharsets.UTF_8));
+            readJson(this.jsonReader);
+        } finally {
+            if(zipFile != null) zipFile.close();
+            if(jsonInputStream != null) jsonInputStream.close();
+            if(jsonReader != null) jsonReader.close();
         }
     }
 }

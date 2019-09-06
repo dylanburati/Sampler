@@ -2,6 +2,8 @@ package libre.sampler.dialogs;
 
 import android.app.Dialog;
 import android.content.Context;
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -10,11 +12,13 @@ import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.Toast;
 
 import com.google.android.material.textfield.TextInputLayout;
 
 import java.io.File;
+import java.io.IOException;
 import java.lang.ref.WeakReference;
 
 import androidx.annotation.NonNull;
@@ -24,6 +28,7 @@ import androidx.fragment.app.DialogFragment;
 import androidx.lifecycle.ViewModelProviders;
 import libre.sampler.R;
 import libre.sampler.listeners.DefaultTextWatcher;
+import libre.sampler.models.FileSelectResult;
 import libre.sampler.models.Instrument;
 import libre.sampler.models.InstrumentEvent;
 import libre.sampler.models.Project;
@@ -33,10 +38,15 @@ import libre.sampler.utils.AppConstants;
 import libre.sampler.utils.DatabaseConnectionManager;
 import libre.sampler.views.MyDialogBuilder;
 
+import static android.app.Activity.RESULT_OK;
+
 public class InstrumentCreateDialog extends DialogFragment {
+    public final String TAG = "InstrumentCreateDialog";
+
     private EditText nameInputView;
+    private EditText pathInputView;
     private boolean importIsChecked;
-    private String importPath = "";
+    private final FileSelectResult importSampleZip = new FileSelectResult();
 
     private ProjectViewModel viewModel;
 
@@ -53,6 +63,7 @@ public class InstrumentCreateDialog extends DialogFragment {
         View rootView = inflater.inflate(R.layout.dialog_instrument_create, null);
         nameInputView = (EditText) rootView.findViewById(R.id.input_name);
         CheckBox importCheckBox = rootView.findViewById(R.id.import_checkbox);
+        final ImageButton browseButton = rootView.findViewById(R.id.browse_button);
         Button submitButton = rootView.findViewById(R.id.submit_button);
         Button cancelButton = rootView.findViewById(R.id.cancel_button);
 
@@ -68,18 +79,30 @@ public class InstrumentCreateDialog extends DialogFragment {
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 importIsChecked = isChecked;
                 if(isChecked) {
-                    // ((AlertDialog) InstrumentCreateDialog.this.getDialog()).getButton(Dialog.BUTTON_POSITIVE);
                     importPathInput.setVisibility(View.VISIBLE);
+                    browseButton.setVisibility(View.VISIBLE);
                 } else {
                     importPathInput.setVisibility(View.GONE);
+                    browseButton.setVisibility(View.GONE);
                 }
             }
         });
 
-        ((EditText) rootView.findViewById(R.id.input_import_path)).addTextChangedListener(new DefaultTextWatcher() {
+        pathInputView = rootView.findViewById(R.id.input_import_path);
+        pathInputView.addTextChangedListener(new DefaultTextWatcher() {
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
-                importPath = s.toString();
+                importSampleZip.setStringValue(s.toString());
+            }
+        });
+
+        browseButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent browse = new Intent(Intent.ACTION_GET_CONTENT);
+                browse.setType("*/*");
+                // browse.setType("application/zip");
+                startActivityForResult(browse, AppConstants.FILE_REQUEST_INSTRUMENT_CREATE);
             }
         });
 
@@ -92,12 +115,7 @@ public class InstrumentCreateDialog extends DialogFragment {
                 toCreate.name = name;
 
                 if(importIsChecked) {
-                    if(importPath.isEmpty()) {
-                        Toast.makeText(getContext(), R.string.file_not_found, Toast.LENGTH_SHORT).show();
-                        return;
-                    }
-                    File inFile = new File(importPath);
-                    if(!inFile.isFile() || !inFile.canRead()) {
+                    if(!importSampleZip.canRead()) {
                         Toast.makeText(getContext(), R.string.file_not_found, Toast.LENGTH_SHORT).show();
                         return;
                     }
@@ -110,8 +128,15 @@ public class InstrumentCreateDialog extends DialogFragment {
                         }
                     }
 
-                    DatabaseConnectionManager.runTask(new ImportInstrumentTask(toCreate, inFile, extractDir,
-                            new ImportTaskCallback(getDialog(), viewModel, viewModel.getProject(), toCreate)));
+                    try {
+                        DatabaseConnectionManager.runTask(new ImportInstrumentTask(
+                                toCreate,
+                                importSampleZip.openInputStream(getContext()),
+                                extractDir,
+                                new ImportTaskCallback(getDialog(), viewModel, viewModel.getProject(), toCreate)));
+                    } catch(IOException e) {
+                        Toast.makeText(getContext(), R.string.file_not_found, Toast.LENGTH_SHORT).show();
+                    }
                 } else {
                     viewModel.getProject().addInstrument(toCreate);
                     viewModel.instrumentEventSource.dispatch(new InstrumentEvent(InstrumentEvent.INSTRUMENT_CREATE, toCreate));
@@ -130,6 +155,17 @@ public class InstrumentCreateDialog extends DialogFragment {
         });
 
         return builder.create();
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        if(data != null && requestCode == AppConstants.FILE_REQUEST_INSTRUMENT_CREATE && resultCode == RESULT_OK) {
+            Uri uri = data.getData();
+            if(uri != null) {
+                pathInputView.setText(uri.getPath());
+                importSampleZip.setUriValue(uri);
+            }
+        }
     }
 
     @Nullable
