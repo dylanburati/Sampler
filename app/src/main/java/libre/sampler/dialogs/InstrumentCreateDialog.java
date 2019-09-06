@@ -36,6 +36,7 @@ import libre.sampler.models.ProjectViewModel;
 import libre.sampler.tasks.ImportInstrumentTask;
 import libre.sampler.utils.AppConstants;
 import libre.sampler.utils.DatabaseConnectionManager;
+import libre.sampler.utils.ModelState;
 import libre.sampler.views.MyDialogBuilder;
 
 import static android.app.Activity.RESULT_OK;
@@ -47,6 +48,7 @@ public class InstrumentCreateDialog extends DialogFragment {
     private EditText pathInputView;
     private boolean importIsChecked;
     private final FileSelectResult importSampleZip = new FileSelectResult();
+    private ModelState instrumentState = ModelState.INVALID;
 
     private ProjectViewModel viewModel;
 
@@ -110,6 +112,9 @@ public class InstrumentCreateDialog extends DialogFragment {
         submitButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                if(instrumentState != ModelState.INVALID) {
+                    return;
+                }
                 String name = nameInputView.getText().toString();
                 Instrument toCreate = viewModel.getDialogInstrument();
                 toCreate.name = name;
@@ -129,6 +134,7 @@ public class InstrumentCreateDialog extends DialogFragment {
                     }
 
                     try {
+                        instrumentState = ModelState.LOADING;
                         DatabaseConnectionManager.runTask(new ImportInstrumentTask(
                                 toCreate,
                                 importSampleZip.openInputStream(getContext()),
@@ -136,6 +142,7 @@ public class InstrumentCreateDialog extends DialogFragment {
                                 new ImportTaskCallback(getDialog(), viewModel, viewModel.getProject(), toCreate)));
                     } catch(IOException e) {
                         Toast.makeText(getContext(), R.string.file_not_found, Toast.LENGTH_SHORT).show();
+                        instrumentState = ModelState.INVALID;
                     }
                 } else {
                     viewModel.getProject().addInstrument(toCreate);
