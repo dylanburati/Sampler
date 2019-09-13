@@ -29,7 +29,7 @@ public class Sample {
     private float sustain;
     private float release;
 
-    private int basePitch;
+    private float basePitch;
 
     private float startTime;
     private float resumeTime;
@@ -142,11 +142,11 @@ public class Sample {
         this.displayFlags |= FIELD_MAX_PITCH;
     }
 
-    public int getBasePitch() {
+    public float getBasePitch() {
         return this.basePitch;
     }
 
-    public void setBasePitch(int basePitch) {
+    public void setBasePitch(float basePitch) {
         this.basePitch = basePitch;
         this.displayFlags |= FIELD_BASE_PITCH;
     }
@@ -337,7 +337,7 @@ public class Sample {
         hashCode ^= Float.floatToIntBits(this.decay);
         hashCode ^= Float.floatToIntBits(this.sustain);
         hashCode ^= Float.floatToIntBits(this.release);
-        hashCode ^= this.basePitch;
+        hashCode ^= Float.floatToIntBits(this.basePitch);
         hashCode ^= Float.floatToIntBits(this.startTime);
         hashCode ^= Float.floatToIntBits(this.resumeTime);
         hashCode ^= Float.floatToIntBits(this.endTime);

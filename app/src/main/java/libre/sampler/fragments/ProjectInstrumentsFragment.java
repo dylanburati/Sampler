@@ -38,6 +38,7 @@ import libre.sampler.models.ProjectViewModel;
 import libre.sampler.models.Sample;
 import libre.sampler.utils.AdapterLoader;
 import libre.sampler.utils.AppConstants;
+import libre.sampler.utils.ModelState;
 import libre.sampler.utils.MyDecimalFormat;
 import libre.sampler.utils.SliderConverter;
 import libre.sampler.views.VerticalSlider;
@@ -54,6 +55,7 @@ public class ProjectInstrumentsFragment extends Fragment {
     private Spinner sampleSpinner;
     private ArrayAdapter<String> sampleSpinnerAdapter;
 
+    private ModelState instrumentEditorState = ModelState.INVALID;
     private boolean isInstrumentEditorReady;
 
     @Nullable
@@ -261,10 +263,10 @@ public class ProjectInstrumentsFragment extends Fragment {
             ed.addTextChangedListener(new StatefulTextWatcher<EditText>(ed) {
                 @Override
                 public void onTextChanged(CharSequence s, int start, int before, int count) {
-                    float val;
-                    if(s.length() == 0) {
+                    if(instrumentEditorState != ModelState.LOADED || s.length() == 0) {
                         return;
                     }
+                    float val;
                     try {
                         val = Float.parseFloat(s.toString());
                     } catch(NumberFormatException e) {
@@ -282,7 +284,7 @@ public class ProjectInstrumentsFragment extends Fragment {
                             editorSample.setMaxPitch((int) val);
                             break;
                         case R.id.pitch_base:
-                            editorSample.setBasePitch((int) val);
+                            editorSample.setBasePitch(val);
                             break;
                         case R.id.velocity_min:
                             editorSample.setMinVelocity((int) val);
@@ -319,10 +321,10 @@ public class ProjectInstrumentsFragment extends Fragment {
             ed.addTextChangedListener(new StatefulTextWatcher<VerticalSlider>(slider) {
                 @Override
                 public void onTextChanged(CharSequence s, int start, int before, int count) {
-                    float val;
-                    if(s.length() == 0) {
+                    if(instrumentEditorState != ModelState.LOADED || s.length() == 0) {
                         return;
                     }
+                    float val;
                     try {
                         val = Float.parseFloat(s.toString());
                     } catch(NumberFormatException e) {
@@ -421,6 +423,7 @@ public class ProjectInstrumentsFragment extends Fragment {
             return;
         }
 
+        instrumentEditorState = ModelState.LOADING;
         int[] textOnlyInputs = new int[]{R.id.pitch_min, R.id.pitch_max, R.id.pitch_base,
                 R.id.velocity_min, R.id.velocity_max,
                 R.id.position_start, R.id.position_end, R.id.position_resume};
@@ -461,7 +464,7 @@ public class ProjectInstrumentsFragment extends Fragment {
                         break;
                     case R.id.pitch_base:
                         if(editorSample.shouldDisplay(Sample.FIELD_BASE_PITCH)) {
-                            ed.setText(String.format("%d", editorSample.getBasePitch()));
+                            ed.setText(fmt3.format(editorSample.getBasePitch()));
                         } else {
                             ed.setText("");
                         }
@@ -555,6 +558,7 @@ public class ProjectInstrumentsFragment extends Fragment {
             }
         }
 
+        instrumentEditorState = ModelState.LOADED;
         if(!isInstrumentEditorReady) {
             attachInstrumentEditorListeners();
             isInstrumentEditorReady = true;

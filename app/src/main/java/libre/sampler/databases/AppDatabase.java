@@ -11,7 +11,7 @@ import libre.sampler.models.Project;
 import libre.sampler.models.Sample;
 import libre.sampler.models.ScheduledNoteEvent;
 
-@Database(entities = {Project.class, Instrument.class, Sample.class, Pattern.class, ScheduledNoteEvent.class}, version = 7)
+@Database(entities = {Project.class, Instrument.class, Sample.class, Pattern.class, ScheduledNoteEvent.class}, version = 8)
 public abstract class AppDatabase extends RoomDatabase {
     public abstract ProjectDao projectDao();
     public abstract InstrumentDao instrumentDao();
@@ -109,6 +109,40 @@ public abstract class AppDatabase extends RoomDatabase {
                     "`sustain` REAL NOT NULL," +
                     "`release` REAL NOT NULL," +
                     "`basePitch` INTEGER NOT NULL," +
+                    "`startTime` REAL NOT NULL," +
+                    "`resumeTime` REAL NOT NULL," +
+                    "`endTime` REAL NOT NULL," +
+                    "`displayFlags` INTEGER NOT NULL," +
+                    "PRIMARY KEY(`instrumentId`, `id`))"
+            );
+            database.execSQL("INSERT INTO `sample` SELECT " +
+                    "`instrumentId`, `id`, `filename`, `volume`, `minPitch`, `maxPitch`," +
+                    "`minVelocity`, `maxVelocity`, `attack`, `decay`, `sustain`, `release`," +
+                    "`basePitch`, `startTime`, `resumeTime`, `endTime`, `displayFlags` " +
+                    "FROM `tmp_sample`"
+            );
+            database.execSQL("DROP TABLE `tmp_sample`");
+        }
+    };
+
+    public static final Migration MIGRATION_7_8 = new Migration(7, 8) {
+        @Override
+        public void migrate(@NonNull SupportSQLiteDatabase database) {
+            database.execSQL("ALTER TABLE `sample` RENAME TO `tmp_sample`");
+            database.execSQL("CREATE TABLE IF NOT EXISTS `sample` (" +
+                    "`instrumentId` INTEGER NOT NULL," +
+                    "`id` INTEGER NOT NULL," +
+                    "`filename` TEXT," +
+                    "`volume` REAL NOT NULL," +
+                    "`minPitch` INTEGER NOT NULL," +
+                    "`maxPitch` INTEGER NOT NULL," +
+                    "`minVelocity` INTEGER NOT NULL," +
+                    "`maxVelocity` INTEGER NOT NULL," +
+                    "`attack` REAL NOT NULL," +
+                    "`decay` REAL NOT NULL," +
+                    "`sustain` REAL NOT NULL," +
+                    "`release` REAL NOT NULL," +
+                    "`basePitch` REAL NOT NULL," +
                     "`startTime` REAL NOT NULL," +
                     "`resumeTime` REAL NOT NULL," +
                     "`endTime` REAL NOT NULL," +

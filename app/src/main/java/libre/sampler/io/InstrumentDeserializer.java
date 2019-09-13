@@ -62,7 +62,7 @@ public class InstrumentDeserializer {
             } else if(nextName.equals("release")) {
                 sample.setRelease((float) reader.nextDouble());
             } else if(nextName.equals("basePitch")) {
-                sample.setBasePitch(reader.nextInt());
+                sample.setBasePitch((float) reader.nextDouble());
             } else if(nextName.equals("startTime")) {
                 sample.setStartTime((float) reader.nextDouble());
             } else if(nextName.equals("resumeTime")) {
