@@ -8,10 +8,12 @@ public class MusicTime {
     public static final int BEATS_PER_BAR = 4;
     public static final int SIXTEENTHS_PER_BEAT = 4;
 
+    public static final long TICKS_PER_MIDI_TICK = 16;
     public static final long TICKS_PER_USER_TICK = 256;
     public static final long TICKS_PER_SIXTEENTH = TICKS_PER_USER_TICK * USER_TICKS_PER_SIXTEENTH;
     public static final long TICKS_PER_BAR = TICKS_PER_SIXTEENTH * SIXTEENTHS_PER_BAR;
     public static final long TICKS_PER_BEAT = TICKS_PER_BAR / 4;
+    public static final long MIDI_TICKS_PER_BEAT = TICKS_PER_BEAT / TICKS_PER_MIDI_TICK;
 
     private static final MusicTime tmpInstance = new MusicTime(0L);
 

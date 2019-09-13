@@ -34,6 +34,7 @@ public class AppConstants {
     public static final int PATTERN_EDITOR_SELECT_SPECIAL = 3;
     public static final int PATTERN_EDITOR_SNAP_LENGTH = 10;
     public static final int PATTERN_EDITOR_PATTERN_LENGTH = 11;
+    public static final int PATTERN_EDITOR_EXPORT = 19;
     public static final int PATTERN_EDITOR_BACK = 20;
 
     public static final int PIANO_ROLL_BOTTOM_KEYNUM = 24;
@@ -42,6 +43,7 @@ public class AppConstants {
     public static final String ERROR_EXPORT_ZIP_EXISTS = "File exists";
     public static final String SUCCESS_EXPORT_INSTRUMENT = "Instrument exported";
     public static final String SUCCESS_IMPORT_INSTRUMENT = "Instrument imported";
+    public static final String SUCCESS_EXPORT_PATTERN = "Pattern exported";
 
     public static final int FILE_REQUEST_INSTRUMENT_CREATE = 1;
 }

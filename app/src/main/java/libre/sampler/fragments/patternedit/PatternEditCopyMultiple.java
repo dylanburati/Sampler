@@ -184,11 +184,13 @@ public class PatternEditCopyMultiple extends Fragment {
         int maxCount = MAX_INPUT_BARS;
         if(selectedNotes.size() > 0) {
             long intervalTicks = intervalPicker.getValue().getTicks();
-            long maxTicks = viewModel.getPianoRollPattern().getLoopLengthTicks() - getSelectionStartTicks();
-            maxCount = (int) (maxTicks / intervalTicks) - 1;
-            long leftoverTicks = maxTicks - (maxCount + 1) * intervalTicks;
-            if(leftoverTicks >= getSelectionLengthTicks()) {
-                maxCount += 1;
+            if(intervalTicks > 0) {
+                long maxTicks = viewModel.getPianoRollPattern().getLoopLengthTicks() - getSelectionStartTicks();
+                maxCount = (int) (maxTicks / intervalTicks) - 1;
+                long leftoverTicks = maxTicks - (maxCount + 1) * intervalTicks;
+                if(leftoverTicks >= getSelectionLengthTicks()) {
+                    maxCount += 1;
+                }
             }
         }
 

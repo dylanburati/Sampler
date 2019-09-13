@@ -1,6 +1,8 @@
 package libre.sampler.utils;
 
 public class MidiConstants {
+    public static final int CHANNELS_PER_TRACK = 16;
+
     // Source: https://github.com/googlesamples/android-MidiSynth -> com.example.android.common.midi.MidiConstants
 
     public static final byte STATUS_COMMAND_MASK = (byte) 0xF0;

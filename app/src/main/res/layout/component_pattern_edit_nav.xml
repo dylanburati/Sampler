@@ -50,4 +50,15 @@
         android:src="@drawable/ic_dimension"
         android:tint="@color/selectable_icon"
         android:padding="6dp" />
+
+    <ImageView
+        android:id="@+id/open_export"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/ic_forward"
+        android:tint="@color/selectable_icon"
+        android:paddingTop="6dp"
+        android:paddingBottom="6dp"
+        android:paddingStart="7dp"
+        android:paddingEnd="6dp" />
 </libre.sampler.views.IconNavigationPanel>

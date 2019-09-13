@@ -86,6 +86,7 @@
     <string name="export_could_not_create">Export failed</string>
     <string name="export_file_exists">Export failed: file exists</string>
     <string name="instrument_exported">Instrument exported</string>
+    <string name="pattern_exported">Pattern exported</string>
     <string name="import_checkbox_label">Import samples</string>
     <string name="import_path_hint">Import path</string>
     <string name="file_not_found">File not found</string>
@@ -100,6 +101,7 @@
     <string name="project_leave">This project has unsaved changes.</string>
     <string name="discard">Discard</string>
     <string name="dialog_project_leave_title">Save before leaving?</string>
+    <string name="dialog_pattern_export_title">Export to .midi</string>
     <plurals name="selected_notes_label">
         <item quantity="one">%d note selected</item>
         <item quantity="other">%d notes selected</item>

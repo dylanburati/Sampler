@@ -432,6 +432,7 @@ public class ProjectInstrumentsFragment extends Fragment {
                 R.id.sample_release_slider, R.id.sample_release};
 
         final MyDecimalFormat fmt3 = new MyDecimalFormat(3, 6);
+        final MyDecimalFormat fmt7 = new MyDecimalFormat(7, 10);
 
         float iVol = keyboardInstrument.getVolumeDecibels();
         iVol = Math.max(-100, Math.min(0, iVol));
@@ -481,21 +482,21 @@ public class ProjectInstrumentsFragment extends Fragment {
                         break;
                     case R.id.position_start:
                         if(editorSample.shouldDisplay(Sample.FIELD_LOOP_START)) {
-                            ed.setText(fmt3.format(editorSample.getStartTime()));
+                            ed.setText(fmt7.format(editorSample.getStartTime()));
                         } else {
                             ed.setText("");
                         }
                         break;
                     case R.id.position_end:
                         if(editorSample.shouldDisplay(Sample.FIELD_LOOP_END)) {
-                            ed.setText(fmt3.format(editorSample.getEndTime()));
+                            ed.setText(fmt7.format(editorSample.getEndTime()));
                         } else {
                             ed.setText("");
                         }
                         break;
                     case R.id.position_resume:
                         if(editorSample.shouldDisplay(Sample.FIELD_LOOP_RESUME)) {
-                            ed.setText(fmt3.format(editorSample.getResumeTime()));
+                            ed.setText(fmt7.format(editorSample.getResumeTime()));
                         } else {
                             ed.setText("");
                         }
