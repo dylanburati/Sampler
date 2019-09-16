@@ -63,7 +63,7 @@ public class ProjectInstrumentsFragment extends Fragment {
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         this.rootView = inflater.inflate(R.layout.fragment_project_instruments, container, false);
 
-        this.instrumentListView = (RecyclerView) rootView.findViewById(R.id.instruments_select);
+        this.instrumentListView = rootView.findViewById(R.id.instruments_select);
 
         // if landscape and not tablet, put instrument editor on right instead of bottom
         if(getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE &&
@@ -197,7 +197,7 @@ public class ProjectInstrumentsFragment extends Fragment {
             }
         });
 
-        ((Button) rootView.findViewById(R.id.sample_add)).setOnClickListener(new View.OnClickListener() {
+        rootView.findViewById(R.id.sample_add).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 String path = ((EditText) rootView.findViewById(R.id.input_sample_paths)).getText().toString();
@@ -214,7 +214,7 @@ public class ProjectInstrumentsFragment extends Fragment {
             }
         });
 
-        ((Button) rootView.findViewById(R.id.sample_replace)).setOnClickListener(new View.OnClickListener() {
+        rootView.findViewById(R.id.sample_replace).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 String path = ((EditText) rootView.findViewById(R.id.input_sample_paths)).getText().toString();
@@ -230,7 +230,7 @@ public class ProjectInstrumentsFragment extends Fragment {
             }
         });
 
-        ((Button) rootView.findViewById(R.id.sample_delete)).setOnClickListener(new View.OnClickListener() {
+        rootView.findViewById(R.id.sample_delete).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Sample toRemove = viewModel.getEditorSample();
@@ -259,7 +259,7 @@ public class ProjectInstrumentsFragment extends Fragment {
                 R.id.position_start, R.id.position_end, R.id.position_resume};
 
         for(int id : textOnlyInputs) {
-            EditText ed = (EditText) rootView.findViewById(id);
+            EditText ed = rootView.findViewById(id);
             ed.addTextChangedListener(new StatefulTextWatcher<EditText>(ed) {
                 @Override
                 public void onTextChanged(CharSequence s, int start, int before, int count) {
@@ -316,8 +316,8 @@ public class ProjectInstrumentsFragment extends Fragment {
                 R.id.sample_release_slider, R.id.sample_release};
 
         for(int i = 0; i < sliderTextPairInputs.length; i += 2) {
-            VerticalSlider slider = (VerticalSlider) rootView.findViewById(sliderTextPairInputs[i]);
-            EditText ed = (EditText) rootView.findViewById(sliderTextPairInputs[i + 1]);
+            VerticalSlider slider = rootView.findViewById(sliderTextPairInputs[i]);
+            EditText ed = rootView.findViewById(sliderTextPairInputs[i + 1]);
             ed.addTextChangedListener(new StatefulTextWatcher<VerticalSlider>(slider) {
                 @Override
                 public void onTextChanged(CharSequence s, int start, int before, int count) {
@@ -446,7 +446,7 @@ public class ProjectInstrumentsFragment extends Fragment {
         if(editorSample != null) {
             ((EditText) rootView.findViewById(R.id.input_sample_paths)).setText(editorSample.filename);
             for(int id : textOnlyInputs) {
-                EditText ed = ((EditText) rootView.findViewById(id));
+                EditText ed = rootView.findViewById(id);
                 switch(id) {
                     case R.id.pitch_min:
                         if(editorSample.shouldDisplay(Sample.FIELD_MIN_PITCH)) {
@@ -510,8 +510,8 @@ public class ProjectInstrumentsFragment extends Fragment {
             }
 
             for(int i = 0; i < sliderTextPairInputs.length; i += 2) {
-                VerticalSlider slider = (VerticalSlider) rootView.findViewById(sliderTextPairInputs[i]);
-                EditText ed = (EditText) rootView.findViewById(sliderTextPairInputs[i + 1]);
+                VerticalSlider slider = rootView.findViewById(sliderTextPairInputs[i]);
+                EditText ed = rootView.findViewById(sliderTextPairInputs[i + 1]);
                 switch(sliderTextPairInputs[i + 1]) {
                     case R.id.sample_volume:
                         float sVol = editorSample.getVolumeDecibels();
@@ -551,8 +551,8 @@ public class ProjectInstrumentsFragment extends Fragment {
                 ((EditText) rootView.findViewById(id)).setText("");
             }
             for(int i = 0; i < sliderTextPairInputs.length; i += 2) {
-                VerticalSlider slider = (VerticalSlider) rootView.findViewById(sliderTextPairInputs[i]);
-                EditText ed = (EditText) rootView.findViewById(sliderTextPairInputs[i + 1]);
+                VerticalSlider slider = rootView.findViewById(sliderTextPairInputs[i]);
+                EditText ed = rootView.findViewById(sliderTextPairInputs[i + 1]);
                 slider.setProgress(0);
                 ed.setText("");
             }

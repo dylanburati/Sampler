@@ -73,7 +73,7 @@ public class PatternEditBase extends Fragment {
         instrumentSpinnerItems = viewModel.getProject().getInstruments();
         updateInstrumentSpinner();
 
-        noteSelectControls = (MaterialButtonToggleGroup) rootView.findViewById(R.id.note_select_controls);
+        noteSelectControls = rootView.findViewById(R.id.note_select_controls);
         noteSelectControls.addOnButtonCheckedListener(new MaterialButtonToggleGroup.OnButtonCheckedListener() {
             @Override
             public void onButtonChecked(MaterialButtonToggleGroup group, int checkedId, boolean isChecked) {

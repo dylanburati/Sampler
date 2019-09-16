@@ -181,7 +181,7 @@ public class InstrumentSerializationInstrumentedTest {
             assertEquals("Properties of samples differ", sample1.getDecay(), sample2.getDecay(), 1e-7);
             assertEquals("Properties of samples differ", sample1.getSustain(), sample2.getSustain(), 1e-7);
             assertEquals("Properties of samples differ", sample1.getRelease(), sample2.getRelease(), 1e-7);
-            assertEquals("Properties of samples differ", sample1.getBasePitch(), sample2.getBasePitch());
+            assertEquals("Properties of samples differ", sample1.getBasePitch(), sample2.getBasePitch(), 1e-7);
             assertEquals("Properties of samples differ", sample1.getStartTime(), sample2.getStartTime(), 1e-7);
             assertEquals("Properties of samples differ", sample1.getResumeTime(), sample2.getResumeTime(), 1e-7);
             assertEquals("Properties of samples differ", sample1.getEndTime(), sample2.getEndTime(), 1e-7);

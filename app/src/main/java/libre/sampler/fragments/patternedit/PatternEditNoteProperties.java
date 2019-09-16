@@ -139,7 +139,7 @@ public class PatternEditNoteProperties extends Fragment {
     private static final int[] TRANSPOSE_BTN_VALUES = new int[]{-12, -1, +1, +12};
     private void initNoteTransposeButtons() {
         for(int i = 0; i < TRANSPOSE_BTN_IDS.length; i++) {
-            Button b = (Button) rootView.findViewById(TRANSPOSE_BTN_IDS[i]);
+            Button b = rootView.findViewById(TRANSPOSE_BTN_IDS[i]);
             final int val = TRANSPOSE_BTN_VALUES[i];
             b.setOnClickListener(new View.OnClickListener() {
                 @Override

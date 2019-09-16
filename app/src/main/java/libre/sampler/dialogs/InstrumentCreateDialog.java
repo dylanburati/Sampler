@@ -63,7 +63,7 @@ public class InstrumentCreateDialog extends DialogFragment {
         MyDialogBuilder builder = new MyDialogBuilder(getActivity());
         LayoutInflater inflater = LayoutInflater.from(requireActivity());
         View rootView = inflater.inflate(R.layout.dialog_instrument_create, null);
-        nameInputView = (EditText) rootView.findViewById(R.id.input_name);
+        nameInputView = rootView.findViewById(R.id.input_name);
         CheckBox importCheckBox = rootView.findViewById(R.id.import_checkbox);
         final ImageButton browseButton = rootView.findViewById(R.id.browse_button);
         Button submitButton = rootView.findViewById(R.id.submit_button);

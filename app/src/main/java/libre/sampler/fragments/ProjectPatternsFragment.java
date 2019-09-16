@@ -1,6 +1,7 @@
 package libre.sampler.fragments;
 
 import android.content.Context;
+import android.content.res.Resources;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -151,7 +152,7 @@ public class ProjectPatternsFragment extends Fragment {
             }
         });
 
-        patternStop = (ImageView) rootView.findViewById(R.id.pattern_stop);
+        patternStop = rootView.findViewById(R.id.pattern_stop);
         patternStop.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -163,7 +164,7 @@ public class ProjectPatternsFragment extends Fragment {
             }
         });
 
-        patternPlay = (ImageView) rootView.findViewById(R.id.pattern_play);
+        patternPlay = rootView.findViewById(R.id.pattern_play);
         patternPlay.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -181,7 +182,7 @@ public class ProjectPatternsFragment extends Fragment {
             }
         });
 
-        pianoRollPosition = (TextView) rootView.findViewById(R.id.piano_roll_position);
+        pianoRollPosition = rootView.findViewById(R.id.piano_roll_position);
 
         registerEditorFragmentNav((IconNavigationPanel) rootView.findViewById(R.id.pattern_edit_nav));
         setEditorFragment(AppConstants.PATTERN_EDITOR_BASE);
@@ -645,19 +646,20 @@ public class ProjectPatternsFragment extends Fragment {
     }
 
     private void updatePlayPauseControls(Context ctx) {
+        final Resources res = getResources();
         if(projectActivity.isPatternThreadRunning()) {
             if(projectActivity.isPatternThreadPaused()) {
                 patternPlay.setImageDrawable(ctx.getDrawable(R.drawable.ic_play));
-                patternPlay.setContentDescription("Play");
+                patternPlay.setContentDescription(res.getString(R.string.play));
             } else {
                 patternPlay.setImageDrawable(ctx.getDrawable(R.drawable.ic_pause));
-                patternPlay.setContentDescription("Pause");
+                patternPlay.setContentDescription(res.getString(R.string.pause));
             }
 
             patternStop.setEnabled(true);
         } else {
             patternPlay.setImageDrawable(ctx.getDrawable(R.drawable.ic_play));
-            patternPlay.setContentDescription("Play");
+            patternPlay.setContentDescription(res.getString(R.string.play));
 
             patternStop.setEnabled(false);
         }

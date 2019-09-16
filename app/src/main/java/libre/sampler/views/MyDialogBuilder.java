@@ -36,46 +36,13 @@ public class MyDialogBuilder {
         return this;
     }
 
-    public MyDialogBuilder setPositiveButton(@StringRes int textId, DialogInterface.OnClickListener listener) {
-        this.positiveButtonText = context.getString(textId);
-        this.positiveButtonListener = listener;
-        return this;
-    }
-
-    public MyDialogBuilder setNegativeButton(@StringRes int textId, DialogInterface.OnClickListener listener) {
-        this.negativeButtonText = context.getString(textId);
-        this.negativeButtonListener = listener;
-        return this;
-    }
-
     public Dialog create() {
         return dialog;
-    }
-
-    public void installContent(View parentPanel) {
-        dialog.findViewById(android.R.id.button1);
     }
 
     private static @StyleRes int resolveDialogTheme(Context context) {
         final TypedValue outValue = new TypedValue();
         context.getTheme().resolveAttribute(android.R.attr.alertDialogTheme, outValue, true);
         return outValue.resourceId;
-    }
-
-    private static class ButtonHandler implements View.OnClickListener {
-        private View positiveButton;
-        private View negativeButton;
-
-        public ButtonHandler(View positiveButton, View negativeButton) {
-            this.positiveButton = positiveButton;
-            this.negativeButton = negativeButton;
-        }
-
-        @Override
-        public void onClick(View v) {
-            if(v == positiveButton) {
-
-            }
-        }
     }
 }

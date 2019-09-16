@@ -24,7 +24,7 @@ public class ProjectSettingsFragment extends Fragment {
         View rootView = inflater.inflate(R.layout.fragment_project_settings, container, false);
         viewModel = ViewModelProviders.of(getActivity()).get(ProjectViewModel.class);
 
-        EditText defaultSamplePathInputView = (EditText) rootView.findViewById(R.id.pref_default_sample_path);
+        EditText defaultSamplePathInputView = rootView.findViewById(R.id.pref_default_sample_path);
         defaultSamplePathInputView.setText(viewModel.getProject().getDefaultSamplePath());
         defaultSamplePathInputView.addTextChangedListener(new TextWatcher() {
             @Override
@@ -41,7 +41,7 @@ public class ProjectSettingsFragment extends Fragment {
             }
         });
 
-        EditText defaultExportPathInputView = (EditText) rootView.findViewById(R.id.pref_default_instrument_export_path);
+        EditText defaultExportPathInputView = rootView.findViewById(R.id.pref_default_instrument_export_path);
         defaultExportPathInputView.setText(viewModel.getProject().getDefaultExportPath());
         defaultExportPathInputView.addTextChangedListener(new TextWatcher() {
             @Override

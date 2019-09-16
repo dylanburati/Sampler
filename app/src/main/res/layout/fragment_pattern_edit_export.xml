@@ -8,7 +8,7 @@
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="wrap_content"
         android:paddingLeft="@dimen/margin3"
         android:paddingTop="@dimen/margin3"
         android:paddingRight="@dimen/margin3"
@@ -28,12 +28,12 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/margin3_dense"
-            android:hint="@string/export_path_hint"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/title">
 
             <EditText
                 android:id="@+id/input_export_path"
+                android:hint="@string/export_path_hint"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:imeOptions="actionNext"

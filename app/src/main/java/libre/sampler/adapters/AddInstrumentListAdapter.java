@@ -46,7 +46,7 @@ public class AddInstrumentListAdapter extends RecyclerView.Adapter<AddInstrument
             super(v);
             rootView = v;
             this.viewType = viewType;
-            nameTextView = (TextView) v.findViewById(R.id.text);
+            nameTextView = v.findViewById(R.id.text);
             checkBox = v.findViewById(R.id.checkbox);
         }
 

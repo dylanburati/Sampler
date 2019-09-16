@@ -1,4 +1,3 @@
-<?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
@@ -58,14 +57,29 @@
                         android:layout_toRightOf="@+id/piano_roll_octave_labels"
                         android:orientation="vertical">
 
-                        <include layout="@layout/component_piano_roll_row" />
-                        <include layout="@layout/component_piano_roll_row" />
-                        <include layout="@layout/component_piano_roll_row" />
-                        <include layout="@layout/component_piano_roll_row" />
-                        <include layout="@layout/component_piano_roll_row" />
-                        <include layout="@layout/component_piano_roll_row" />
-                        <include layout="@layout/component_piano_roll_row" />
-                        <include layout="@layout/component_piano_roll_row" />
+                        <include
+                            layout="@layout/component_piano_roll_row" />
+
+                        <include
+                            layout="@layout/component_piano_roll_row" />
+
+                        <include
+                            layout="@layout/component_piano_roll_row" />
+
+                        <include
+                            layout="@layout/component_piano_roll_row" />
+
+                        <include
+                            layout="@layout/component_piano_roll_row" />
+
+                        <include
+                            layout="@layout/component_piano_roll_row" />
+
+                        <include
+                            layout="@layout/component_piano_roll_row" />
+
+                        <include
+                            layout="@layout/component_piano_roll_row" />
                     </LinearLayout>
 
                     <LinearLayout
@@ -75,9 +89,7 @@
                         android:layout_alignParentLeft="true"
                         android:layout_alignParentTop="true"
                         android:background="#7737373A"
-                        android:orientation="vertical">
-                    </LinearLayout>
-
+                        android:orientation="vertical" />
                 </RelativeLayout>
             </ScrollView>
         </LinearLayout>
@@ -105,7 +117,6 @@
             android:layout_height="match_parent"
             android:layout_toRightOf="@id/pattern_edit_nav"
             android:layout_alignParentEnd="true" />
-
     </RelativeLayout>
 
     <RelativeLayout
@@ -124,7 +135,8 @@
             android:layout_height="match_parent"
             android:paddingLeft="@dimen/margin2_dense"
             android:paddingRight="@dimen/margin2_dense"
-            android:src="@drawable/ic_play" />
+            android:src="@drawable/ic_play"
+            android:contentDescription="@string/play" />
 
         <ImageView
             android:id="@+id/pattern_stop"
@@ -135,7 +147,8 @@
             android:paddingRight="@dimen/margin2_dense"
             android:tintMode="src_in"
             android:tint="@color/ic_background_tint"
-            android:src="@drawable/ic_stop" />
+            android:src="@drawable/ic_stop"
+            android:contentDescription="@string/stop" />
 
         <TextView
             android:id="@+id/piano_roll_position"

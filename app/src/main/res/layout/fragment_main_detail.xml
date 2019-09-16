@@ -13,12 +13,12 @@
         android:layout_marginBottom="@dimen/margin3"
         android:layout_marginLeft="@dimen/margin3"
         android:layout_marginRight="@dimen/margin3"
-        android:hint="@string/name_hint"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
         <EditText
             android:id="@+id/input_name"
+            android:hint="@string/name_hint"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:inputType="textPersonName" />

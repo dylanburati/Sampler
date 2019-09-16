@@ -27,12 +27,12 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="@dimen/margin3_dense"
-        android:hint="@string/name_hint"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/title">
 
         <EditText
             android:id="@+id/input_name"
+            android:hint="@string/name_hint"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:inputType="textPersonName" />
@@ -65,13 +65,13 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="@dimen/margin3_dense"
         android:layout_marginRight="@dimen/margin2"
-        android:hint="@string/import_path_hint"
         app:layout_constraintTop_toBottomOf="@+id/import_checkbox"
         app:layout_constraintEnd_toStartOf="@+id/browse_button"
         app:layout_constraintStart_toStartOf="parent">
 
         <EditText
             android:id="@+id/input_import_path"
+            android:hint="@string/import_path_hint"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:inputType="textPersonName" />
@@ -85,6 +85,7 @@
         android:src="@drawable/ic_folder"
         android:baseline="32dp"
         android:backgroundTint="@color/colorAccentDarker"
+        android:contentDescription="@string/browse_for_instrument"
         app:layout_constraintBaseline_toBaselineOf="@+id/input_import_path_container"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@id/input_import_path_container" />

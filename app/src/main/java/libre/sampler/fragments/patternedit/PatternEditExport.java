@@ -75,7 +75,7 @@ public class PatternEditExport extends Fragment {
     }
 
     private void updateControl() {
-        ;
+        exportPathInputView.setText(viewModel.getProject().getDefaultExportPath());
     }
 
     private static class ExportTaskCallback implements ExportPatternTask.Callbacks {

@@ -7,6 +7,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.StringReader;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -18,7 +19,7 @@ public class ProjectSettingsConverter {
     public static String serializeSettings(Map<String, Object> map) {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         try {
-            JsonWriter writer = new JsonWriter(new OutputStreamWriter(out, "UTF-8"));
+            JsonWriter writer = new JsonWriter(new OutputStreamWriter(out, StandardCharsets.UTF_8));
             writer.beginObject();
 
             Object defaultSamplePath = map.get(AppConstants.PREF_DEFAULT_SAMPLE_PATH);

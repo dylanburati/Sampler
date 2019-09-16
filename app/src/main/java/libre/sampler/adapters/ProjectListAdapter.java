@@ -35,8 +35,8 @@ public class ProjectListAdapter extends RecyclerView.Adapter<ProjectListAdapter.
         public ViewHolder(LinearLayout v) {
             super(v);
             rootView = v;
-            nameTextView = (TextView) v.findViewById(R.id.text);
-            mtimeTextView = (TextView) v.findViewById(R.id.mtime);
+            nameTextView = v.findViewById(R.id.text);
+            mtimeTextView = v.findViewById(R.id.mtime);
         }
 
         public PopupMenu getPopupMenu() {

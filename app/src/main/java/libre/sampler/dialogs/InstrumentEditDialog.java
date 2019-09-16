@@ -38,8 +38,8 @@ public class InstrumentEditDialog extends DialogFragment {
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
         LayoutInflater inflater = LayoutInflater.from(requireActivity());
         ConstraintLayout rootView = (ConstraintLayout) inflater.inflate(R.layout.dialog_instrument_edit, null);
-        nameInputView = (EditText) rootView.findViewById(R.id.input_name);
-        instrumentDeleteButton = (Button) rootView.findViewById(R.id.delete_instrument);
+        nameInputView = rootView.findViewById(R.id.input_name);
+        instrumentDeleteButton = rootView.findViewById(R.id.delete_instrument);
 
         viewModel = ViewModelProviders.of(getActivity()).get(ProjectViewModel.class);
 

@@ -45,8 +45,8 @@ public class InstrumentExportDialog extends DialogFragment {
         MyDialogBuilder builder = new MyDialogBuilder(getActivity());
         LayoutInflater inflater = LayoutInflater.from(requireActivity());
         ConstraintLayout rootView = (ConstraintLayout) inflater.inflate(R.layout.dialog_instrument_export, null);
-        exportPathInputView = (EditText) rootView.findViewById(R.id.input_export_path);
-        nameInputView = (EditText) rootView.findViewById(R.id.input_name);
+        exportPathInputView = rootView.findViewById(R.id.input_export_path);
+        nameInputView = rootView.findViewById(R.id.input_name);
         Button submitButton = rootView.findViewById(R.id.submit_button);
         Button cancelButton = rootView.findViewById(R.id.cancel_button);
         progressBar = rootView.findViewById(R.id.progress_bar);

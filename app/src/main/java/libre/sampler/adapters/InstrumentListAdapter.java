@@ -43,7 +43,7 @@ public class InstrumentListAdapter extends RecyclerView.Adapter<InstrumentListAd
             super(v);
             rootView = v;
             this.viewType = viewType;
-            nameTextView = (TextView) v.findViewById(R.id.text);
+            nameTextView = v.findViewById(R.id.text);
         }
 
         public void setPopupMenu(PopupMenu menu) {

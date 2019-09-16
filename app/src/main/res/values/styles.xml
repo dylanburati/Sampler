@@ -17,35 +17,12 @@
         <item name="windowNoTitle">true</item>
     </style>
 
-    <style name="AppTheme.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar" />
-
-    <style name="AppTheme.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />
-
     <style name="ActionBar" parent="Widget.AppCompat.ActionBar">
         <item name="background">@color/colorBackgroundLighter</item>
     </style>
 
     <style name="TextAppearanceMonospace" parent="TextAppearance.AppCompat.Body1">
         <item name="android:fontFamily">monospace</item>
-    </style>
-
-    <style name="SimpleSpinnerItem" parent="TextAppearance.AppCompat.Menu" />
-
-    <style name="SimpleSpinnerDropdownItem" parent="TextAppearance.AppCompat.Menu">
-        <item name="android:textColor">?android:attr/textColorPrimaryDisableOnly</item>
-    </style>
-
-    <style name="SeekBar" parent="Widget.AppCompat.SeekBar">
-        <item name="android:progressDrawable">@drawable/progress_drawable</item>
-    </style>
-
-    <style name="GroupedButton" parent="Widget.AppCompat.Button.Borderless" />
-
-    <style name="MaterialButton" parent="Widget.MaterialComponents.Button">
-        <item name="android:backgroundTint">?attr/colorControlHighlight</item>
-        <item name="android:backgroundTintMode">src_atop</item>
-        <item name="android:letterSpacing">0</item>
-        <item name="android:textAppearance">@style/Base.TextAppearance.AppCompat.Widget.Button</item>
     </style>
 
     <style name="MaterialButtonOutlined" parent="Widget.MaterialComponents.Button.OutlinedButton">

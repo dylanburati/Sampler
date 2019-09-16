@@ -10,6 +10,7 @@
         android:layout_height="wrap_content"
         android:src="@drawable/ic_home"
         android:tint="@color/selectable_icon"
+        android:contentDescription="@string/pattern_editor_home"
         android:layout_marginTop="@dimen/margin1"
         android:padding="6dp" />
 
@@ -19,6 +20,7 @@
         android:layout_height="wrap_content"
         android:src="@drawable/ic_properties"
         android:tint="@color/selectable_icon"
+        android:contentDescription="@string/pattern_editor_note_properties"
         android:padding="6dp" />
 
     <ImageView
@@ -27,6 +29,7 @@
         android:layout_height="wrap_content"
         android:src="@drawable/ic_content_copy"
         android:tint="@color/selectable_icon"
+        android:contentDescription="@string/pattern_editor_copy"
         android:paddingTop="6dp"
         android:paddingBottom="6dp"
         android:paddingStart="7dp"
@@ -38,6 +41,7 @@
         android:layout_height="wrap_content"
         android:src="@drawable/ic_magnet"
         android:tint="@color/selectable_icon"
+        android:contentDescription="@string/pattern_editor_snap_length"
         android:paddingTop="7dp"
         android:paddingBottom="6dp"
         android:paddingStart="6dp"
@@ -49,6 +53,7 @@
         android:layout_height="wrap_content"
         android:src="@drawable/ic_dimension"
         android:tint="@color/selectable_icon"
+        android:contentDescription="@string/pattern_editor_pattern_length"
         android:padding="6dp" />
 
     <ImageView
@@ -57,6 +62,7 @@
         android:layout_height="wrap_content"
         android:src="@drawable/ic_forward"
         android:tint="@color/selectable_icon"
+        android:contentDescription="@string/pattern_editor_export"
         android:paddingTop="6dp"
         android:paddingBottom="6dp"
         android:paddingStart="7dp"

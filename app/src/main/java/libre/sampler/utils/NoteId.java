@@ -27,7 +27,7 @@ public class NoteId {
         long duplicateIndex = 1 + (noteId >> DUPLICATE_BIT_SHIFT);
         noteId &= TIME_MASK;
         noteId |= SCHEDULED_MASK;
-        noteId |= ((long) duplicateIndex << DUPLICATE_BIT_SHIFT) & DUPLICATE_MASK;
+        noteId |= (duplicateIndex << DUPLICATE_BIT_SHIFT) & DUPLICATE_MASK;
         return noteId;
     }
 }
