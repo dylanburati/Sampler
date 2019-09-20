@@ -30,6 +30,7 @@ import libre.sampler.MainActivity;
 import libre.sampler.ProjectActivity;
 import libre.sampler.R;
 import libre.sampler.adapters.ProjectListAdapter;
+import libre.sampler.dialogs.AboutDialog;
 import libre.sampler.dialogs.ProjectImportDialog;
 import libre.sampler.models.MainViewModel;
 import libre.sampler.models.Project;
@@ -165,6 +166,12 @@ public class MainProjectsFragment extends Fragment {
         } else if(item.getItemId() == R.id.appbar_import_project) {
             if(requireInternetPermissions()) {
                 showProjectImportDialog();
+            }
+        } else if(item.getItemId() == R.id.appbar_about) {
+            FragmentManager fm = getFragmentManager();
+            if(fm != null) {
+                AboutDialog dialog = new AboutDialog();
+                dialog.show(fm, "AboutDialog");
             }
         }
         return super.onOptionsItemSelected(item);

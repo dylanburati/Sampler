@@ -115,4 +115,5 @@
     <string name="project_imported">Project downloaded</string>
     <string name="import_could_not_connect">Could not connect</string>
     <string name="action_download">Download</string>
+    <string name="app_copyright">Copyright (c) 2019 Dylan Burati</string>
 </resources>
