@@ -23,12 +23,14 @@ import androidx.appcompat.app.ActionBar;
 import androidx.core.content.ContextCompat;
 import androidx.core.util.Consumer;
 import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
 import androidx.lifecycle.ViewModelProviders;
 import androidx.recyclerview.widget.RecyclerView;
 import libre.sampler.MainActivity;
 import libre.sampler.ProjectActivity;
 import libre.sampler.R;
 import libre.sampler.adapters.ProjectListAdapter;
+import libre.sampler.dialogs.ProjectImportDialog;
 import libre.sampler.models.MainViewModel;
 import libre.sampler.models.Project;
 import libre.sampler.models.ProjectEvent;
@@ -47,6 +49,7 @@ public class MainProjectsFragment extends Fragment {
     private MainViewModel viewModel;
 
     private boolean willShowDialogCreateProject;
+    private boolean willShowDialogImportProject;
     private boolean isAdapterLoaded;
     private View rootView;
 
@@ -105,6 +108,10 @@ public class MainProjectsFragment extends Fragment {
             ((MainActivity) getActivity()).openDetailFragment(ProjectEvent.PROJECT_CREATE, null);
             willShowDialogCreateProject = false;
         }
+        if(willShowDialogImportProject) {
+            showProjectImportDialog();
+            willShowDialogImportProject = false;
+        }
     }
 
     @Override
@@ -155,6 +162,10 @@ public class MainProjectsFragment extends Fragment {
             File dataDir = getContext().getDir("data", MODE_PRIVATE);
             DatabaseConnectionManager.runTask(new CleanFilesTask(dataDir, getContext()));
             return true;
+        } else if(item.getItemId() == R.id.appbar_import_project) {
+            if(requireInternetPermissions()) {
+                showProjectImportDialog();
+            }
         }
         return super.onOptionsItemSelected(item);
     }
@@ -169,8 +180,31 @@ public class MainProjectsFragment extends Fragment {
         }
 
         if(!granted && Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            requestPermissions(new String[]{Manifest.permission.READ_EXTERNAL_STORAGE,
-                    Manifest.permission.WRITE_EXTERNAL_STORAGE}, AppConstants.PERM_REQUEST_READ_EXTERNAL_STORAGE);
+            requestPermissions(new String[]{
+                        Manifest.permission.READ_EXTERNAL_STORAGE,
+                        Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                    AppConstants.PERM_REQUEST_READ_EXTERNAL_STORAGE);
+        }
+        return granted;
+    }
+
+    private boolean requireInternetPermissions() {
+        boolean granted = true;
+
+        if(ContextCompat.checkSelfPermission(getContext(), Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+            granted = false;
+        } else if(ContextCompat.checkSelfPermission(getContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+            granted = false;
+        } else if(ContextCompat.checkSelfPermission(getContext(), Manifest.permission.INTERNET) != PackageManager.PERMISSION_GRANTED) {
+            granted = false;
+        }
+
+        if(!granted && Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            requestPermissions(new String[]{
+                        Manifest.permission.INTERNET,
+                        Manifest.permission.READ_EXTERNAL_STORAGE,
+                        Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                    AppConstants.PERM_REQUEST_READ_EXTERNAL_STORAGE);
         }
         return granted;
     }
@@ -179,13 +213,29 @@ public class MainProjectsFragment extends Fragment {
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         switch(requestCode) {
             case AppConstants.PERM_REQUEST_READ_EXTERNAL_STORAGE:
-                if(grantResults.length >= 2 && grantResults[0] == PackageManager.PERMISSION_GRANTED &&
+                if(grantResults.length >= 2 &&
+                        grantResults[0] == PackageManager.PERMISSION_GRANTED &&
                         grantResults[1] == PackageManager.PERMISSION_GRANTED) {
                     willShowDialogCreateProject = true;
                 }
                 break;
+            case AppConstants.PERM_REQUEST_INTERNET:
+                if(grantResults.length >= 3 &&
+                        grantResults[0] == PackageManager.PERMISSION_GRANTED &&
+                        grantResults[1] == PackageManager.PERMISSION_GRANTED &&
+                        grantResults[2] == PackageManager.PERMISSION_GRANTED) {
+                    willShowDialogImportProject = true;
+                }
             default:
                 break;
+        }
+    }
+
+    private void showProjectImportDialog() {
+        FragmentManager fm = getFragmentManager();
+        if(fm != null) {
+            ProjectImportDialog dialog = new ProjectImportDialog();
+            dialog.show(fm, "ProjectImportDialog");
         }
     }
 

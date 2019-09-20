@@ -207,6 +207,8 @@ public class InstrumentCreateDialog extends DialogFragment {
                 if(dialog != null) {
                     dialog.dismiss();
                 }
+            } else {
+                Toast.makeText(dialog.getContext(), R.string.import_failed, Toast.LENGTH_SHORT).show();
             }
         }
     }

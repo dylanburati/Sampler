@@ -23,15 +23,22 @@ import java.util.zip.ZipInputStream;
 import libre.sampler.models.Instrument;
 import libre.sampler.models.Sample;
 import libre.sampler.utils.MD5OutputStream;
+import libre.sampler.utils.ProgressFraction;
 
 public class InstrumentDeserializer {
     private Instrument toCreate;
     private Map<String, String> entriesToFilenames;
     private ZipInputStream zipFile;
     private JsonReader jsonReader;
+    private final ProgressFraction progress;
 
     public InstrumentDeserializer(Instrument toCreate) {
+        this(toCreate, null);
+    }
+
+    public InstrumentDeserializer(Instrument toCreate, ProgressFraction progress) {
         this.toCreate = toCreate;
+        this.progress = progress;
         this.entriesToFilenames = new HashMap<>();
     }
 
@@ -138,6 +145,10 @@ public class InstrumentDeserializer {
                     extractDirectory.getAbsolutePath()));
         }
 
+        if(this.progress != null) {
+            this.progress.setProgressTotal(1);
+        }
+        float progressComplement = 1;
         this.zipFile = new ZipInputStream(inputStream);
         ByteArrayInputStream jsonInputStream = null;
         try {
@@ -162,6 +173,10 @@ public class InstrumentDeserializer {
                         if(extractFile.createNewFile()) {
                             try(OutputStream outputStream = new FileOutputStream(extractFile, false)) {
                                 byteArrayOutputStream.writeTo(outputStream);
+                                if(this.progress != null) {
+                                    progressComplement *= 0.75;
+                                    this.progress.setProgressCurrent(1 - progressComplement);
+                                }
                             }
                         }
                     }
@@ -173,6 +188,9 @@ public class InstrumentDeserializer {
 
             this.jsonReader = new JsonReader(new InputStreamReader(jsonInputStream, StandardCharsets.UTF_8));
             readJson(this.jsonReader);
+            if(this.progress != null) {
+                this.progress.setProgressCurrent(1);
+            }
         } finally {
             if(zipFile != null) zipFile.close();
             if(jsonInputStream != null) jsonInputStream.close();

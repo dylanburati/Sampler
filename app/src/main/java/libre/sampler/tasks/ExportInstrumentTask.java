@@ -50,15 +50,15 @@ public class ExportInstrumentTask extends AsyncTask<Void, Float, String> impleme
     }
 
     // ProgressFraction
-    private int total;
+    private float total;
 
     @Override
-    public void setProgressTotal(int total) {
+    public void setProgressTotal(float total) {
         this.total = total;
     }
 
     @Override
-    public void setProgressCurrent(int current) {
-        publishProgress((float) current / total);
+    public void setProgressCurrent(float current) {
+        if(this.total != 0) publishProgress( current / total);
     }
 }

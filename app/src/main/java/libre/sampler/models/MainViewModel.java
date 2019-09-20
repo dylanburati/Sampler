@@ -98,16 +98,23 @@ public class MainViewModel extends AndroidViewModel {
     }
 
     public void addNewProject(final Project toAdd, final Collection<Instrument> instruments) {
-        if(this.projectsState == ModelState.LOADED && this.allInstrumentsState == ModelState.LOADED) {
+        if(this.projectsState == ModelState.LOADED) {
             DatabaseConnectionManager.runTask(new CreateProjectTask(toAdd, instruments, new Runnable() {
                 @Override
                 public void run() {
                     MainViewModel.this.projects.add(0, toAdd);
-                    MainViewModel.this.allInstruments.addAll(toAdd.getInstruments());
+                    if(MainViewModel.this.allInstrumentsState == ModelState.LOADED) {
+                        MainViewModel.this.allInstruments.addAll(toAdd.getInstruments());
+                    }
                     projectEventSource.dispatch(new ProjectEvent(ProjectEvent.PROJECT_CREATE, toAdd));
                 }
             }));
         }
+    }
+
+    public void addImportedProject(final Project toAdd) {
+        MainViewModel.this.projects.add(0, toAdd);
+        projectEventSource.dispatch(new ProjectEvent(ProjectEvent.PROJECT_CREATE, toAdd));
     }
 
     public void removeProject(final Project project) {

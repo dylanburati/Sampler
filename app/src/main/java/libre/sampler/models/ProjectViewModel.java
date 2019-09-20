@@ -2,7 +2,6 @@ package libre.sampler.models;
 
 import android.app.Application;
 import android.content.Context;
-import android.content.Intent;
 import android.media.midi.MidiDeviceInfo;
 import android.media.midi.MidiManager;
 import android.os.Build;
@@ -24,7 +23,6 @@ import androidx.core.util.Consumer;
 import androidx.lifecycle.AndroidViewModel;
 import libre.sampler.publishers.EmptyEventSource;
 import libre.sampler.publishers.InstrumentEventSource;
-import libre.sampler.publishers.MapEventSource;
 import libre.sampler.publishers.MidiEventDispatcher;
 import libre.sampler.publishers.NoteEventSource;
 import libre.sampler.publishers.PatternEventSource;
@@ -54,7 +52,6 @@ public class ProjectViewModel extends AndroidViewModel {
     private MidiEventDispatcher midiEventDispatcher;
 
     public final EmptyEventSource loadEventSource = new EmptyEventSource();
-    public final MapEventSource<Intent> intentEventSource = new MapEventSource<>();
     public final NoteEventSource noteEventSource = new NoteEventSource();
     public final InstrumentEventSource instrumentEventSource = new InstrumentEventSource();
     public final PatternEventSource patternEventSource = new PatternEventSource();
