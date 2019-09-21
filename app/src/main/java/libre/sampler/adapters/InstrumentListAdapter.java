@@ -24,7 +24,7 @@ public class InstrumentListAdapter extends RecyclerView.Adapter<InstrumentListAd
 
     private final InstrumentActionConsumer instrumentActionConsumer;
 
-    private Instrument activateOnBind;
+    private Instrument activeInstrument;
 
     @Override
     public List<Instrument> items() {
@@ -131,9 +131,7 @@ public class InstrumentListAdapter extends RecyclerView.Adapter<InstrumentListAd
             //     }
             // });
             holder.nameTextView.setText(holder.instrument.name);
-            if(holder.instrument == this.activateOnBind) {
-                activateItem(holder);
-            }
+            holder.nameTextView.setActivated(holder.instrument == this.activeInstrument);
         }
     }
 
@@ -143,24 +141,15 @@ public class InstrumentListAdapter extends RecyclerView.Adapter<InstrumentListAd
     }
 
     public void activateInstrument(Instrument instrument) {
-        this.activateOnBind = instrument;
-        if(instrument == null) {
-            return;
+        int deactivateIdx = this.items.indexOf(activeInstrument);
+        this.activeInstrument = instrument;
+        int activateIdx = this.items.indexOf(activeInstrument);
+        if(deactivateIdx >= 0) {
+            notifyItemChanged(deactivateIdx);
         }
-        for(ViewHolder vh : viewHolderSet) {
-            if(vh != null) {
-                if(instrument == vh.instrument) {
-                    activateItem(vh);
-                } else {
-                    vh.nameTextView.setActivated(false);
-                }
-            }
+        if(activateIdx >= 0) {
+            notifyItemChanged(activateIdx);
         }
-    }
-
-    private void activateItem(ViewHolder vh) {
-        vh.nameTextView.setActivated(true);
-        this.activateOnBind = null;
     }
 
     public interface InstrumentActionConsumer {
