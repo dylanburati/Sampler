@@ -12,6 +12,7 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.TextView;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -53,6 +54,7 @@ public class MainProjectsFragment extends Fragment {
     private boolean willShowDialogImportProject;
     private boolean isAdapterLoaded;
     private View rootView;
+    private TextView noProjectsView;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -86,6 +88,7 @@ public class MainProjectsFragment extends Fragment {
             public void accept(final ProjectEvent event) {
                 if(event.action == ProjectEvent.PROJECT_CREATE) {
                     AdapterLoader.insertItem(projectListAdapter, 0, event.project);
+                    updateAdapter();
                 } else if(event.action == ProjectEvent.PROJECT_EDIT) {
                     int changeIdx = projectListAdapter.items.indexOf(event.project);
                     if(changeIdx != -1) {
@@ -128,14 +131,25 @@ public class MainProjectsFragment extends Fragment {
         this.projectListView = rootView.findViewById(R.id.projects_select);
         this.projectListAdapter = new ProjectListAdapter(new ArrayList<Project>(),
                 new MyProjectActionConsumer());
+        this.noProjectsView = rootView.findViewById(R.id.no_projects_yet);
         projectListView.setAdapter(this.projectListAdapter);
     }
 
     private void updateAdapter() {
         List<Project> projects = viewModel.getProjects();
-        if(!isAdapterLoaded && projects != null) {
-            AdapterLoader.insertAll(projectListAdapter, viewModel.getProjects());
-            isAdapterLoaded = true;
+        if(projects != null) {
+            if(!isAdapterLoaded) {
+                AdapterLoader.insertAll(projectListAdapter, projects);
+                isAdapterLoaded = true;
+            }
+
+            if(projects.size() == 0) {
+                projectListView.setVisibility(View.GONE);
+                noProjectsView.setVisibility(View.VISIBLE);
+            } else {
+                projectListView.setVisibility(View.VISIBLE);
+                noProjectsView.setVisibility(View.GONE);
+            }
         }
     }
 

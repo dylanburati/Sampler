@@ -116,4 +116,5 @@
     <string name="import_could_not_connect">Could not connect</string>
     <string name="action_download">Download</string>
     <string name="app_copyright">Copyright (c) 2019 Dylan Burati</string>
+    <string name="no_projects_yet">Projects you create will be listed here.\n\nTo get started, you can click the menu in the top right and import the default project.</string>
 </resources>
