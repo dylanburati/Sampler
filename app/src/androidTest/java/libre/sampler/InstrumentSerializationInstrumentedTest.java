@@ -134,11 +134,11 @@ public class InstrumentSerializationInstrumentedTest {
         // Export to .zip
         ProgressFraction progressFraction = new ProgressFraction() {
             @Override
-            public void setProgressTotal(int total) {
+            public void setProgressTotal(float total) {
             }
 
             @Override
-            public void setProgressCurrent(int current) {
+            public void setProgressCurrent(float current) {
             }
         };
         try(InstrumentSerializer serializer = new InstrumentSerializer(instrument1, progressFraction)) {

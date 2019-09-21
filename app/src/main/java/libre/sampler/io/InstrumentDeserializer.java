@@ -22,6 +22,8 @@ import java.util.zip.ZipInputStream;
 
 import libre.sampler.models.Instrument;
 import libre.sampler.models.Sample;
+import libre.sampler.utils.JsonParser;
+import libre.sampler.utils.JsonTypes;
 import libre.sampler.utils.MD5OutputStream;
 import libre.sampler.utils.ProgressFraction;
 
@@ -42,68 +44,36 @@ public class InstrumentDeserializer {
         this.entriesToFilenames = new HashMap<>();
     }
 
-    private void readSample(JsonReader reader) throws IOException {
+    private Sample readSample(JsonTypes.Object jsonSample) throws IOException {
         Sample sample = new Sample("", 0);
-        reader.beginObject();
-        while(reader.hasNext()) {
-            String nextName = reader.nextName();
-            if(nextName.equals("filename")) {
-                String entryName = reader.nextString();
-                sample.filename = Objects.requireNonNull(entriesToFilenames.get(entryName));
-            } else if(nextName.equals("volume")) {
-                sample.setVolume((float) reader.nextDouble());
-            } else if(nextName.equals("minPitch")) {
-                sample.setMinPitch(reader.nextInt());
-            } else if(nextName.equals("maxPitch")) {
-                sample.setMaxPitch(reader.nextInt());
-            } else if(nextName.equals("minVelocity")) {
-                sample.setMinVelocity(reader.nextInt());
-            } else if(nextName.equals("maxVelocity")) {
-                sample.setMaxVelocity(reader.nextInt());
-            } else if(nextName.equals("attack")) {
-                sample.setAttack((float) reader.nextDouble());
-            } else if(nextName.equals("decay")) {
-                sample.setDecay((float) reader.nextDouble());
-            } else if(nextName.equals("sustain")) {
-                sample.setSustain((float) reader.nextDouble());
-            } else if(nextName.equals("release")) {
-                sample.setRelease((float) reader.nextDouble());
-            } else if(nextName.equals("basePitch")) {
-                sample.setBasePitch((float) reader.nextDouble());
-            } else if(nextName.equals("startTime")) {
-                sample.setStartTime((float) reader.nextDouble());
-            } else if(nextName.equals("resumeTime")) {
-                sample.setResumeTime((float) reader.nextDouble());
-            } else if(nextName.equals("endTime")) {
-                sample.setEndTime((float) reader.nextDouble());
-            } else if(nextName.equals("displayFlags")) {
-                sample.displayFlags = reader.nextInt();
-            } else {
-                reader.skipValue();
-            }
-        }
-        reader.endObject();
+        String entryName = jsonSample.getNonNull("filename").getValueString();
+        sample.filename = Objects.requireNonNull(entriesToFilenames.get(entryName));
+        sample.setVolume(jsonSample.getNonNull("volume").getValueFloat());
+        sample.setMinPitch(jsonSample.getNonNull("minPitch").getValueInt());
+        sample.setMaxPitch(jsonSample.getNonNull("maxPitch").getValueInt());
+        sample.setMinVelocity(jsonSample.getNonNull("minVelocity").getValueInt());
+        sample.setMaxVelocity(jsonSample.getNonNull("maxVelocity").getValueInt());
+        sample.setAttack(jsonSample.getNonNull("attack").getValueFloat());
+        sample.setDecay(jsonSample.getNonNull("decay").getValueFloat());
+        sample.setSustain(jsonSample.getNonNull("sustain").getValueFloat());
+        sample.setRelease(jsonSample.getNonNull("release").getValueFloat());
+        sample.setBasePitch(jsonSample.getNonNull("basePitch").getValueFloat());
+        sample.setStartTime(jsonSample.getNonNull("startTime").getValueFloat());
+        sample.setResumeTime(jsonSample.getNonNull("resumeTime").getValueFloat());
+        sample.setEndTime(jsonSample.getNonNull("endTime").getValueFloat());
+        sample.displayFlags = jsonSample.getNonNull("displayFlags").getValueInt();
 
-        toCreate.addSample(sample);
+        return sample;
     }
 
     private void readJson(JsonReader reader) throws IOException {
-        reader.beginObject();
-        while(reader.hasNext()) {
-            String nextName = reader.nextName();
-            if(nextName.equals("name")) {
-                /*discard*/ reader.nextString();
-            } else if(nextName.equals("volume")) {
-                toCreate.setVolume((float) reader.nextDouble());
-            } else if(nextName.equals("samples")) {
-                reader.beginArray();
-                while(reader.hasNext()) {
-                    readSample(reader);
-                }
-                reader.endArray();
-            }
+        JsonTypes.Object jsonInstrument = JsonParser.parseObject(reader);
+        toCreate.setVolume(jsonInstrument.getNonNull("volume").getValueFloat());
+        JsonTypes.Array jsonSampleArr = jsonInstrument.getNonNull("samples").getValueArray();
+        for(JsonTypes.Any jsonSample : jsonSampleArr) {
+            Sample s = readSample(jsonSample.getValueObject());
+            toCreate.addSample(s);
         }
-        reader.endObject();
     }
 
     private void copy(InputStream in, OutputStream out) throws IOException {
