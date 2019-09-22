@@ -94,7 +94,7 @@ public class ProjectKeyboardFragment extends Fragment {
                 for(int i = 0; i < pointerCount; i++) {
                     View octaveContainer = rv.findChildViewUnder(e.getX(i), e.getY(i));
                     int eventAction = e.getActionMasked();
-                    Pair<Long, Integer> eventId = NoteId.createForKeyboard(e.getDownTime(), e.getPointerId(i));
+                    NoteId eventId = NoteId.createForKeyboard(e.getDownTime(), e.getPointerId(i));
                     KeyData keyData = resolveKeyNum(octaveContainer, e.getX(i), e.getY(i));
 
                     if(eventAction == MotionEvent.ACTION_CANCEL || eventAction == MotionEvent.ACTION_UP

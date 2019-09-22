@@ -275,12 +275,12 @@ public class Sample {
         this.displayFlags |= FIELD_RELEASE;
     }
 
-    public boolean contains(NoteEvent e) {
-        if(e.keyNum < this.minPitch || e.keyNum > this.maxPitch ||
-                e.velocity < this.minVelocity || e.velocity > this.maxVelocity) {
-            return false;
-        }
-        return true;
+    public boolean containsKey(NoteEvent e) {
+        return (e.keyNum >= this.minPitch && e.keyNum <= this.maxPitch);
+    }
+
+    public boolean containsVelocity(NoteEvent e) {
+        return (e.velocity >= this.minVelocity && e.velocity <= this.maxVelocity);
     }
 
     public boolean checkLoop() {

@@ -355,8 +355,20 @@ public class ProjectActivity extends AppCompatActivity {
         @Override
         public void accept(NoteEvent noteEvent) {
             if(pdService != null && noteEvent.instrument != null) {
-                List<Sample> samples = noteEvent.instrument.getSamplesForEvent(noteEvent);
-                if(samples.size() == 0) {
+                List<Sample> samples = null;
+                if(noteEvent.action == NoteEvent.NOTE_ON) {
+                    samples = noteEvent.instrument.getSamplesForEvent(noteEvent, true);
+                } else if(noteEvent.action == NoteEvent.NOTE_OFF) {
+                    NoteEvent openEvent = pdVoiceBindings.getOpenEvent(noteEvent);
+                    if(openEvent == null) {
+                        samples = noteEvent.instrument.getSamplesForEvent(noteEvent, false);
+                    } else {
+                        samples = noteEvent.instrument.getSamplesForEvent(openEvent, true);
+                    }
+                } else if(noteEvent.action == NoteEvent.CLOSE) {
+                    samples = noteEvent.instrument.getSamplesForEvent(noteEvent, false);
+                }
+                if(samples == null || samples.size() == 0) {
                     return;
                 }
                 try {
@@ -372,7 +384,7 @@ public class ProjectActivity extends AppCompatActivity {
                         if(noteEvent.action == NoteEvent.NOTE_ON) {
                             float adjVelocity = (float) (Math.pow(noteEvent.velocity / 128.0, 2) *
                                     noteEvent.instrument.getVolume() * s.getVolume());
-                            int voiceIndex = pdVoiceBindings.getBinding(noteEvent, s.id);
+                            int voiceIndex = pdVoiceBindings.newBinding(noteEvent, s.id);
                             if(voiceIndex == -1) {
                                 continue;
                             }

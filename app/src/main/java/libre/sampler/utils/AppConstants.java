@@ -53,5 +53,5 @@ public class AppConstants {
 
     public static final int FILE_REQUEST_INSTRUMENT_CREATE = 1;
 
-    public static final String SERIALIZED_PROJECT_URL = "https://relisten.xyz/20190920/project.json";
+    public static final String SERIALIZED_PROJECT_URL = "https://dylanburati.github.io/sampler-exporter/project/all.json";
 }

@@ -1,7 +1,10 @@
 package libre.sampler.utils;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import libre.sampler.models.NoteEvent;
 
@@ -19,15 +22,17 @@ public class VoiceBindingList {
     }
 
     private List<VoiceBindingData> bindings;
+    private Map<NoteId, Integer> noteIdLookup;
 
     public VoiceBindingList(int size) {
         bindings = new ArrayList<>(size);
         for(int i = 0; i < size; i++) {
             bindings.add(null);
         }
+        noteIdLookup = new HashMap<>(size);
     }
 
-    public synchronized int getBinding(NoteEvent openEvt, int sampleId) {
+    public synchronized int newBinding(NoteEvent openEvt, int sampleId) {
         int voiceIndex = 0;
         while(voiceIndex < bindings.size() && bindings.get(voiceIndex) != null) {
             voiceIndex++;
@@ -35,19 +40,30 @@ public class VoiceBindingList {
         if(voiceIndex >= bindings.size()) {
             return -1;
         }
+        noteIdLookup.put(openEvt.eventId, voiceIndex);
         bindings.set(voiceIndex, new VoiceBindingData(openEvt, sampleId));
         return voiceIndex;
     }
 
+    public synchronized NoteEvent getOpenEvent(NoteEvent closeEvt) {
+        Integer voiceIndex = noteIdLookup.get(closeEvt.eventId);
+        if(voiceIndex != null) {
+            VoiceBindingData b = bindings.get(voiceIndex);
+            if(b != null && !b.closed && b.event.eventId.equals(closeEvt.eventId)) {
+                return b.event;
+            }
+        }
+        return null;
+    }
+
     public synchronized int releaseBinding(NoteEvent closeEvt, int sampleId) {
-        int voiceIndex = 0;
-        while(voiceIndex < bindings.size()) {
+        Integer voiceIndex = noteIdLookup.get(closeEvt.eventId);
+        if(voiceIndex != null) {
             VoiceBindingData b = bindings.get(voiceIndex);
             if(b != null && !b.closed && b.event.eventId.equals(closeEvt.eventId) && b.sampleId == sampleId) {
                 b.closed = true;
                 return voiceIndex;
             }
-            voiceIndex++;
         }
         return -1;
     }
@@ -55,6 +71,12 @@ public class VoiceBindingList {
     public synchronized void voiceFree(int voiceIndex) {
         if(voiceIndex >= 0 && voiceIndex <= bindings.size()) {
             bindings.set(voiceIndex, null);
+            Iterator<Map.Entry<NoteId, Integer>> iterator = noteIdLookup.entrySet().iterator();
+            while(iterator.hasNext()) {
+                if(voiceIndex == iterator.next().getValue()) {
+                    iterator.remove();
+                }
+            }
         }
     }
 

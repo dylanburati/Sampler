@@ -38,7 +38,7 @@ public class ProjectDeserializer {
         }
 
         progress.setProgressTotal(jsonInstrumentArr.size());
-        int i = 0;
+        int index = 0;
         JsonTypes.Object jsonInstrument;
         for(JsonTypes.Any aJsonInstrument : jsonInstrumentArr) {
             jsonInstrument = aJsonInstrument.getValueObject();
@@ -46,7 +46,7 @@ public class ProjectDeserializer {
             toCreate.registerInstrument(instrument);
 
             URL download = new URL(jsonInstrument.getNonNull("download").getValueString());
-            final int index = i;
+            final int indexCopy = index;
             InstrumentDeserializer deserializer = new InstrumentDeserializer(instrument, new ProgressFraction() {
                 float total;
                 @Override
@@ -56,11 +56,12 @@ public class ProjectDeserializer {
 
                 @Override
                 public void setProgressCurrent(float current) {
-                    progress.setProgressCurrent(index + (current / total));
+                    progress.setProgressCurrent(indexCopy + (current / total));
                 }
             });
             deserializer.read(download.openConnection().getInputStream(), extractDirectory);
             toCreate.addInstrument(instrument);
+            index++;
         }
     }
 

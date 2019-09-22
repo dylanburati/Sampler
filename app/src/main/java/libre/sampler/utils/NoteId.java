@@ -2,18 +2,28 @@ package libre.sampler.utils;
 
 import android.util.Pair;
 
-public class NoteId {
+public class NoteId extends Pair<Long, Integer> {
     private static final long TIME_MASK             = 0x0000ffffffffffffL;
     private static final long SCHEDULED_MASK        = 0x0001000000000000L;
     private static final long DUPLICATE_MASK        = 0xfff0000000000000L;
     private static final int DUPLICATE_BIT_SHIFT = 52;
 
-    public static Pair<Long, Integer> createForKeyboard(long timeMs, int pointerIndex) {
-        return new Pair<>(timeMs & TIME_MASK, pointerIndex);
+    /**
+     * Constructor for a NoteId.
+     *
+     * @param first  the first 64 bits
+     * @param second the last 32 bits
+     */
+    public NoteId(Long first, Integer second) {
+        super(first, second);
     }
 
-    public static Pair<Long, Integer> createForMidi(int keyNum) {
-        return new Pair<>(-1L, keyNum);
+    public static NoteId createForKeyboard(long timeMs, int pointerIndex) {
+        return new NoteId(timeMs & TIME_MASK, pointerIndex);
+    }
+
+    public static NoteId createForMidi(int keyNum) {
+        return new NoteId(-1L, keyNum);
     }
 
     public static long createForScheduledNoteEvent(long timeMs, int duplicateIndex) {

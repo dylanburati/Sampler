@@ -89,11 +89,13 @@ public class Instrument {
         return samples;
     }
 
-    public List<Sample> getSamplesForEvent(NoteEvent event) {
+    public List<Sample> getSamplesForEvent(NoteEvent event, boolean compareVelocity) {
         List<Sample> retval = new ArrayList<>(10);
         for(int i = 0; i < samples.size(); i++) {
-            if(samples.get(i).contains(event)) {
-                retval.add(samples.get(i));
+            if(samples.get(i).containsKey(event)) {
+                if(!compareVelocity || samples.get(i).containsVelocity(event)) {
+                    retval.add(samples.get(i));
+                }
             }
         }
         return retval;

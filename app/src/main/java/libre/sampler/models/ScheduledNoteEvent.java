@@ -1,10 +1,9 @@
 package libre.sampler.models;
 
-import android.util.Pair;
-
 import androidx.annotation.NonNull;
 import androidx.room.Entity;
 import androidx.room.Ignore;
+import libre.sampler.utils.NoteId;
 
 @Entity(tableName = "scheduledNoteEvent", primaryKeys = {"patternId", "id"})
 public class ScheduledNoteEvent {
@@ -47,7 +46,7 @@ public class ScheduledNoteEvent {
     }
 
     public NoteEvent getNoteEvent(int loopIndex) {
-        return new NoteEvent(action, instrument, keyNum, velocity, new Pair<>(noteId, loopIndex));
+        return new NoteEvent(action, instrument, keyNum, velocity, new NoteId(noteId, loopIndex));
     }
 
     public void setInstrument(Instrument t) {

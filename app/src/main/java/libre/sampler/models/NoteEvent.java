@@ -1,6 +1,6 @@
 package libre.sampler.models;
 
-import android.util.Pair;
+import libre.sampler.utils.NoteId;
 
 public class NoteEvent {
     public static final int NOTHING = -1;
@@ -12,9 +12,9 @@ public class NoteEvent {
     public Instrument instrument;
     public int keyNum;
     public int velocity;
-    public Pair<Long, Integer> eventId;
+    public NoteId eventId;
 
-    public NoteEvent(int action, Instrument instrument, int keyNum, int velocity, Pair<Long, Integer> eventId) {
+    public NoteEvent(int action, Instrument instrument, int keyNum, int velocity, NoteId eventId) {
         this.instrument = instrument;
         this.keyNum = keyNum;
         this.action = action;
