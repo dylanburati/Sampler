@@ -18,7 +18,7 @@ public class NoteEvent {
         this.instrument = instrument;
         this.keyNum = keyNum;
         this.action = action;
-        this.velocity = velocity * (action == 1 ? 1 : 0);
+        this.velocity = velocity * (action == NOTE_ON ? 1 : 0);
         this.eventId = eventId;
     }
 }

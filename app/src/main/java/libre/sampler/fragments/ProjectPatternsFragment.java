@@ -39,6 +39,7 @@ import libre.sampler.adapters.PianoRoll;
 import libre.sampler.fragments.patternedit.PatternEditBase;
 import libre.sampler.fragments.patternedit.PatternEditCopyMultiple;
 import libre.sampler.fragments.patternedit.PatternEditExport;
+import libre.sampler.fragments.patternedit.PatternEditHelp;
 import libre.sampler.fragments.patternedit.PatternEditNoteProperties;
 import libre.sampler.fragments.patternedit.PatternEditPatternLength;
 import libre.sampler.fragments.patternedit.PatternEditSelectSpecial;
@@ -727,6 +728,9 @@ public class ProjectPatternsFragment extends Fragment {
                     case R.id.open_export:
                         fragmentId = AppConstants.PATTERN_EDITOR_EXPORT;
                         break;
+                    case R.id.open_help:
+                        fragmentId = AppConstants.PATTERN_EDITOR_HELP;
+                        break;
                 }
                 if(fragmentId != -1) {
                     setEditorFragment(fragmentId);
@@ -744,6 +748,7 @@ public class ProjectPatternsFragment extends Fragment {
         navPositionLookup.put(PatternEditSnapLength.class, AppConstants.PATTERN_EDITOR_SNAP_LENGTH);
         navPositionLookup.put(PatternEditPatternLength.class, AppConstants.PATTERN_EDITOR_PATTERN_LENGTH);
         navPositionLookup.put(PatternEditExport.class, AppConstants.PATTERN_EDITOR_EXPORT);
+        navPositionLookup.put(PatternEditHelp.class, AppConstants.PATTERN_EDITOR_HELP);
     }
     public void setEditorFragment(int which) {
         FragmentManager fm = getChildFragmentManager();
@@ -779,6 +784,8 @@ public class ProjectPatternsFragment extends Fragment {
             fragment = new PatternEditPatternLength();
         } else if(which == AppConstants.PATTERN_EDITOR_EXPORT) {
             fragment = new PatternEditExport();
+        } else if(which == AppConstants.PATTERN_EDITOR_HELP) {
+            fragment = new PatternEditHelp();
         } else {
             return;
         }
