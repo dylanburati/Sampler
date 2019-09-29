@@ -15,6 +15,7 @@ import android.view.inputmethod.EditorInfo;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.ScrollView;
 import android.widget.TextView;
 
 import java.text.DecimalFormat;
@@ -27,6 +28,7 @@ import java.util.TreeSet;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.core.util.Consumer;
 import androidx.core.view.GestureDetectorCompat;
 import androidx.fragment.app.Fragment;
@@ -185,7 +187,8 @@ public class ProjectPatternsFragment extends Fragment {
 
         pianoRollPosition = rootView.findViewById(R.id.piano_roll_position);
 
-        registerEditorFragmentNav((IconNavigationPanel) rootView.findViewById(R.id.pattern_edit_nav));
+        ScrollView patternEditNavScroll = rootView.findViewById(R.id.pattern_edit_nav);
+        registerEditorFragmentNav(new IconNavigationPanel((ConstraintLayout) patternEditNavScroll.getChildAt(0)));
         setEditorFragment(AppConstants.PATTERN_EDITOR_BASE);
 
         return rootView;
