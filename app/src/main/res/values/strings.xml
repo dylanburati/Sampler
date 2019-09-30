@@ -115,7 +115,7 @@
     <string name="project_imported">Project downloaded</string>
     <string name="import_could_not_connect">Could not connect</string>
     <string name="action_download">Download</string>
-    <string name="app_copyright">Copyright (c) 2019 Dylan Burati</string>
+    <string name="app_copyright">Copyright (c) 2019 Dylan Burati\nIcon: Keyboard by Shocho from the Noun Project</string>
     <string name="no_projects_yet">Projects you create will be listed here.\n\nTo get started, you can click the menu in the top right and import the default project.</string>
     <string name="pattern_edit_help"><![CDATA[
     The piano roll is a visual representation of a piece of music, similar to sheet music. The <i>x-axis</i> is time, which is divided into bars or measures (dark line) and quarter notes. The <i>y-axis</i> is pitch, which goes from C1 to B8 (middle C is C4).<br><br>To add a note to the piano roll, <b>long click</b><br>To remove a note, <b>long click on it</b><br>To select a note, <b>tap it</b><br><br>Notes about time representation: There are 24 ticks per sixteenth, and 16 sixteenths per bar.
