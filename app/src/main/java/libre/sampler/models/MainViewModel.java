@@ -114,6 +114,9 @@ public class MainViewModel extends AndroidViewModel {
 
     public void addImportedProject(final Project toAdd) {
         MainViewModel.this.projects.add(0, toAdd);
+        if(MainViewModel.this.allInstrumentsState == ModelState.LOADED) {
+            MainViewModel.this.allInstruments.addAll(toAdd.getInstruments());
+        }
         projectEventSource.dispatch(new ProjectEvent(ProjectEvent.PROJECT_CREATE, toAdd));
     }
 
