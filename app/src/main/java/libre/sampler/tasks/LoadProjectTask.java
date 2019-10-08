@@ -7,6 +7,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.Map;
 
 import androidx.core.util.Consumer;
@@ -91,10 +92,14 @@ public class LoadProjectTask extends AsyncTask<Void, Void, LoadProjectTask.Proje
                     return Long.compare(o1.offsetTicks, o2.offsetTicks);
                 }
             });
-            for(ScheduledNoteEvent e : r.scheduledNoteEvents) {
+            ListIterator<ScheduledNoteEvent> iter = r.scheduledNoteEvents.listIterator();
+            while(iter.hasNext()) {
+                ScheduledNoteEvent e = iter.next();
                 Instrument t = projInstrumentsMap.get(e.instrumentId);
                 if(t != null) {
                     e.setInstrument(t);
+                } else {
+                    iter.remove();
                 }
             }
             r.pattern.setEvents(r.scheduledNoteEvents);

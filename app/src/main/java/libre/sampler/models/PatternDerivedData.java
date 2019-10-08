@@ -27,4 +27,8 @@ public class PatternDerivedData {
     public Set<Instrument> getInstrumentList() {
         return noteMap.keySet();
     }
+
+    public void removeInstrument(@NonNull Instrument t) {
+        noteMap.remove(t);
+    }
 }

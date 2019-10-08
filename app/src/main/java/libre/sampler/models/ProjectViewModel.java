@@ -260,4 +260,14 @@ public class ProjectViewModel extends AndroidViewModel {
     public void setDialogInstrument(Instrument instrument) {
         this.dialogInstrument = instrument;
     }
+
+    public void removeInstrument(Instrument toRemove) {
+        if(projectState != ModelState.LOADED) {
+            return;
+        }
+
+        instrumentEventSource.dispatch(new InstrumentEvent(InstrumentEvent.INSTRUMENT_PREDELETE, toRemove));
+        project.removeInstrument(toRemove);
+        instrumentEventSource.dispatch(new InstrumentEvent(InstrumentEvent.INSTRUMENT_DELETE, toRemove));
+    }
 }

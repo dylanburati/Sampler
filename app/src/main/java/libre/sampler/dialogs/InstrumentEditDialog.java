@@ -53,8 +53,7 @@ public class InstrumentEditDialog extends DialogFragment {
             @Override
             public void onClick(View v) {
                 Instrument toRemove = viewModel.getDialogInstrument();
-                viewModel.getProject().removeInstrument(toRemove);
-                viewModel.instrumentEventSource.dispatch(new InstrumentEvent(InstrumentEvent.INSTRUMENT_DELETE, toRemove));
+                viewModel.removeInstrument(toRemove);
                 viewModel.setDialogInstrument(null);
                 getDialog().cancel();
             }

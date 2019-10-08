@@ -55,6 +55,7 @@ import libre.sampler.models.PatternEvent;
 import libre.sampler.models.ProjectViewModel;
 import libre.sampler.models.ScheduledNoteEvent;
 import libre.sampler.publishers.EmptyEventSource;
+import libre.sampler.publishers.NoteEventSource;
 import libre.sampler.utils.AppConstants;
 import libre.sampler.utils.LabelHelper;
 import libre.sampler.utils.MusicTime;
@@ -348,6 +349,18 @@ public class ProjectPatternsFragment extends Fragment {
         }
 
         patternEditEventSource.dispatch(AppConstants.PIANO_ROLL_NOTES);
+    }
+
+    // Called to remove deleted instrument
+    public static void removeBatchFromPattern(PatternThread.Editor editor, Collection<VisualNote> visualNotes,
+                                              NoteEventSource noteEventSource) {
+        for(VisualNote note : visualNotes) {
+            editor.pattern.removeEvent(note.eventOn);
+            NoteEvent sendOff = editor.pattern.removeAndGetEvent(note.eventOff);
+            if(sendOff != null) {
+                noteEventSource.dispatch(sendOff);
+            }
+        }
     }
 
     private void removeBatchFromPianoRollPattern(Collection<VisualNote> visualNotes, List<VisualNote> source) {

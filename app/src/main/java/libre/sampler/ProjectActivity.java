@@ -34,10 +34,13 @@ import androidx.lifecycle.ViewModelProviders;
 import androidx.viewpager.widget.ViewPager;
 import libre.sampler.adapters.ProjectFragmentAdapter;
 import libre.sampler.dialogs.ProjectLeaveDialog;
+import libre.sampler.fragments.ProjectPatternsFragment;
 import libre.sampler.listeners.PdFloatListener;
 import libre.sampler.listeners.PdListListener;
 import libre.sampler.models.InstrumentEvent;
 import libre.sampler.models.NoteEvent;
+import libre.sampler.models.Pattern;
+import libre.sampler.models.PatternDerivedData;
 import libre.sampler.models.PatternEvent;
 import libre.sampler.models.ProjectViewModel;
 import libre.sampler.models.Sample;
@@ -49,6 +52,7 @@ import libre.sampler.utils.DatabaseConnectionManager;
 import libre.sampler.utils.PatternThread;
 import libre.sampler.utils.SampleBindingList;
 import libre.sampler.utils.VoiceBindingList;
+import libre.sampler.views.VisualNote;
 
 public class ProjectActivity extends AppCompatActivity {
     public static final String TAG = "ProjectActivity";
@@ -128,6 +132,17 @@ public class ProjectActivity extends AppCompatActivity {
                     } else {
                         Log.d("InstrumentLoader", "async " + event.instrument.name);
                         viewModel.instrumentEventSource.addToReplayQueue(InstrumentEvent.QUEUE_FOR_INIT_PD, event);
+                    }
+                } else if(event.action == InstrumentEvent.INSTRUMENT_PREDELETE) {
+                    for(Pattern p : viewModel.getProject().getPatterns()) {
+                        PatternDerivedData derivedData = viewModel.getPatternDerivedData(p);
+                        List<VisualNote> toDelete = derivedData.getNotesForInstrument(event.instrument);
+                        if(toDelete != null) {
+                            try(PatternThread.Editor editor = patternThread.getEditor(viewModel.getPianoRollPattern())) {
+                                ProjectPatternsFragment.removeBatchFromPattern(editor, toDelete, viewModel.noteEventSource);
+                            }
+                            derivedData.removeInstrument(event.instrument);
+                        }
                     }
                 }
             }
@@ -388,7 +403,8 @@ public class ProjectActivity extends AppCompatActivity {
                             if(voiceIndex == -1) {
                                 continue;
                             }
-                            Log.d("NoteEventConsumer", String.format("NOTE_ON : voiceIndex=%d id1=%x id2=%d", voiceIndex, noteEvent.eventId.first, noteEvent.eventId.second));
+                            Log.d("NoteEventConsumer", String.format("NOTE_ON : voiceIndex=%d sampleId=%d id1=%x id2=%d",
+                                    voiceIndex, s.id, noteEvent.eventId.first, noteEvent.eventId.second));
                             PdBase.sendList("note", voiceIndex, noteEvent.keyNum,
                                     /*velocity*/   adjVelocity,
                                     /*ADSR*/       s.getAttack(), s.getDecay(), s.getSustain(), s.getRelease(),
@@ -398,7 +414,8 @@ public class ProjectActivity extends AppCompatActivity {
                             if(voiceIndex == -1) {
                                 continue;
                             }
-                            Log.d("NoteEventConsumer", String.format("NOTE_OFF: voiceIndex=%d id1=%x id2=%d", voiceIndex, noteEvent.eventId.first, noteEvent.eventId.second));
+                            Log.d("NoteEventConsumer", String.format("NOTE_OFF: voiceIndex=%d sampleId=%d id1=%x id2=%d",
+                                    voiceIndex, s.id, noteEvent.eventId.first, noteEvent.eventId.second));
                             PdBase.sendList("note", voiceIndex, noteEvent.keyNum,
                                     /*velocity*/   0,
                                     /*ADSR*/       s.getAttack(), s.getDecay(), s.getSustain(), s.getRelease(),
