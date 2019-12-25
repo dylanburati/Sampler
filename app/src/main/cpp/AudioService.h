@@ -7,6 +7,8 @@
 #include <jni.h>
 #include <vector>
 #include <map>
+#include <list>
+#include "audio/Limiter.h"
 #include "audio/Player.h"
 #include "utils/LockFreeQueue.h"
 
@@ -36,11 +38,14 @@ private:
     std::unique_ptr<float[]> conversionBuffer { nullptr };
     std::vector<std::unique_ptr<Player>> voices;
     LockFreeQueue<int, NUM_VOICES> voicesToFree;
+    std::mutex voicesToFreeMutex;
     std::map<int, std::shared_ptr<FileDataSource>> sources;
     std::unique_ptr<jobject> voiceFreeListener { nullptr };
     std::unique_ptr<jobject> sampleLoadListener { nullptr };
+    std::unique_ptr<Limiter> limiter;
 
     std::future<void> tmpFuture;
+    std::list<std::future<void>> tmpFutures;
     void doLoadFile(int sampleIndex, std::string path);
     void notifyLoadFile(int sampleIndex, int sampleLength, int sampleRate);
     void notifyVoiceFree();

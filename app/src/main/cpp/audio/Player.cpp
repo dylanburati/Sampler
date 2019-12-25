@@ -18,6 +18,9 @@
 #include "Player.h"
 #include "../utils/logging.h"
 
+Player::Player(int theOutputRate) : outputRate(theOutputRate) {
+}
+
 void Player::noteMsg(const std::shared_ptr<FileDataSource> src, int keynum, float velocity,
                      ADSR adsr, float start, float resume, float end, float baseKey) {
 
@@ -35,11 +38,26 @@ void Player::noteMsg(const std::shared_ptr<FileDataSource> src, int keynum, floa
         setLooping(resume > 0);
         setPlaying(true);
     } else {
+        envelope.sustain = getAttackDecayFraction();
         currentEnvIndex = ADSR::RELEASE_START;
     }
 }
 
-bool Player::renderAudio(float *targetData, int32_t numFrames, int outputRate) {
+float Player::getAttackDecayFraction() {
+    int decayIndex = (int) (envelope.attack * 0.001F * outputRate);
+    int sustainIndex = decayIndex + (int) (envelope.decay * 0.001F * outputRate);
+
+    if(currentEnvIndex < decayIndex) {
+        return currentEnvIndex / 1.0F / decayIndex;
+    } else if(currentEnvIndex < sustainIndex) {
+        return 1 - (1 - envelope.sustain) * (currentEnvIndex - decayIndex) /
+                                  1.0F / (sustainIndex - decayIndex);
+    } else {
+        return envelope.sustain;
+    }
+}
+
+bool Player::renderAudio(float *targetData, int32_t numFrames) {
 
     if(mSource != nullptr && mIsPlaying) {
         const AudioProperties properties = mSource->getProperties();
@@ -53,37 +71,30 @@ bool Player::renderAudio(float *targetData, int32_t numFrames, int outputRate) {
         if(mReadFrameIndex > actualEndFrameIndex) {
             actualPlaybackRate = -actualPlaybackRate;
         }
-        int decayIndex = (int) (envelope.attack * 0.001F * outputRate);
-        int sustainIndex = decayIndex + (int) (envelope.decay * 0.001F * outputRate);
+
         int freeIndex = ADSR::RELEASE_START + (int) (envelope.release * 0.001F * outputRate);
 
         for(int i = 0; i < framesToRenderFromData; ++i) {
-            int currentIndex = (int) mReadFrameIndex;
-            float frac = mReadFrameIndex - currentIndex;
-            if(i < 1) {
-                currentIndex = 1;
-                frac = 0;
-            } else if(i > totalSourceFrames - 2) {
-                currentIndex = totalSourceFrames - 2;
-                frac = 1;
-            }
-
             currentEnvIndex++;
             float actualVolMultiplier;
-            if(currentEnvIndex < decayIndex) {
-                actualVolMultiplier = currentEnvIndex / 1.0F / decayIndex;
-            } else if(currentEnvIndex < sustainIndex) {
-                actualVolMultiplier = 1 - (1 - envelope.sustain) * (currentEnvIndex - decayIndex) /
-                                           1.0F / (sustainIndex - decayIndex);
-            } else if(currentEnvIndex < ADSR::RELEASE_START) {
-                actualVolMultiplier = envelope.sustain;
+            if(currentEnvIndex < ADSR::RELEASE_START) {
+                actualVolMultiplier = getAttackDecayFraction();
             } else {
-                actualVolMultiplier = envelope.sustain * (1 - (currentEnvIndex -
-                                                                ADSR::RELEASE_START) / 1.0F /
-                                                               (freeIndex - ADSR::RELEASE_START));
+                actualVolMultiplier = envelope.sustain * ((freeIndex - currentEnvIndex) / 1.0F /
+                                                          (freeIndex - ADSR::RELEASE_START));
             }
             actualVolMultiplier *= actualVolMultiplier;
             actualVolMultiplier *= volumeMultiplier;
+
+            int currentIndex = (int) mReadFrameIndex;
+            float frac = mReadFrameIndex - currentIndex;
+            if(currentIndex < 1) {
+                currentIndex = 1;
+                frac = 0;
+            } else if(currentIndex > totalSourceFrames - 2) {
+                currentIndex = totalSourceFrames - 2;
+                frac = 1;
+            }
 
             for(int j = 0; j < 2; ++j) {
                 float a = data[(currentIndex - 1) * properties.channelCount +
@@ -103,8 +114,7 @@ bool Player::renderAudio(float *targetData, int32_t numFrames, int outputRate) {
 
             // Increment and handle wraparound
             mReadFrameIndex += actualPlaybackRate;
-            if(mReadFrameIndex >= totalSourceFrames || mReadFrameIndex < 0 ||
-               currentEnvIndex >= freeIndex) {
+            if(currentEnvIndex >= freeIndex) {
                 mIsPlaying = false;
                 return true;
             } else if(actualPlaybackRate * (mReadFrameIndex - actualEndFrameIndex) > 0) {

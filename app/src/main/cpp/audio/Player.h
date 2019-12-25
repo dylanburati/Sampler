@@ -31,9 +31,8 @@
 class Player {
 
 public:
-    Player() {
-    }
-    bool renderAudio(float *targetData, int32_t numFrames, int outputRate);
+    Player(int theOutputRate);
+    bool renderAudio(float *targetData, int32_t numFrames);
     void resetPlayHead() { mReadFrameIndex = startFrameIndex; };
     void setPlaying(bool isPlaying) {
         mIsPlaying = isPlaying;
@@ -45,6 +44,7 @@ public:
 
 private:
     std::shared_ptr<FileDataSource> mSource;
+    int outputRate;
     float mReadFrameIndex = 0;
     int startFrameIndex = 0;
     int endFrameIndex = 0;
@@ -57,6 +57,7 @@ private:
     std::atomic<bool> mIsLooping{false};
 
     void renderSilence(float *, int32_t);
+    float getAttackDecayFraction();
 };
 
 #endif //CSAMPLER_PLAYER_H

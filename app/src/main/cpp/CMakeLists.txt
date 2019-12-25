@@ -21,6 +21,7 @@ add_library( # Sets the name of the library.
         AudioService.cpp
 
         audio/FileDataSource.cpp
+        audio/Limiter.cpp
         audio/NDKExtractor.cpp
         audio/Player.cpp
         utils/logging.h

@@ -7,6 +7,7 @@
 #include <thread>
 #include "AudioService.h"
 #include "utils/logging.h"
+#include "audio/Limiter.h"
 
 AudioService::AudioService(JavaVM **vm) {
     javaVM = *vm;
@@ -34,8 +35,9 @@ bool AudioService::openStream() {
         return false;
     }
     for(int i = 0; i < NUM_VOICES; i++) {
-        voices.emplace_back(std::make_unique<Player>());
+        voices.emplace_back(std::make_unique<Player>(audioStream->getSampleRate()));
     }
+    limiter = std::make_unique<Limiter>(audioStream->getSampleRate());
 
     if(audioStream->getFormat() == AudioFormat::I16) {
         conversionBuffer = std::make_unique<float[]>(
@@ -62,7 +64,12 @@ void AudioService::stop() {
 }
 
 void AudioService::loadFile(int sampleIndex, std::string path) {
-    tmpFuture = std::async(std::launch::async, &AudioService::doLoadFile, this, sampleIndex, path);
+    auto itr = tmpFutures.begin();
+    while(itr != tmpFutures.end() && (itr->wait_for(std::chrono::seconds(0)) == std::future_status::ready)) {
+        tmpFutures.pop_front();
+        itr = tmpFutures.begin();
+    }
+    tmpFutures.emplace_back(std::async(std::launch::async, &AudioService::doLoadFile, this, sampleIndex, path));
 }
 
 void AudioService::doLoadFile(int sampleIndex, std::string path) {
@@ -104,6 +111,7 @@ void AudioService::notifyVoiceFree() {
     jmethodID methodID = env->GetMethodID(env->GetObjectClass(*voiceFreeListener),
                                           "voiceFree", "(I)V");
     int outIndex;
+    std::lock_guard<std::mutex> lock(voicesToFreeMutex);
     while(voicesToFree.pop(outIndex)) {
         env->CallVoidMethod(*voiceFreeListener, methodID, outIndex);
     }
@@ -127,10 +135,11 @@ void AudioService::setVoiceFreeListener(JNIEnv *env, jobject l) {
 void AudioService::noteMsg(int voiceIndex, int keynum, float velocity, ADSR adsr, int sampleIndex,
                            float start, float resume, float end, float baseKey) {
 
-    if(sampleIndex >= 0 && sampleIndex < sources.size()) {
+    auto itr = sources.find(sampleIndex);
+    if(itr != sources.end()) {
         Player *player = voices.at(voiceIndex).get();
-        player->noteMsg(sources.at(sampleIndex), keynum, velocity, adsr, start, resume, end,
-                        baseKey);
+        player->noteMsg(itr->second, keynum, velocity, adsr, start, resume, end,
+                baseKey);
     } else {
         LOGE("Invalid sample index");
     }
@@ -151,7 +160,7 @@ AudioService::onAudioReady(AudioStream *oboeStream, void *audioData, int32_t num
 
     int voiceIndex = 0;
     for(auto &voice : voices) {
-        if(voice->renderAudio(outputBuffer, numFrames, oboeStream->getSampleRate())) {
+        if(voice->renderAudio(outputBuffer, numFrames)) {
             voicesToFree.push(voiceIndex);
         }
         voiceIndex++;
@@ -160,6 +169,8 @@ AudioService::onAudioReady(AudioStream *oboeStream, void *audioData, int32_t num
     if(voicesToFree.size() > 0) {
         tmpFuture = std::async(std::launch::async, &AudioService::notifyVoiceFree, this);
     }
+
+    limiter->process(outputBuffer, numFrames);
 
     if(is16Bit) {
         oboe::convertFloatToPcm16(outputBuffer,

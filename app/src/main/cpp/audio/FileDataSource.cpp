@@ -43,7 +43,7 @@ FileDataSource* FileDataSource::newFromUncompressedAsset(std::string filename) {
         return nullptr;
     } else {
         // stereo or greater
-        int numSamples = audioFile.getNumSamplesPerChannel();
+        int numSamples = audioFile.getNumChannels() * audioFile.getNumSamplesPerChannel();
         return new FileDataSource(std::move(audioFile.samplesConsecutive), numSamples, properties);
     }
 }
