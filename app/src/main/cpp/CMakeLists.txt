@@ -24,6 +24,8 @@ add_library( # Sets the name of the library.
         audio/Limiter.cpp
         audio/NDKExtractor.cpp
         audio/Player.cpp
+        tinysndfile/primitives.c
+        tinysndfile/tinysndfile.c
         utils/logging.h
         )
 
@@ -42,6 +44,7 @@ find_library( # Sets the name of the path variable.
 
 # Set the path to the Oboe directory.
 set(OBOE_DIR ./oboe)
+message(WARNING ${ANDROID_ABI})
 
 # Add the Oboe library as a subdirectory in your project.
 # add_subdirectory tells CMake to look in this directory to

@@ -22,36 +22,36 @@
 #include "AudioProperties.h"
 #include "NDKExtractor.h"
 #include "../utils/logging.h"
-#include "../AudioFile/AudioFile.h"
+#include "../tinysndfile/sndfile.h"
 
-constexpr int kMaxCompressionRatio { 3 };
+constexpr int kMaxCompressionRatio{3};
 
-FileDataSource* FileDataSource::newFromUncompressedAsset(std::string filename) {
-    AudioFile<float> audioFile;
-    if(!audioFile.load(filename)) {
+FileDataSource *FileDataSource::newFromUncompressedAsset(std::string filename) {
+    SF_INFO properties;
+    SNDFILE *audioFile = sf_open(filename.c_str(), SFM_READ, &properties);
+    if(!audioFile) {
         LOGE("Failed to open asset %s", filename.c_str());
         return nullptr;
     }
 
-    AudioProperties properties = AudioProperties {
-        .sampleRate = (int32_t) audioFile.getSampleRate(),
-        .channelCount = audioFile.getNumChannels()
-    };
-
-    if(properties.channelCount == 0) {
+    if(properties.channels == 0) {
         LOGD("Asset %s could not be decoded", filename.c_str());
         return nullptr;
     } else {
         // stereo or greater
-        int numSamples = audioFile.getNumChannels() * audioFile.getNumSamplesPerChannel();
-        return new FileDataSource(std::move(audioFile.samplesConsecutive), numSamples, properties);
+        int numSamples = properties.frames * properties.channels;
+        auto outputBuffer = std::make_unique<float[]>(numSamples);
+        sf_readf_float(audioFile, outputBuffer.get(), properties.frames);
+        sf_close(audioFile);
+        return new FileDataSource(std::move(outputBuffer), numSamples,
+                                  AudioProperties{properties.channels, properties.samplerate});
     }
 }
 
-FileDataSource* FileDataSource::newFromCompressedAsset(const char *filename) {
+FileDataSource *FileDataSource::newFromCompressedAsset(const char *filename) {
 
     int fd = open(filename, O_RDONLY | O_CLOEXEC);
-    if (fd == -1) {
+    if(fd == -1) {
         LOGE("Failed to open asset %s", filename);
         return nullptr;
     }
@@ -65,7 +65,7 @@ FileDataSource* FileDataSource::newFromCompressedAsset(const char *filename) {
     const long maximumDataSizeInBytes = kMaxCompressionRatio * assetSize * sizeof(int16_t);
     auto decodedData = new uint8_t[maximumDataSizeInBytes];
 
-    AudioProperties targetProperties = AudioProperties { 0, 0 };
+    AudioProperties targetProperties = AudioProperties{0, 0};
     int64_t bytesDecoded = NDKExtractor::decode(fd, decodedData, assetSize, &targetProperties);
     auto numSamples = bytesDecoded / sizeof(int16_t);
 
@@ -74,7 +74,7 @@ FileDataSource* FileDataSource::newFromCompressedAsset(const char *filename) {
 
     // The NDK decoder can only decode to int16, we need to convert to floats
     oboe::convertPcm16ToFloat(
-            reinterpret_cast<int16_t*>(decodedData),
+            reinterpret_cast<int16_t *>(decodedData),
             outputBuffer.get(),
             bytesDecoded / sizeof(int16_t));
 
