@@ -75,10 +75,10 @@ void AudioService::loadFile(int sampleIndex, std::string path) {
 void AudioService::doLoadFile(int sampleIndex, std::string path) {
     FileDataSource *src = FileDataSource::newFromUncompressedAsset(path);
     if(src) {
+        std::lock_guard<std::mutex> lock(sourcesMutex);
         sources.insert(std::make_pair(sampleIndex, std::shared_ptr<FileDataSource>{src}));
         notifyLoadFile(sampleIndex, src->getSize() / src->getProperties().channelCount,
                        src->getProperties().sampleRate);
-        LOGD("props %s %d", path.c_str(), src->getProperties().channelCount);
     }
 }
 

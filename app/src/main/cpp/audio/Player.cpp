@@ -18,7 +18,8 @@
 #include "Player.h"
 #include "../utils/logging.h"
 
-Player::Player(int theOutputRate) : outputRate(theOutputRate) {
+Player::Player(int theOutputRate) : outputRate(theOutputRate),
+                                    envelope(Envelope(ADSR{0, 0, 1, 0}, outputRate)) {
 }
 
 void Player::noteMsg(const std::shared_ptr<FileDataSource> src, int keynum, float velocity,
@@ -30,30 +31,15 @@ void Player::noteMsg(const std::shared_ptr<FileDataSource> src, int keynum, floa
 
         mSource = src;
         int sampleRate = mSource->getProperties().sampleRate;
-        currentEnvIndex = 0;
-        envelope = adsr;
+        envelope = Envelope(adsr, outputRate);
+
         startFrameIndex = (int) round(start * sampleRate);
         endFrameIndex = (int) round(end * sampleRate);
         resumeFrameIndex = (int) round(resume * sampleRate);
         setLooping(resume > 0);
         setPlaying(true);
     } else {
-        envelope.sustain = getAttackDecayFraction();
-        currentEnvIndex = ADSR::RELEASE_START;
-    }
-}
-
-float Player::getAttackDecayFraction() {
-    int decayIndex = (int) (envelope.attack * 0.001F * outputRate);
-    int sustainIndex = decayIndex + (int) (envelope.decay * 0.001F * outputRate);
-
-    if(currentEnvIndex < decayIndex) {
-        return currentEnvIndex / 1.0F / decayIndex;
-    } else if(currentEnvIndex < sustainIndex) {
-        return 1 - (1 - envelope.sustain) * (currentEnvIndex - decayIndex) /
-                                  1.0F / (sustainIndex - decayIndex);
-    } else {
-        return envelope.sustain;
+        envelope.beginRelease(adsr);
     }
 }
 
@@ -72,17 +58,9 @@ bool Player::renderAudio(float *targetData, int32_t numFrames) {
             actualPlaybackRate = -actualPlaybackRate;
         }
 
-        int freeIndex = ADSR::RELEASE_START + (int) (envelope.release * 0.001F * outputRate);
-
         for(int i = 0; i < framesToRenderFromData; ++i) {
-            currentEnvIndex++;
-            float actualVolMultiplier;
-            if(currentEnvIndex < ADSR::RELEASE_START) {
-                actualVolMultiplier = getAttackDecayFraction();
-            } else {
-                actualVolMultiplier = envelope.sustain * ((freeIndex - currentEnvIndex) / 1.0F /
-                                                          (freeIndex - ADSR::RELEASE_START));
-            }
+            float actualVolMultiplier = envelope.getFraction();
+            envelope.advance();
             actualVolMultiplier *= actualVolMultiplier;
             actualVolMultiplier *= volumeMultiplier;
 
@@ -91,8 +69,8 @@ bool Player::renderAudio(float *targetData, int32_t numFrames) {
             if(currentIndex < 1) {
                 currentIndex = 1;
                 frac = 0;
-            } else if(currentIndex > totalSourceFrames - 2) {
-                currentIndex = totalSourceFrames - 2;
+            } else if(currentIndex >= totalSourceFrames - 2) {
+                currentIndex = totalSourceFrames - 3;
                 frac = 1;
             }
 
@@ -114,7 +92,7 @@ bool Player::renderAudio(float *targetData, int32_t numFrames) {
 
             // Increment and handle wraparound
             mReadFrameIndex += actualPlaybackRate;
-            if(currentEnvIndex >= freeIndex) {
+            if(envelope.isFinished()) {
                 mIsPlaying = false;
                 return true;
             } else if(actualPlaybackRate * (mReadFrameIndex - actualEndFrameIndex) > 0) {
@@ -133,10 +111,4 @@ bool Player::renderAudio(float *targetData, int32_t numFrames) {
     }
 
     return false;
-}
-
-void Player::renderSilence(float *start, int32_t numSamples) {
-    for(int i = 0; i < numSamples; ++i) {
-        start[i] = 0;
-    }
 }

@@ -26,6 +26,7 @@
 
 #include <android/asset_manager.h>
 #include "AudioProperties.h"
+#include "Envelope.h"
 #include "FileDataSource.h"
 
 class Player {
@@ -45,6 +46,7 @@ public:
 private:
     std::shared_ptr<FileDataSource> mSource;
     int outputRate;
+    Envelope envelope;
     float mReadFrameIndex = 0;
     int startFrameIndex = 0;
     int endFrameIndex = 0;
@@ -52,12 +54,8 @@ private:
     float playbackRate = 1;
     float volumeMultiplier = 1;
     int currentEnvIndex = 0;
-    ADSR envelope{0, 0, 1, 0};
     std::atomic<bool> mIsPlaying{false};
     std::atomic<bool> mIsLooping{false};
-
-    void renderSilence(float *, int32_t);
-    float getAttackDecayFraction();
 };
 
 #endif //CSAMPLER_PLAYER_H

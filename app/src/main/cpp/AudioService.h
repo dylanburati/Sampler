@@ -40,6 +40,7 @@ private:
     LockFreeQueue<int, NUM_VOICES> voicesToFree;
     std::mutex voicesToFreeMutex;
     std::map<int, std::shared_ptr<FileDataSource>> sources;
+    std::mutex sourcesMutex;
     std::unique_ptr<jobject> voiceFreeListener { nullptr };
     std::unique_ptr<jobject> sampleLoadListener { nullptr };
     std::unique_ptr<Limiter> limiter;

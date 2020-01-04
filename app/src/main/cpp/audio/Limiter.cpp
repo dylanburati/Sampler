@@ -5,6 +5,7 @@
 #include <cmath>
 #include <algorithm>
 #include "Limiter.h"
+#include "../utils/logging.h"
 
 Limiter::Limiter(int theOutputRate) : outputRate(theOutputRate) {
     amp = 1.0F;

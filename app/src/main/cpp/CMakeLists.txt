@@ -20,6 +20,7 @@ add_library( # Sets the name of the library.
         native-lib.cpp
         AudioService.cpp
 
+        audio/Envelope.cpp
         audio/FileDataSource.cpp
         audio/Limiter.cpp
         audio/NDKExtractor.cpp
