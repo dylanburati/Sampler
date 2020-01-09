@@ -8,7 +8,7 @@ class Limiter {
 
 public:
     Limiter(int theOutputRate);
-    void process(float *targetData, int32_t numFrames);
+    void processStereo(float *targetData, int32_t numFrames);
 
 private:
     int outputRate;

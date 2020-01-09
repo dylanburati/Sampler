@@ -326,8 +326,8 @@ public class ProjectActivity extends AppCompatActivity {
                         if(voiceIndex == -1) {
                             continue;
                         }
-                        Log.d("NoteEventConsumer", String.format("NOTE_ON : voiceIndex=%d sampleId=%d id1=%x id2=%d",
-                                voiceIndex, s.id, noteEvent.eventId.first, noteEvent.eventId.second));
+                        Log.d("NoteEventConsumer", String.format("NOTE_ON : voice=%d sample=%d",
+                                voiceIndex, s.sampleIndex));
                         sendNoteMsg(voiceIndex, noteEvent.keyNum,
                                 /*velocity*/   adjVelocity,
                                 /*ADSR*/       s.getAttack(), s.getDecay(), s.getSustain(), s.getRelease(),
@@ -337,8 +337,8 @@ public class ProjectActivity extends AppCompatActivity {
                         if(voiceIndex == -1) {
                             continue;
                         }
-                        Log.d("NoteEventConsumer", String.format("NOTE_OFF: voiceIndex=%d sampleId=%d id1=%x id2=%d",
-                                voiceIndex, s.id, noteEvent.eventId.first, noteEvent.eventId.second));
+                        Log.d("NoteEventConsumer", String.format("NOTE_OFF: voice=%d sample=%d",
+                                voiceIndex, s.sampleIndex));
                         sendNoteMsg(voiceIndex, noteEvent.keyNum,
                                 /*velocity*/   0,
                                 /*ADSR*/       s.getAttack(), s.getDecay(), s.getSustain(), s.getRelease(),

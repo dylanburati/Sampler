@@ -2,39 +2,51 @@
 // Created by dylan on 1/3/2020.
 //
 
+#include <utility>
 #include "Envelope.h"
 
-Envelope::Envelope(ADSR src, int theOutputRate) {
+Envelope::Envelope(int theOutputRate) {
     outputRate = theOutputRate;
-    decayIndex = (int) (src.attack * 0.001F * outputRate);
-    sustainIndex = decayIndex + (int) (src.decay * 0.001F * outputRate);
-    sustainLvl = src.sustain;
-    freeIndex = Envelope::RELEASE_START + (int) (src.release * 0.001F * outputRate);
-    currentEnvIndex = 0;
+}
+
+void Envelope::beginAttack(ADSR src) {
+    queue.clear();
+    int decayIndex = (int) (src.attack * 0.001F * outputRate);
+    int sustainIndex = decayIndex + (int) (src.decay * 0.001F * outputRate);
+
+    queue.push(std::pair<uint64_t, float>{currentEnvIndex, 0.0F});
+    queue.push(std::pair<uint64_t, float>{currentEnvIndex + decayIndex, 1.0F});
+    queue.push(std::pair<uint64_t, float>{currentEnvIndex + sustainIndex, src.sustain});
+
+    isReleased = false;
 }
 
 void Envelope::beginRelease(ADSR updated) {
-    freeIndex = Envelope::RELEASE_START + (int) (updated.release * 0.001F * outputRate);
-    sustainLvl = getFraction();
-    currentEnvIndex = Envelope::RELEASE_START;
+    queue.clear();
+    int freeIndex = (int) (updated.release * 0.001F * outputRate);
+
+    queue.push(std::pair<uint64_t, float>{currentEnvIndex + freeIndex, 0.0F});
+
+    isReleased = true;
 }
 
 float Envelope::getFraction() {
-    if(currentEnvIndex < decayIndex) {
-        // A: 0 -> 1
-        return currentEnvIndex / 1.0F / decayIndex;
-    } else if(currentEnvIndex < sustainIndex) {
-        // D: 1 -> s
-        return 1 - (1 - sustainLvl) * (currentEnvIndex - decayIndex) /
-                   1.0F / (sustainIndex - decayIndex);
-    } else if(currentEnvIndex < Envelope::RELEASE_START) {
-        return sustainLvl;
-    } else if(freeIndex > Envelope::RELEASE_START) {
-        // R: s -> 0
-        return sustainLvl * ((freeIndex - currentEnvIndex) / 1.0F /
-                             (freeIndex - Envelope::RELEASE_START));
+    std::pair<uint64_t, float> next;
+    bool hasNext = queue.peek(next);
+    if(hasNext) {
+        if(currentEnvIndex < next.first) {
+            // Next event is in the future, use linear interpolation
+            currentEnv += (next.second - currentEnv) / (float)(next.first - currentEnvIndex);
+        } else {
+            // Next event is now, set directly and check for other events at the same timestamp
+            while(hasNext && currentEnvIndex >= next.first) {
+                currentEnv = next.second;
+                queue.pop(next);
+                hasNext = queue.peek(next);
+            }
+        }
     }
-    return 0;
+    return currentEnv;
 }
 
 void Envelope::advance() {
@@ -42,5 +54,5 @@ void Envelope::advance() {
 }
 
 bool Envelope::isFinished() {
-    return (currentEnvIndex >= freeIndex);
+    return (isReleased && queue.size() == 0);
 }

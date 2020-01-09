@@ -10,7 +10,6 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.recyclerview.widget.RecyclerView;
 import libre.sampler.R;
-import libre.sampler.utils.Debouncer;
 
 public class PianoRecyclerView extends androidx.recyclerview.widget.RecyclerView {
     private OnTouchListener scaleGestureDetector;
@@ -34,10 +33,7 @@ public class PianoRecyclerView extends androidx.recyclerview.widget.RecyclerView
     private void initScaleDetector() {
         scrollBarHeight = getResources().getDimension(R.dimen.text_caption) + getResources().getDimension(R.dimen.margin2) * 3;
         this.scaleGestureDetector = new OnTouchListener() {
-            private final Debouncer debouncer = new Debouncer();
-
             private boolean inProgress = false;
-            private int numPointersTracking = 0;
             private int[] trackingPointerIds = new int[2];
 
             private float initialSpan = 1.0f;

@@ -65,13 +65,14 @@ public class LoopScheduler {
     }
 
     public synchronized void cancelPending() {
-        // if(loopIndex != pendingLoopIndex || eventIndex != pendingEventIndex)
         loopIndex = pendingLoopIndex;
         eventIndex = pendingEventIndex;
     }
 
     public synchronized void confirmPending() {
-        Log.d("LoopScheduler", String.format("Advance from %d:%d to %d:%d", pendingLoopIndex, pendingEventIndex, loopIndex, eventIndex));
+        if(pendingLoopIndex != loopIndex) {
+            Log.d("LoopScheduler", String.format("loop=%d", pendingLoopIndex));
+        }
         pendingLoopIndex = loopIndex;
         pendingEventIndex = eventIndex;
     }
@@ -110,7 +111,7 @@ public class LoopScheduler {
         events.remove(removeIdx);
         if(events.size() == 0) {
             events.add(0, ScheduledNoteEvent.getPlaceholder());
-            Log.d("LoopScheduler", "Warning: placeholder event missing was missing from pattern");
+            Log.w("LoopScheduler", "placeholder event missing was missing from pattern");
         }
         cancelPending();
 

@@ -6,13 +6,14 @@
 #define SAMPLER_ENVELOPE_H
 
 
+#include <atomic>
 #include "AudioProperties.h"
+#include "../utils/LockFreeQueue.h"
 
 class Envelope {
 public:
-    const static int RELEASE_START = 1000 * 1000 * 1000;
-
-    Envelope(ADSR src, int theOutputRate);
+    explicit Envelope(int theOutputRate);
+    void beginAttack(ADSR src);
     void beginRelease(ADSR updated);
     float getFraction();
     void advance();
@@ -20,12 +21,13 @@ public:
     bool isFinished();
 
 private:
+    std::atomic<bool> isReleased {false};
     int outputRate;
-    int decayIndex;
-    int sustainIndex;
-    float sustainLvl;
-    int freeIndex;
-    int currentEnvIndex;
+    LockFreeQueue<std::pair<uint64_t, float>, 16> queue;
+
+    uint64_t currentEnvIndex = 0;
+    float currentEnv = 0.0F;
+    float slope = 0.0F;
 };
 
 

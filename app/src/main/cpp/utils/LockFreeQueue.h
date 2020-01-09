@@ -94,6 +94,10 @@ public:
         }
     }
 
+    void clear() {
+        while(!isEmpty()) ++readCounter;
+    }
+
     /**
      * Get the item at the front of the queue but do not remove it
      *

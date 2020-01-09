@@ -46,14 +46,13 @@ public:
 private:
     std::shared_ptr<FileDataSource> mSource;
     int outputRate;
-    Envelope envelope;
+    std::unique_ptr<Envelope> envelope;
     float mReadFrameIndex = 0;
     int startFrameIndex = 0;
     int endFrameIndex = 0;
     int resumeFrameIndex = 0;
     float playbackRate = 1;
     float volumeMultiplier = 1;
-    int currentEnvIndex = 0;
     std::atomic<bool> mIsPlaying{false};
     std::atomic<bool> mIsLooping{false};
 };

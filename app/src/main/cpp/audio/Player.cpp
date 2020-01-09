@@ -18,8 +18,9 @@
 #include "Player.h"
 #include "../utils/logging.h"
 
-Player::Player(int theOutputRate) : outputRate(theOutputRate),
-                                    envelope(Envelope(ADSR{0, 0, 1, 0}, outputRate)) {
+Player::Player(int theOutputRate) {
+    outputRate = theOutputRate;
+    envelope = std::make_unique<Envelope>(outputRate);
 }
 
 void Player::noteMsg(const std::shared_ptr<FileDataSource> src, int keynum, float velocity,
@@ -31,7 +32,8 @@ void Player::noteMsg(const std::shared_ptr<FileDataSource> src, int keynum, floa
 
         mSource = src;
         int sampleRate = mSource->getProperties().sampleRate;
-        envelope = Envelope(adsr, outputRate);
+
+        envelope->beginAttack(adsr);
 
         startFrameIndex = (int) round(start * sampleRate);
         endFrameIndex = (int) round(end * sampleRate);
@@ -39,7 +41,7 @@ void Player::noteMsg(const std::shared_ptr<FileDataSource> src, int keynum, floa
         setLooping(resume > 0);
         setPlaying(true);
     } else {
-        envelope.beginRelease(adsr);
+        envelope->beginRelease(adsr);
     }
 }
 
@@ -59,8 +61,8 @@ bool Player::renderAudio(float *targetData, int32_t numFrames) {
         }
 
         for(int i = 0; i < framesToRenderFromData; ++i) {
-            float actualVolMultiplier = envelope.getFraction();
-            envelope.advance();
+            float actualVolMultiplier = envelope->getFraction();
+            envelope->advance();
             actualVolMultiplier *= actualVolMultiplier;
             actualVolMultiplier *= volumeMultiplier;
 
@@ -92,7 +94,7 @@ bool Player::renderAudio(float *targetData, int32_t numFrames) {
 
             // Increment and handle wraparound
             mReadFrameIndex += actualPlaybackRate;
-            if(envelope.isFinished()) {
+            if(envelope->isFinished()) {
                 mIsPlaying = false;
                 return true;
             } else if(actualPlaybackRate * (mReadFrameIndex - actualEndFrameIndex) > 0) {

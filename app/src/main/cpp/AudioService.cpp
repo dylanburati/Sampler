@@ -170,7 +170,7 @@ AudioService::onAudioReady(AudioStream *oboeStream, void *audioData, int32_t num
         tmpFuture = std::async(std::launch::async, &AudioService::notifyVoiceFree, this);
     }
 
-    limiter->process(outputBuffer, numFrames);
+    limiter->processStereo(outputBuffer, numFrames);
 
     if(is16Bit) {
         oboe::convertFloatToPcm16(outputBuffer,

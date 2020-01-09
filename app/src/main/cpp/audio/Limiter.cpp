@@ -13,7 +13,7 @@ Limiter::Limiter(int theOutputRate) : outputRate(theOutputRate) {
     releaseCoeff = 0.00025F;
 }
 
-void Limiter::process(float *targetData, int32_t numFrames) {
+void Limiter::processStereo(float *targetData, int32_t numFrames) {
     for(int i = 0; i < numFrames; ++i) {
         float ampFollow = std::max(std::abs(targetData[i * 2]), std::abs(targetData[i * 2 + 1]));
         if(ampFollow > amp) {
