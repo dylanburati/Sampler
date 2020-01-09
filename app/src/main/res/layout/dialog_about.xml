@@ -42,7 +42,7 @@
             android:layout_height="wrap_content"
             android:layout_marginBottom="@dimen/margin4"
             android:autoLink="web"
-            android:text="@string/license_libpd" />
+            android:text="@string/license_oboe" />
 
         <TextView
             android:layout_width="match_parent"
