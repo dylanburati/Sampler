@@ -49,6 +49,7 @@ typedef struct SNDFILE_ SNDFILE;
 
 // Format
 #define SF_FORMAT_TYPEMASK  1
+#define SF_FORMAT_AIFF      0
 #define SF_FORMAT_WAV       1
 #define SF_FORMAT_SUBMASK   14
 #define SF_FORMAT_PCM_16    2
@@ -67,17 +68,7 @@ void sf_close(SNDFILE *handle);
  * Read interleaved frames
  * \return actual number of frames read
  */
-sf_count_t sf_readf_short(SNDFILE *handle, int16_t *ptr, sf_count_t desired);
 sf_count_t sf_readf_float(SNDFILE *handle, float *ptr, sf_count_t desired);
-sf_count_t sf_readf_int(SNDFILE *handle, int *ptr, sf_count_t desired);
-
-/**
- * Write interleaved frames
- * \return actual number of frames written
- */
-sf_count_t sf_writef_short(SNDFILE *handle, const int16_t *ptr, sf_count_t desired);
-sf_count_t sf_writef_float(SNDFILE *handle, const float *ptr, sf_count_t desired);
-sf_count_t sf_writef_int(SNDFILE *handle, const int *ptr, sf_count_t desired);
 
 /** \cond */
 __END_DECLS
