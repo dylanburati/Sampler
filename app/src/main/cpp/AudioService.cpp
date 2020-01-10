@@ -14,7 +14,16 @@ AudioService::AudioService(JavaVM **vm) {
 }
 
 void AudioService::start() {
-    openStream();
+    bool openResult = openStream();
+    if(!openResult) {
+        LOGE("Failed to open stream");
+    }
+
+    for(int i = 0; i < NUM_VOICES; i++) {
+        voices.emplace_back(std::make_unique<Player>(audioStream->getSampleRate()));
+    }
+    limiter = std::make_unique<Limiter>(audioStream->getSampleRate());
+
     Result result = audioStream->requestStart();
     if(result != Result::OK) {
         LOGE("Failed to start stream. Error: %s", convertToText(result));
@@ -34,10 +43,6 @@ bool AudioService::openStream() {
         LOGE("Failed to open stream. Error: %s", convertToText(result));
         return false;
     }
-    for(int i = 0; i < NUM_VOICES; i++) {
-        voices.emplace_back(std::make_unique<Player>(audioStream->getSampleRate()));
-    }
-    limiter = std::make_unique<Limiter>(audioStream->getSampleRate());
 
     if(audioStream->getFormat() == AudioFormat::I16) {
         conversionBuffer = std::make_unique<float[]>(
@@ -57,10 +62,10 @@ bool AudioService::openStream() {
 void AudioService::stop() {
     if(audioStream != nullptr) {
         audioStream->close();
-        voices.clear();
         delete audioStream;
         audioStream = nullptr;
     }
+    voices.clear();
 }
 
 void AudioService::loadFile(int sampleIndex, std::string path) {
@@ -182,5 +187,11 @@ AudioService::onAudioReady(AudioStream *oboeStream, void *audioData, int32_t num
 }
 
 void AudioService::onErrorAfterClose(AudioStream *oboeStream, Result error) {
-    LOGE("The audio stream was closed, please restart the app. Error: %s", convertToText(error));
+    if(error == Result::ErrorDisconnected) {
+        LOGD("The audio stream was disconnected, starting again", convertToText(error));
+        stop();
+        start();
+    } else {
+        LOGE("The audio stream was closed: %s", convertToText(error));
+    }
 }
