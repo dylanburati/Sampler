@@ -23,12 +23,8 @@
     <dimen name="piano_keymargin_50">-14dp</dimen>
     <dimen name="piano_keymargin_67">-18.667dp</dimen>
     <dimen name="piano_keymargin_75">-21dp</dimen>
-    <!-- Default screen margins, per the Android Design guidelines. -->
-    <dimen name="activity_horizontal_margin">16dp</dimen>
-    <dimen name="activity_vertical_margin">16dp</dimen>
     <dimen name="piano_roll_barwidth">384dp</dimen>
     <dimen name="piano_roll_colheight">288dp</dimen>
-    <dimen name="piano_roll_beatwidth">96dp</dimen>
     <dimen name="pattern_footer_height">40dp</dimen>
 
     <dimen name="split_screen_direction_threshold">820dp</dimen>
@@ -36,7 +32,7 @@
     <dimen name="margin2_border_out">7dp</dimen>
     <dimen name="volume_slider_height">250dp</dimen>
     <dimen name="instrument_editor_edittext_width">57sp</dimen>
-    <dimen name="progressBarCornerRadius">0dp</dimen>
+    <dimen name="volume_slider_corner_radius">0dp</dimen>
     <dimen name="volume_slider_width">5dp</dimen>
     <dimen name="negative_button_margin">-4dp</dimen>
     <dimen name="button_corner_radius">4dp</dimen>

@@ -20,7 +20,6 @@
     <string name="start">Start</string>
     <string name="end">End</string>
     <string name="loop">Loop</string>
-    <string name="label_envelope">Envelope (ms, ms, dB, ms)</string>
     <string name="base">Base</string>
     <string name="new_instrument">New instrument</string>
     <string name="default_sample_path">Default Sample Directory</string>
@@ -98,8 +97,6 @@
     <string name="pattern_editor_export">Export Pattern to MIDI</string>
     <string name="stop">Stop</string>
     <string name="about_third_party_libraries">Third party libraries</string>
-    <string name="about_credit_title_1">libpd</string>
-    <string name="license">License</string>
     <plurals name="selected_notes_label">
         <item quantity="one">%d note selected</item>
         <item quantity="other">%d notes selected</item>

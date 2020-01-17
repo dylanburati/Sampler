@@ -3,7 +3,7 @@
     <item android:id="@android:id/background"
         android:gravity="center_vertical|fill_horizontal">
         <shape android:shape="rectangle">
-            <corners android:radius="@dimen/progressBarCornerRadius" />
+            <corners android:radius="@dimen/volume_slider_corner_radius" />
             <size android:height="@dimen/volume_slider_width" />
             <solid android:color="#61FFFFFF" />
         </shape>
@@ -13,7 +13,7 @@
         <scale android:scaleWidth="100%">
             <shape android:shape="rectangle"
                 android:tint="?attr/colorControlActivated">
-                <corners android:radius="@dimen/progressBarCornerRadius" />
+                <corners android:radius="@dimen/volume_slider_corner_radius" />
                 <size android:height="@dimen/volume_slider_width" />
                 <solid android:color="#61FFFFFF" />
             </shape>
@@ -24,7 +24,7 @@
         <scale android:scaleWidth="100%">
             <shape android:shape="rectangle"
                 android:tint="?attr/colorControlActivated">
-                <corners android:radius="@dimen/progressBarCornerRadius" />
+                <corners android:radius="@dimen/volume_slider_corner_radius" />
                 <size android:height="@dimen/volume_slider_width" />
                 <solid android:color="@color/colorAccent" />
             </shape>

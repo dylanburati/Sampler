@@ -5,7 +5,7 @@
 
     <uses-feature
         android:name="android.software.midi"
-        android:required="true"/>
+        android:required="true" />
 
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
@@ -45,8 +45,5 @@
                 <action android:name="android.intent.action.VIEW" />
             </intent-filter>
         </activity>
-
-        <service android:name="org.puredata.android.service.PdService" />
     </application>
-
 </manifest>

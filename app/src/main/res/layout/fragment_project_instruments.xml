@@ -116,9 +116,9 @@
                     app:layout_constraintBottom_toTopOf="@+id/expanded_sample_data"
                     app:layout_constraintEnd_toStartOf="@+id/sample_replace"
                     app:layout_constraintHorizontal_bias="1.0"
+                    app:layout_constraintHorizontal_chainStyle="packed"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@+id/input_sample_paths"
-                    app:layout_constraintHorizontal_chainStyle="packed" />
+                    app:layout_constraintTop_toBottomOf="@+id/input_sample_paths" />
 
                 <Button
                     android:id="@+id/sample_replace"
