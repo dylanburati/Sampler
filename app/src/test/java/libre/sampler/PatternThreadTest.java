@@ -99,7 +99,7 @@ public class PatternThreadTest {
         averageDevianceNs /= (TEST_RESULTS_SIZE - 1);
 
         try {
-            assertTrue("Events were not fired at the correct times", averageDevianceNs < 3 * NANOS_PER_MILLI);
+            assertTrue("Events were not fired at the correct times", averageDevianceNs < 15 * NANOS_PER_MILLI);
         } finally {
             System.out.println("\nTimings");
             System.out.print("Expected: ");

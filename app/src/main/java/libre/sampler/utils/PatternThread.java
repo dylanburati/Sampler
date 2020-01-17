@@ -131,19 +131,12 @@ public class PatternThread extends Thread {
                 }
 
                 if(minWaitTime > NANOS_FOR_WAIT) {
-                    // Log.d("PatternThread", "Waiting " + (minWaitTime / 1e9) + " seconds");
                     // awaiting allows lock to be used by other thread
-                    while(minWaitTime > NANOS_FOR_WAIT) {
+                    while(minWaitTime > NANOS_FOR_WAIT && runningPatternsModCount == lastModCount) {
                         long t0 = System.nanoTime();
                         patternsChangedTrigger.awaitNanos(minWaitTime);
-                        if(runningPatternsModCount > lastModCount) {
-                            // stop waiting for `next` if patterns added or removed
-                            noteEventsOut = null;
-                            break;
-                        }
                         minWaitTime -= System.nanoTime() - t0;
                     }
-
                 }
             } catch(InterruptedException e) {
                 e.printStackTrace();
@@ -151,6 +144,7 @@ public class PatternThread extends Thread {
                 lock.unlock();
             }
 
+            if(done) return;
             if(isSuspended) {
                 lock.lock();
                 try {
@@ -163,7 +157,7 @@ public class PatternThread extends Thread {
                 } finally {
                     lock.unlock();
                 }
-            } else if(!done && runningPatternsModCount == lastModCount && noteEventsOut != null) {
+            } else if(runningPatternsModCount == lastModCount) {
                 lock.lock();
                 try {
                     nextPattern.scheduler.confirmPending();
@@ -177,8 +171,6 @@ public class PatternThread extends Thread {
                 } finally {
                     lock.unlock();
                 }
-            } else {
-                // Log.d("PatternThread", "Skipped");
             }
         }
     }

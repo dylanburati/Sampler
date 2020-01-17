@@ -36,7 +36,7 @@ float Envelope::getFraction() {
     if(hasNext) {
         if(currentEnvIndex < next.first) {
             // Next event is in the future, use linear interpolation
-            currentEnv += (next.second - currentEnv) / (float)(next.first - currentEnvIndex);
+            currentEnv += (next.second - currentEnv) / (float)(next.first - currentEnvIndex + 1);
         } else {
             // Next event is now, set directly and check for other events at the same timestamp
             while(hasNext && currentEnvIndex >= next.first) {
