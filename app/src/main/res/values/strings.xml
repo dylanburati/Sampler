@@ -118,4 +118,6 @@
     The piano roll is a visual representation of a piece of music, similar to sheet music. The <i>x-axis</i> is time, which is divided into bars or measures (dark line) and quarter notes. The <i>y-axis</i> is pitch, which goes from C1 to B8 (middle C is C4).<br><br>To add a note to the piano roll, <b>long click</b><br>To remove a note, <b>long click on it</b><br>To select a note, <b>tap it</b><br><br>Notes about time representation: There are 24 ticks per sixteenth, and 16 sixteenths per bar.
     ]]></string>
     <string name="pattern_editor_help">Pattern Editor Help</string>
+    <string name="privacy_policy_name">Privacy Policy</string>
+    <string name="privacy_policy">We don\'t store your data. Period.</string>
 </resources>
