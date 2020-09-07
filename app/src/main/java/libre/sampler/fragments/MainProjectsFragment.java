@@ -225,7 +225,7 @@ public class MainProjectsFragment extends Fragment {
                         Manifest.permission.INTERNET,
                         Manifest.permission.READ_EXTERNAL_STORAGE,
                         Manifest.permission.WRITE_EXTERNAL_STORAGE},
-                    AppConstants.PERM_REQUEST_READ_EXTERNAL_STORAGE);
+                    AppConstants.PERM_REQUEST_INTERNET);
         }
         return granted;
     }
