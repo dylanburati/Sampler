@@ -68,12 +68,12 @@
     <string name="delete_selected">Delete Selected</string>
     <string name="dialog_instrument_export_title">Export to .zip</string>
     <string name="default_instrument_export_path">Default Export Directory</string>
-    <string name="export_path_hint">Export path</string>
+    <string name="export_path_hint">Export folder</string>
     <string name="export_could_not_create">Export failed</string>
     <string name="export_file_exists">Export failed: file exists</string>
     <string name="instrument_exported">Instrument exported</string>
     <string name="pattern_exported">Pattern exported</string>
-    <string name="import_checkbox_label">Import samples</string>
+    <string name="import_checkbox_label">Import from ZIP</string>
     <string name="import_path_hint">Import path</string>
     <string name="file_not_found">File not found</string>
     <string name="action_edit">Edit</string>
