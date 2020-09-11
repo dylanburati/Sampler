@@ -31,10 +31,16 @@ public class ProjectKeyboardFragment extends Fragment {
     private class KeyData {
         public View keyView;
         public int keyNum;
+        public float yFraction;
 
-        public KeyData(View keyView, int keyNum) {
+        public KeyData() {
+            this.keyNum = -1;
+        }
+
+        public KeyData(View keyView, int keyNum, float yFraction) {
             this.keyView = keyView;
             this.keyNum = keyNum;
+            this.yFraction = yFraction;
         }
     }
 
@@ -43,32 +49,32 @@ public class ProjectKeyboardFragment extends Fragment {
             R.id.piano_e, R.id.piano_f, R.id.piano_g, R.id.piano_a, R.id.piano_b};
     private final int[] KEY_OFFSETS = new int[]{1, 3, 6, 8, 10, 0, 2, 4, 5, 7, 9, 11};
     private float scrollBarHeight;
+    private float keyboardHeight;
 
     private KeyData resolveKeyNum(View octaveContainer, float x, float y) {
         if(octaveContainer == null) {
-            return new KeyData(null, -1);
+            return new KeyData();
         }
         int octave = pianoContainer.getChildAdapterPosition(octaveContainer);
         if(octave == RecyclerView.NO_POSITION) {
-            return new KeyData(null, -1);
+            return new KeyData();
         }
         ViewGroup vg = (ViewGroup) octaveContainer;
 
-        int keyNum = -1;
-        View keyView = null;
         for(int i = 0; i < KEY_IDS.length; i++) {
-            keyView = vg.findViewById(KEY_IDS[i]);
+            View keyView = vg.findViewById(KEY_IDS[i]);
             Rect r = new Rect();
             keyView.getLocalVisibleRect(r);
             vg.offsetDescendantRectToMyCoords(keyView, r);
             pianoContainer.offsetDescendantRectToMyCoords(octaveContainer, r);
 
             if(r.contains((int) x, (int) y)) {
-                keyNum = (octave + 2) * 12 + KEY_OFFSETS[i];
-                break;
+                int keyNum = (octave + 2) * 12 + KEY_OFFSETS[i];
+                float yFraction = (y - r.top) / r.height();
+                return new KeyData(keyView, keyNum, yFraction);
             }
         }
-        return new KeyData(keyView, keyNum);
+        return new KeyData();
     }
 
     @Nullable
@@ -79,6 +85,7 @@ public class ProjectKeyboardFragment extends Fragment {
         viewModel = ViewModelProviders.of(getActivity()).get(ProjectViewModel.class);
 
         scrollBarHeight = getResources().getDimension(R.dimen.text_caption) + getResources().getDimension(R.dimen.margin2) * 3;
+        keyboardHeight = getResources().getDimension(R.dimen.piano_height);
         pianoContainer.addOnItemTouchListener(new RecyclerView.OnItemTouchListener() {
             @Override
             public boolean onInterceptTouchEvent(@NonNull RecyclerView rv, @NonNull MotionEvent e) {
@@ -86,6 +93,32 @@ public class ProjectKeyboardFragment extends Fragment {
                     return true;
                 }
                 return false;
+            }
+
+            private void sendNoteOn(NoteId eventId, KeyData keyData, float pressure, boolean enqueue) {
+                NoteEvent noteEvent = new NoteEvent(
+                        NoteEvent.NOTE_ON,
+                        viewModel.getKeyboardInstrument(),
+                        keyData.keyNum,
+                        viewModel.getProject().getTouchVelocitySource().getVelocity(keyData.yFraction, pressure),
+                        eventId
+                );
+                viewModel.noteEventSource.dispatch(noteEvent);
+                if(enqueue) noteQueue.put(eventId, keyData);
+                keyData.keyView.setActivated(true);
+            }
+
+            private void sendNoteOff(NoteId eventId, KeyData keyData, boolean dequeue) {
+                NoteEvent prevEndEvent = new NoteEvent(
+                        NoteEvent.NOTE_OFF,
+                        viewModel.getKeyboardInstrument(),
+                        keyData.keyNum,
+                        0,
+                        eventId
+                );
+                viewModel.noteEventSource.dispatch(prevEndEvent);
+                if(dequeue) noteQueue.remove(eventId);
+                keyData.keyView.setActivated(false);
             }
 
             @Override
@@ -101,36 +134,23 @@ public class ProjectKeyboardFragment extends Fragment {
                             || (eventAction == MotionEvent.ACTION_POINTER_UP && e.getActionIndex() == i)) {
                         KeyData previous = noteQueue.get(eventId);
                         if(previous != null && previous.keyNum != -1) {
-                            NoteEvent prevEndEvent = new NoteEvent(NoteEvent.NOTE_OFF, viewModel.getKeyboardInstrument(), previous.keyNum, 100, eventId);
-                            viewModel.noteEventSource.dispatch(prevEndEvent);
-                            noteQueue.remove(eventId);
-                            previous.keyView.setActivated(false);
+                            sendNoteOff(eventId, previous, true);
                         }
-                        continue;
-                    }
-
-                    if(eventAction == MotionEvent.ACTION_DOWN || eventAction == MotionEvent.ACTION_POINTER_DOWN) {
+                    } else if(eventAction == MotionEvent.ACTION_DOWN || eventAction == MotionEvent.ACTION_POINTER_DOWN) {
                         if(keyData.keyNum != -1 && !noteQueue.containsKey(eventId)) {
-                            NoteEvent noteEvent = new NoteEvent(NoteEvent.NOTE_ON, viewModel.getKeyboardInstrument(), keyData.keyNum, 100, eventId);
-                            viewModel.noteEventSource.dispatch(noteEvent);
-                            noteQueue.put(eventId, keyData);
-                            keyData.keyView.setActivated(true);
+                            sendNoteOn(eventId, keyData, e.getPressure(i), true);
                         }
                     } else if(eventAction == MotionEvent.ACTION_MOVE) {
                         KeyData previous = noteQueue.get(eventId);
                         if(previous != null && previous.keyNum != keyData.keyNum) {
                             if(previous.keyNum != -1) {
                                 // moved off of a key
-                                NoteEvent prevEndEvent = new NoteEvent(NoteEvent.NOTE_OFF, viewModel.getKeyboardInstrument(), previous.keyNum, 100, eventId);
-                                viewModel.noteEventSource.dispatch(prevEndEvent);
-                                previous.keyView.setActivated(false);
+                                sendNoteOff(eventId, previous, false);
                             }
 
                             if(keyData.keyNum != -1) {
                                 // moved onto a key
-                                NoteEvent noteEvent = new NoteEvent(NoteEvent.NOTE_ON, viewModel.getKeyboardInstrument(), keyData.keyNum, 100, eventId);
-                                viewModel.noteEventSource.dispatch(noteEvent);
-                                keyData.keyView.setActivated(true);
+                                sendNoteOn(eventId, keyData, e.getPressure(i), false);
                             }
                             noteQueue.put(eventId, keyData);  // new location saved as last regardless
                         }

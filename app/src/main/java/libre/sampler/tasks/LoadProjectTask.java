@@ -23,14 +23,12 @@ import libre.sampler.utils.DatabaseConnectionManager;
 
 public class LoadProjectTask extends AsyncTask<Void, Void, LoadProjectTask.ProjectData> {
     private int projectId;
-    private Consumer<Project> projectCallback;
-    private Consumer<List<Instrument>> instrumentCallback;
-    private Consumer<List<Pattern>> patternCallback;
+    private Consumer<ProjectData> projectCallback;
 
-    static class ProjectData {
-        private Project project;
-        private List<Instrument> instruments;
-        private List<Pattern> patterns;
+    public static class ProjectData {
+        public Project project;
+        public List<Instrument> instruments;
+        public List<Pattern> patterns;
 
         public ProjectData(Project project, List<Instrument> instruments, List<Pattern> patterns) {
             this.project = project;
@@ -39,11 +37,9 @@ public class LoadProjectTask extends AsyncTask<Void, Void, LoadProjectTask.Proje
         }
     }
 
-    public LoadProjectTask(int projectId, Consumer<Project> projectCallback, Consumer<List<Instrument>> instrumentCallback, Consumer<List<Pattern>> patternCallback) {
+    public LoadProjectTask(int projectId, Consumer<ProjectData> projectCallback) {
         this.projectId = projectId;
         this.projectCallback = projectCallback;
-        this.instrumentCallback = instrumentCallback;
-        this.patternCallback = patternCallback;
     }
 
     @Override
@@ -118,8 +114,6 @@ public class LoadProjectTask extends AsyncTask<Void, Void, LoadProjectTask.Proje
 
     @Override
     protected void onPostExecute(ProjectData data) {
-        if(this.projectCallback != null) this.projectCallback.accept(data.project);
-        if(this.instrumentCallback != null) this.instrumentCallback.accept(data.instruments);
-        if(this.patternCallback != null) this.patternCallback.accept(data.patterns);
+        if(this.projectCallback != null) this.projectCallback.accept(data);
     }
 }

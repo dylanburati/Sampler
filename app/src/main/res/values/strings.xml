@@ -28,6 +28,7 @@
     <string name="dialog_project_edit_submit">Done</string>
     <string name="appbar_clean">Clean files</string>
     <string name="action_refresh_midi">Refresh MIDI</string>
+    <string name="constant_velocity">Constant velocity</string>
     <string name="project_saved">Saved project</string>
     <string name="play">PLAY</string>
     <string name="pause">PAUSE</string>
@@ -120,4 +121,8 @@
     <string name="pattern_editor_help">Pattern Editor Help</string>
     <string name="privacy_policy_name">Privacy Policy</string>
     <string name="privacy_policy">We don\'t store your data. Period.</string>
+    <string name="keyboard_velocity_mode">Keyboard Velocity Mode</string>
+    <string name="touch_velocity_none">None</string>
+    <string name="touch_velocity_location">Touch location</string>
+    <string name="touch_velocity_pressure">Pressure</string>
 </resources>

@@ -160,7 +160,7 @@ public class PatternThread extends Thread {
             } else if(runningPatternsModCount == lastModCount) {
                 lock.lock();
                 try {
-                    nextPattern.scheduler.confirmPending();
+                    nextPattern.confirmEvents();
                     for(NoteEvent e : noteEventsOut) {
                         if(e != null) {
                             noteEventSource.dispatch(e);

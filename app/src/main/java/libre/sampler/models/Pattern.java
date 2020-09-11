@@ -38,7 +38,9 @@ public class Pattern {
     private long checkpointNanos;
 
     @Ignore
-    public LoopScheduler scheduler;
+    private LoopScheduler scheduler;
+    @Ignore
+    private final Object schedulerLock = new Object();
 
     @Ignore
     private int playingState;
@@ -80,6 +82,9 @@ public class Pattern {
     // should be called with the `events` obtained from the database
     public void setEvents(List<ScheduledNoteEvent> events) {
         this.events = events;
+        if (events.isEmpty()) {
+            this.events.add(ScheduledNoteEvent.getPlaceholder());
+        }
         for(ScheduledNoteEvent e : events) {
             if(e.id >= nextEventId) {
                 nextEventId = e.id + 1;
@@ -92,7 +97,7 @@ public class Pattern {
     }
 
     public List<ScheduledNoteEvent> getEventsDeepCopy() {
-        synchronized(scheduler) {
+        synchronized(schedulerLock) {
             return new ArrayList<>(events);
         }
     }
@@ -145,7 +150,7 @@ public class Pattern {
         noteEvent.id = nextEventId;
         nextEventId++;
 
-        synchronized(scheduler) {
+        synchronized(schedulerLock) {
             int insertIdx = Collections.binarySearch(events, noteEvent, new Comparator<ScheduledNoteEvent>() {
                 @Override
                 public int compare(ScheduledNoteEvent o1, ScheduledNoteEvent o2) {
@@ -166,7 +171,7 @@ public class Pattern {
     public boolean removeEvent(ScheduledNoteEvent event) {
         // Removes eventIndex and moves to next index according to time
         // Last scheduled events will be invalidated
-        synchronized(scheduler) {
+        synchronized(schedulerLock) {
             int removeIdx = events.indexOf(event);
             if(removeIdx != -1) {
                 scheduler.doRemove(removeIdx, event);
@@ -179,7 +184,7 @@ public class Pattern {
     public NoteEvent removeAndGetEvent(ScheduledNoteEvent event) {
         // Removes eventIndex and moves to next index according to time
         // Last scheduled events will be invalidated
-        synchronized(scheduler) {
+        synchronized(schedulerLock) {
             int removeIdx = events.indexOf(event);
             if(removeIdx != -1) {
                 return scheduler.doRemove(removeIdx, event);
@@ -189,7 +194,7 @@ public class Pattern {
     }
 
     public void start() {
-        synchronized(scheduler) {
+        synchronized(schedulerLock) {
             playingState = PLAYING;
             checkpointNanos = System.nanoTime();
             checkpointTicks = 0;
@@ -198,7 +203,7 @@ public class Pattern {
     }
 
     public void pause() {
-        synchronized(scheduler) {
+        synchronized(schedulerLock) {
             long now = System.nanoTime();
             checkpointTicks = getTicksAtTime(now);
             checkpointNanos = now;
@@ -211,7 +216,7 @@ public class Pattern {
         if(!isPaused()) {
             return;
         }
-        synchronized(scheduler) {
+        synchronized(schedulerLock) {
             playingState = PLAYING;
             checkpointNanos = System.nanoTime();
         }
@@ -244,7 +249,7 @@ public class Pattern {
     }
 
     public void getNextEvents(NoteEvent[] noteEventsOut, long tolerance) {
-        synchronized(scheduler) {
+        synchronized(schedulerLock) {
             scheduler.cancelPending();
             long firstEventTime = Long.MAX_VALUE;
 
@@ -260,6 +265,12 @@ public class Pattern {
                     return;
                 }
             }
+        }
+    }
+    
+    public void confirmEvents() {
+        synchronized(schedulerLock) {
+            scheduler.confirmPending();
         }
     }
 

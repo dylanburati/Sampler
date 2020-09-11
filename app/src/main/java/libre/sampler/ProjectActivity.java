@@ -61,7 +61,7 @@ public class ProjectActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_project);
-        ActionBar toolbar = getSupportActionBar();
+        final ActionBar toolbar = getSupportActionBar();
         if(toolbar != null) {
             toolbar.setTitle(getIntent().getStringExtra(Intent.EXTRA_TITLE));
         }
@@ -214,7 +214,7 @@ public class ProjectActivity extends AppCompatActivity {
     }
 
     @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
+    public boolean onCreateOptionsMenu(final Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.menu_project, menu);
         return true;
@@ -326,8 +326,8 @@ public class ProjectActivity extends AppCompatActivity {
                         if(voiceIndex == -1) {
                             continue;
                         }
-                        Log.d("NoteEventConsumer", String.format("NOTE_ON : voice=%d sample=%d",
-                                voiceIndex, s.sampleIndex));
+                        Log.d("NoteEventConsumer", String.format("NOTE_ON : voice=%d sample=%d vel=%d",
+                                voiceIndex, s.sampleIndex, noteEvent.velocity));
                         sendNoteMsg(voiceIndex, noteEvent.keyNum,
                                 /*velocity*/   adjVelocity,
                                 /*ADSR*/       s.getAttack(), s.getDecay(), s.getSustain(), s.getRelease(),

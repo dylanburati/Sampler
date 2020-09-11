@@ -7,6 +7,10 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
+import android.widget.RadioGroup;
+
+import java.util.HashMap;
+import java.util.Map;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -14,6 +18,7 @@ import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProviders;
 import libre.sampler.R;
 import libre.sampler.models.ProjectViewModel;
+import libre.sampler.models.TouchVelocitySource;
 
 public class ProjectSettingsFragment extends Fragment {
     private ProjectViewModel viewModel;
@@ -55,6 +60,26 @@ public class ProjectSettingsFragment extends Fragment {
 
             @Override
             public void afterTextChanged(Editable s) {
+            }
+        });
+
+        final Map<Integer, TouchVelocitySource> viewIdToSource = new HashMap<>();
+        viewIdToSource.put(R.id.radio_button_touch_velocity_none, TouchVelocitySource.NONE);
+        viewIdToSource.put(R.id.radio_button_touch_velocity_location, TouchVelocitySource.LOCATION);
+        viewIdToSource.put(R.id.radio_button_touch_velocity_pressure, TouchVelocitySource.PRESSURE);
+        final Map<TouchVelocitySource, Integer> sourceToViewId = new HashMap<>();
+        for (Map.Entry<Integer, TouchVelocitySource> e : viewIdToSource.entrySet()) {
+            sourceToViewId.put(e.getValue(), e.getKey());
+        }
+
+        RadioGroup touchVelocityGroup = rootView.findViewById(R.id.pref_touch_velocity);
+        Integer initialViewId = sourceToViewId.get(viewModel.getProject().getTouchVelocitySource());
+        if (initialViewId != null) touchVelocityGroup.check(initialViewId);
+        touchVelocityGroup.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(RadioGroup radioGroup, int i) {
+                TouchVelocitySource nextSrc = viewIdToSource.get(radioGroup.getCheckedRadioButtonId());
+                if (nextSrc != null) viewModel.getProject().setTouchVelocitySource(nextSrc);
             }
         });
 

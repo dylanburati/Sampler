@@ -5,16 +5,13 @@ import java.security.NoSuchAlgorithmException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 
 import androidx.room.Entity;
 import androidx.room.Ignore;
 import androidx.room.PrimaryKey;
 import androidx.room.TypeConverters;
-import libre.sampler.databases.ProjectSettingsConverter;
 import libre.sampler.utils.AppConstants;
 import libre.sampler.utils.IdStatus;
 import libre.sampler.utils.MD5OutputStream;
@@ -27,8 +24,8 @@ public class Project {
     public String name;
     public long mtime;
 
-    @TypeConverters(ProjectSettingsConverter.class)
-    public Map<String, Object> settings;
+    @TypeConverters(ProjectSettings.JsonConverter.class)
+    public ProjectSettings settings;
 
     @Ignore
     private List<Instrument> instruments;
@@ -50,7 +47,7 @@ public class Project {
         this.name = name;
         this.mtime = mtime;
 
-        this.settings = new HashMap<>();
+        this.settings = new ProjectSettings();
         this.instruments = new ArrayList<>();
         this.patterns = new ArrayList<>();
     }
@@ -165,8 +162,16 @@ public class Project {
         return patterns;
     }
 
+    public TouchVelocitySource getTouchVelocitySource() {
+        return settings.touchVelocitySource;
+    }
+
+    public void setTouchVelocitySource(TouchVelocitySource vs) {
+        settings.touchVelocitySource = vs;
+    }
+
     public String getDefaultSamplePath() {
-        String s = (String) settings.get(AppConstants.PREF_DEFAULT_SAMPLE_PATH);
+        String s = settings.defaultSamplePath;
         if(s == null) {
             return "";
         }
@@ -174,12 +179,12 @@ public class Project {
     }
 
     public void setDefaultSamplePath(String s) {
-        settings.put(AppConstants.PREF_DEFAULT_SAMPLE_PATH, s);
+        settings.defaultSamplePath = s;
     }
 
 
     public String getDefaultExportPath() {
-        String s = (String) settings.get(AppConstants.PREF_DEFAULT_INSTRUMENT_EXPORT_PATH);
+        String s = settings.defaultInstrumentExportPath;
         if(s == null) {
             return "";
         }
@@ -187,7 +192,7 @@ public class Project {
     }
 
     public void setDefaultExportPath(String s) {
-        settings.put(AppConstants.PREF_DEFAULT_INSTRUMENT_EXPORT_PATH, s);
+        settings.defaultInstrumentExportPath = s;
     }
 
     public String getRelativeTime() {
@@ -224,9 +229,7 @@ public class Project {
         try(MD5OutputStream outputStream = new MD5OutputStream()) {
             outputStream.writeInt(id);
             outputStream.writeInt(name.hashCode());
-            for(Map.Entry<String, Object> entry : settings.entrySet()) {
-                outputStream.writeInt(entry.hashCode());
-            }
+            outputStream.writeInt(settings.hashCode());
             for(Instrument t : getInstruments()) {
                 t.writeHashCodes(outputStream);
             }
@@ -236,7 +239,7 @@ public class Project {
             outputStream.flush();
             return outputStream.getMessageDigest().digest();
         } catch(IOException | NoSuchAlgorithmException e) {
-            return new byte[16];
+            return null;
         }
     }
 }

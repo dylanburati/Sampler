@@ -44,23 +44,58 @@
     </com.google.android.material.textfield.TextInputLayout>
 
     <TextView
-        android:id="@+id/label_placeholder_bool"
-        android:layout_width="0dp"
+        android:id="@+id/label_touch_velocity"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="@dimen/margin3"
-        android:visibility="gone"
-        android:text="@string/default_instrument_export_path"
-        app:layout_constraintEnd_toStartOf="@+id/pref_placeholder_bool"
-        app:layout_constraintHorizontal_weight="1"
+        android:layout_marginTop="@dimen/margin4"
+        android:text="@string/keyboard_velocity_mode"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/container_2" />
 
-    <Switch
-        android:id="@+id/pref_placeholder_bool"
-        android:layout_width="wrap_content"
+    <RadioGroup
+        android:id="@+id/pref_touch_velocity"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:visibility="gone"
-        app:layout_constraintBaseline_toBaselineOf="@+id/label_placeholder_bool"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@+id/label_placeholder_bool" />
+        android:paddingTop="@dimen/margin1"
+        android:checkedButton="@id/radio_button_touch_velocity_none"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/label_touch_velocity">
+
+        <RadioButton
+            android:id="@+id/radio_button_touch_velocity_none"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/touch_velocity_none" />
+
+        <RadioButton
+            android:id="@+id/radio_button_touch_velocity_location"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/touch_velocity_location" />
+
+        <RadioButton
+            android:id="@+id/radio_button_touch_velocity_pressure"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/touch_velocity_pressure" />
+    </RadioGroup>
+
+    <!--<TextView-->
+        <!--android:id="@+id/label_placeholder_bool"-->
+        <!--android:layout_width="0dp"-->
+        <!--android:layout_height="wrap_content"-->
+        <!--android:layout_marginTop="@dimen/margin3"-->
+        <!--android:text="@string/default_instrument_export_path"-->
+        <!--app:layout_constraintEnd_toStartOf="@+id/pref_placeholder_bool"-->
+        <!--app:layout_constraintHorizontal_weight="1"-->
+        <!--app:layout_constraintStart_toStartOf="parent"-->
+        <!--app:layout_constraintTop_toBottomOf="@+id/container_2" />-->
+
+    <!--<Switch-->
+        <!--android:id="@+id/pref_placeholder_bool"-->
+        <!--android:layout_width="wrap_content"-->
+        <!--android:layout_height="wrap_content"-->
+        <!--app:layout_constraintBaseline_toBaselineOf="@+id/label_placeholder_bool"-->
+        <!--app:layout_constraintEnd_toEndOf="parent"-->
+        <!--app:layout_constraintStart_toEndOf="@+id/label_placeholder_bool" />-->
 </androidx.constraintlayout.widget.ConstraintLayout>

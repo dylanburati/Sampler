@@ -74,25 +74,17 @@ public class ProjectViewModel extends AndroidViewModel {
 
             projectState = ModelState.LOADING;
             DatabaseConnectionManager.runTask(new LoadProjectTask(projectId,
-                    new Consumer<Project>() {
+                    new Consumer<LoadProjectTask.ProjectData>() {
                         @Override
-                        public void accept(Project project) {
-                            ProjectViewModel.this.project = project;
-                        }
-                    }, new Consumer<List<Instrument>>() {
-                        @Override
-                        public void accept(List<Instrument> instruments) {
-                            project.setInstruments(instruments);
-                            if(instruments.size() > 0) {
-                                keyboardInstrument = instruments.get(0);
+                        public void accept(LoadProjectTask.ProjectData data) {
+                            ProjectViewModel.this.project = data.project;
+                            project.setInstruments(data.instruments);
+                            if(data.instruments.size() > 0) {
+                                keyboardInstrument = data.instruments.get(0);
                             }
-                        }
-                    }, new Consumer<List<Pattern>>() {
-                        @Override
-                        public void accept(List<Pattern> patterns) {
-                            project.setPatterns(patterns);
-                            if(patterns.size() > 0) {
-                                pianoRollPattern = patterns.get(0);
+                            project.setPatterns(data.patterns);
+                            if(data.patterns.size() > 0) {
+                                pianoRollPattern = data.patterns.get(0);
                             } else {
                                 pianoRollPattern = Pattern.getEmptyPattern();
                                 project.registerPattern(pianoRollPattern);
@@ -106,7 +98,8 @@ public class ProjectViewModel extends AndroidViewModel {
                             projectHash = project.valueHash();
                             projectState = ModelState.LOADED;
                         }
-                    }));
+                    })
+            );
         }
 
         return project;
@@ -121,7 +114,7 @@ public class ProjectViewModel extends AndroidViewModel {
         if(projectState == ModelState.LOADED) {
             byte[] currentHash = project.valueHash();
 
-            if(projectHash == null) {
+            if(projectHash == null || currentHash == null) {
                 return true;
             }
 
