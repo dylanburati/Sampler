@@ -38,8 +38,7 @@ public class ImportProjectTask extends AsyncTask<Void, Float, String> implements
                     @Override
                     public void run() {
                         // Only insert project when deserializer has reached the `instruments` array
-                        int projectId = (int) DatabaseConnectionManager.getInstance().projectDao().insert(project);
-                        project.setProjectId(projectId);
+                        DatabaseConnectionManager.getInstance().projectDao().insert(project);
                     }
                 });
         try {
@@ -59,6 +58,7 @@ public class ImportProjectTask extends AsyncTask<Void, Float, String> implements
             return e.getMessage();
         }
 
+        project.prepareSave();
         InstrumentDao instrumentDao = DatabaseConnectionManager.getInstance().instrumentDao();
         SampleDao sampleDao = DatabaseConnectionManager.getInstance().sampleDao();
 

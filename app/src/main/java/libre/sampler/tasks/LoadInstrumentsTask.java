@@ -29,7 +29,7 @@ public class LoadInstrumentsTask extends AsyncTask<Void, Void, List<Instrument>>
             Collections.sort(r.samples, new Comparator<Sample>() {
                 @Override
                 public int compare(Sample o1, Sample o2) {
-                    return Integer.compare(o1.id, o2.id);
+                    return Integer.compare(o1.sort, o2.sort);
                 }
             });
             r.instrument.setSamples(r.samples);

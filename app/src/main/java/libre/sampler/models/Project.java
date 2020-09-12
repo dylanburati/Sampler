@@ -8,19 +8,20 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import java.util.UUID;
 
+import androidx.annotation.NonNull;
 import androidx.room.Entity;
 import androidx.room.Ignore;
 import androidx.room.PrimaryKey;
 import androidx.room.TypeConverters;
-import libre.sampler.utils.AppConstants;
-import libre.sampler.utils.IdStatus;
 import libre.sampler.utils.MD5OutputStream;
 
 @Entity(tableName = "project")
 public class Project {
-    @PrimaryKey(autoGenerate = true)
-    public int id;
+    @PrimaryKey
+    @NonNull
+    public String id;
 
     public String name;
     public long mtime;
@@ -30,21 +31,18 @@ public class Project {
 
     @Ignore
     private List<Instrument> instruments;
-    @Ignore
-    private int nextInstrumentId;
-    @Ignore
-    private IdStatus instrumentIdStatus = new IdStatus("Project,Instrument");
 
     @Ignore
     private List<Pattern> patterns;
-    @Ignore
-    private int nextPatternId;
-    @Ignore
-    private IdStatus patternIdStatus = new IdStatus("Project,Pattern");
 
     @Ignore
     public Project(String name, long mtime) {
-        this.id = 0;
+        this(UUID.randomUUID().toString(), name, mtime);
+    }
+
+    // should be called with the `id` obtained from the database
+    public Project(@NonNull String id, String name, long mtime) {
+        this.id = id;
         this.name = name;
         this.mtime = mtime;
 
@@ -53,47 +51,13 @@ public class Project {
         this.patterns = new ArrayList<>();
     }
 
-    // should be called with the `id` obtained from the database
-    public Project(int id, String name, long mtime) {
-        this(name, mtime);
+    public void setProjectId(String id) {
         this.id = id;
-        this.nextInstrumentId = id * AppConstants.MAX_INSTRUMENTS_PER_PROJECT;
-        this.nextPatternId = id * AppConstants.MAX_PATTERNS_PER_PROJECT;
-
-        if(id >= 0) {
-            instrumentIdStatus.set(IdStatus.SELF);
-            patternIdStatus.set(IdStatus.SELF);
-        }
-    }
-
-    public void setProjectId(int id) {
-        this.id = id;
-        this.nextInstrumentId = id * AppConstants.MAX_INSTRUMENTS_PER_PROJECT;
-        this.nextPatternId = id * AppConstants.MAX_PATTERNS_PER_PROJECT;
-
-        instrumentIdStatus.set(IdStatus.SELF);
-        patternIdStatus.set(IdStatus.SELF);
     }
 
     // should be called with a list obtained from the database
     public void setInstruments(List<Instrument> instruments) {
         this.instruments = instruments;
-        for(Instrument t : instruments) {
-            if(t.id >= nextInstrumentId) {
-                nextInstrumentId = t.id + 1;
-            }
-        }
-
-        instrumentIdStatus.require(IdStatus.SELF);
-        instrumentIdStatus.set(IdStatus.CHILDREN_DB);
-    }
-
-    public void registerInstrument(Instrument e) {
-        e.setInstrumentId(nextInstrumentId);
-        nextInstrumentId++;
-
-        instrumentIdStatus.require(IdStatus.SELF);
-        instrumentIdStatus.set(IdStatus.CHILDREN_ADDED);
     }
 
     public void addInstrument(Instrument e) {
@@ -123,21 +87,6 @@ public class Project {
     // should be called with a list obtained from the database
     public void setPatterns(List<Pattern> patterns) {
         this.patterns = patterns;
-        for(Pattern p : patterns) {
-            if(p.id >= nextPatternId) {
-                nextPatternId = p.id + 1;
-            }
-        }
-
-        patternIdStatus.set(IdStatus.CHILDREN_DB);
-    }
-
-    public void registerPattern(Pattern e) {
-        e.setPatternId(nextPatternId);
-        nextPatternId++;
-
-        patternIdStatus.require(IdStatus.SELF);
-        patternIdStatus.set(IdStatus.CHILDREN_ADDED);
     }
 
     public void addPattern(Pattern e) {
@@ -196,8 +145,20 @@ public class Project {
         settings.defaultInstrumentExportPath = s;
     }
 
+    public void prepareSave() {
+        for (int i = 0; i < this.instruments.size(); i++) {
+            Instrument e = this.instruments.get(i);
+            e.sort = i;
+            e.prepareSave();
+        }
+        for (int i = 0; i < this.patterns.size(); i++) {
+            Pattern e = this.patterns.get(i);
+            e.sort = i;
+        }
+    }
+
     public String getRelativeTime() {
-        Date then = new Date(mtime)
+        Date then = new Date(mtime);
         Calendar cal = Calendar.getInstance();
         int yearNow = cal.get(Calendar.YEAR);
         cal.setTime(then);
@@ -231,7 +192,7 @@ public class Project {
 
     public byte[] valueHash() {
         try(MD5OutputStream outputStream = new MD5OutputStream()) {
-            outputStream.writeInt(id);
+            outputStream.writeInt(id.hashCode());
             outputStream.writeInt(name.hashCode());
             outputStream.writeInt(settings.hashCode());
             for(Instrument t : getInstruments()) {

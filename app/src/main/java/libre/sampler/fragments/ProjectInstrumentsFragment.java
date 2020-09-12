@@ -567,7 +567,6 @@ public class ProjectInstrumentsFragment extends Fragment {
                 InstrumentCreateDialog dialog = new InstrumentCreateDialog();
                 Instrument toCreate = new Instrument(null);
                 viewModel.setDialogInstrument(toCreate);
-                viewModel.getProject().registerInstrument(toCreate);
                 dialog.show(fm, "InstrumentCreateDialog");
             }
         }

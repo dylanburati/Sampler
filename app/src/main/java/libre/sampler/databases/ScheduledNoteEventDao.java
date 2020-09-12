@@ -17,10 +17,10 @@ public interface ScheduledNoteEventDao {
     void insertAll(ScheduledNoteEvent[] events);
 
     @Query("DELETE FROM scheduledNoteEvent WHERE patternId = :patternId")
-    void deleteAll(int patternId);
+    void deleteAll(String patternId);
 
     @Query("DELETE FROM scheduledNoteEvent WHERE patternId IN (:patternIds)")
-    void deleteAll(List<Integer> patternIds);
+    void deleteAll(List<String> patternIds);
 
     @Query("SELECT * FROM scheduledNoteEvent")
     List<ScheduledNoteEvent> getAll();

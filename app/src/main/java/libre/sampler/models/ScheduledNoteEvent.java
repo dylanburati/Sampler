@@ -1,34 +1,40 @@
 package libre.sampler.models;
 
+import java.util.UUID;
+
 import androidx.annotation.NonNull;
 import androidx.room.Entity;
 import androidx.room.Ignore;
+import androidx.room.PrimaryKey;
 import libre.sampler.utils.NoteId;
 
-@Entity(tableName = "scheduledNoteEvent", primaryKeys = {"patternId", "id"})
+@Entity(tableName = "scheduledNoteEvent")
 public class ScheduledNoteEvent {
-    public int id;
-    public int patternId;
+    public String patternId;
+
+    @PrimaryKey
+    @NonNull
+    public String id;
 
     public long offsetTicks;
 
     public int action;
     @Ignore
     public Instrument instrument;
-    public int instrumentId;
+    public String instrumentId;
     public int keyNum;
     public int velocity;
     public long noteId;
 
     // should be called with the `id` obtained from the database
-    public ScheduledNoteEvent(int id, int instrumentId) {
+    public ScheduledNoteEvent(@NonNull String id, String instrumentId) {
         this.id = id;
         this.instrumentId = instrumentId;
     }
 
     @Ignore
     public ScheduledNoteEvent(long offsetTicks, int action, Instrument instrument, int keyNum, int velocity, long noteId) {
-        this.id = 0;
+        this.id = UUID.randomUUID().toString();
 
         this.offsetTicks = offsetTicks;
         this.action = action;
@@ -63,10 +69,10 @@ public class ScheduledNoteEvent {
 
     public int valueHash() {
         int hashCode = 0;
-        hashCode ^= id;
-        hashCode ^= patternId;
+        if (id != null) hashCode ^= id.hashCode();
+        if (patternId != null) hashCode ^= patternId.hashCode();
         hashCode ^= (int) (offsetTicks % 0x80000000L);
-        hashCode ^= instrumentId;
+        if (instrumentId != null) hashCode ^= instrumentId.hashCode();
         hashCode ^= (action << 20);
         hashCode ^= (keyNum << 16);
         hashCode ^= (velocity << 8);

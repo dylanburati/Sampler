@@ -22,7 +22,7 @@ import libre.sampler.models.ScheduledNoteEvent;
 import libre.sampler.utils.DatabaseConnectionManager;
 
 public class LoadProjectTask extends AsyncTask<Void, Void, LoadProjectTask.ProjectData> {
-    private int projectId;
+    private String projectId;
     private Consumer<ProjectData> projectCallback;
 
     public static class ProjectData {
@@ -37,7 +37,7 @@ public class LoadProjectTask extends AsyncTask<Void, Void, LoadProjectTask.Proje
         }
     }
 
-    public LoadProjectTask(int projectId, Consumer<ProjectData> projectCallback) {
+    public LoadProjectTask(String projectId, Consumer<ProjectData> projectCallback) {
         this.projectId = projectId;
         this.projectCallback = projectCallback;
     }
@@ -45,15 +45,15 @@ public class LoadProjectTask extends AsyncTask<Void, Void, LoadProjectTask.Proje
     @Override
     protected ProjectData doInBackground(Void... voids) {
         Project project = null;
-        List<Integer> instrumentIds = new ArrayList<>();
-        List<Integer> patternIds = new ArrayList<>();
+        List<String> instrumentIds = new ArrayList<>();
+        List<String> patternIds = new ArrayList<>();
 
-        Map<Integer, Instrument> projInstrumentsMap = new HashMap<>();
+        Map<String, Instrument> projInstrumentsMap = new HashMap<>();
         List<Pattern> projPatterns = new ArrayList<>();
 
         List<ProjectDao.ProjectWithRelations> relations = DatabaseConnectionManager.getInstance().projectDao().getWithRelations(projectId);
         for(ProjectDao.ProjectWithRelations prj : relations) {
-            if(prj.project.id == projectId) {
+            if(projectId.equals(prj.project.id)) {
                 project = prj.project;
                 for(Instrument t : prj.instruments) {
                     instrumentIds.add(t.id);
@@ -73,7 +73,7 @@ public class LoadProjectTask extends AsyncTask<Void, Void, LoadProjectTask.Proje
             Collections.sort(r.samples, new Comparator<Sample>() {
                 @Override
                 public int compare(Sample o1, Sample o2) {
-                    return Integer.compare(o1.id, o2.id);
+                    return Integer.compare(o1.sort, o2.sort);
                 }
             });
             r.instrument.setSamples(r.samples);
@@ -106,7 +106,7 @@ public class LoadProjectTask extends AsyncTask<Void, Void, LoadProjectTask.Proje
         Collections.sort(projInstruments, new Comparator<Instrument>() {
             @Override
             public int compare(Instrument o1, Instrument o2) {
-                return Integer.compare(o1.id, o2.id);
+                return Integer.compare(o1.sort, o2.sort);
             }
         });
         return new ProjectData(project, projInstruments, projPatterns);

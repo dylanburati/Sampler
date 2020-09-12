@@ -27,11 +27,8 @@ public class CreateProjectTask extends AsyncTask<Void, Void, Void> {
         InstrumentDao instrumentDao = DatabaseConnectionManager.getInstance().instrumentDao();
         SampleDao sampleDao = DatabaseConnectionManager.getInstance().sampleDao();
 
-        int projectId = (int) DatabaseConnectionManager.getInstance().projectDao().insert(project);
-        this.project.setProjectId(projectId);
         for(Instrument t : instruments) {
             Instrument tCopy = new Instrument(t.name);
-            this.project.registerInstrument(tCopy);
             tCopy.setVolume(t.getVolume());
             for(Sample s : t.getSamples()) {
                 tCopy.addSample(new Sample(s));
@@ -39,6 +36,7 @@ public class CreateProjectTask extends AsyncTask<Void, Void, Void> {
             this.project.addInstrument(tCopy);
         }
 
+        project.prepareSave();
         instrumentDao.insertAll(project.getInstruments());
         for(Instrument t : project.getInstruments()) {
             sampleDao.insertAll(t.getSamples());

@@ -143,7 +143,6 @@ public class MainViewModel extends AndroidViewModel {
             project.setInstruments(dbInstruments);
             for(Instrument t : instruments) {
                 Instrument tCopy = new Instrument(t.name);
-                project.registerInstrument(tCopy);
                 tCopy.setVolume(t.getVolume());
                 for(Sample s : t.getSamples()) {
                     tCopy.addSample(new Sample(s));
@@ -151,6 +150,7 @@ public class MainViewModel extends AndroidViewModel {
                 project.addInstrument(tCopy);
                 this.allInstruments.add(tCopy);
             }
+            project.prepareSave();
             DatabaseConnectionManager.runTask(new UpdateProjectTask2(project, new Runnable() {
                 @Override
                 public void run() {

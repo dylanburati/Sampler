@@ -35,7 +35,7 @@ public class UpdateProjectTask2 extends AsyncTask<Void, Void, Void> {
         List<ProjectDao.ProjectWithRelations> data = projectDao.getWithRelations(project.id);
         for(ProjectDao.ProjectWithRelations d : data) {
             if(d.project.id == project.id) {
-                List<Integer> instrumentIds = new ArrayList<>();
+                List<String> instrumentIds = new ArrayList<>();
                 for(Instrument t : d.instruments) {
                     instrumentIds.add(t.id);
                 }

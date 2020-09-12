@@ -1,17 +1,21 @@
 package libre.sampler.models;
 
+import java.util.UUID;
+
+import androidx.annotation.NonNull;
 import androidx.room.Entity;
 import androidx.room.Ignore;
+import androidx.room.PrimaryKey;
 
-@Entity(tableName = "sample", primaryKeys = {"instrumentId", "id"})
+@Entity(tableName = "sample")
 public class Sample {
-    public int instrumentId;
+    public String instrumentId;
 
-    public int id;
+    @PrimaryKey
+    @NonNull
+    public String id;
     public String filename;
-
-    @Ignore
-    public int sampleIndex;
+    public int sort;
 
     private float volume;
     private int minPitch;
@@ -40,10 +44,14 @@ public class Sample {
     @Ignore
     private boolean isInfoLoaded = false;
 
-    public Sample(String filename, int id) {
+    @Ignore
+    public Sample(String filename) {
+        this(UUID.randomUUID().toString(), filename);
+    }
+
+    public Sample(@NonNull String id, String filename) {
         this.filename = filename;
         this.id = id;
-        this.sampleIndex = -1;
 
         this.setSampleZone(-1, -1, 0, 127);
         this.sustain = 1.0f;
@@ -52,10 +60,7 @@ public class Sample {
     }
 
     public Sample(Sample other) {
-        this.id = -1;
-        this.sampleIndex = -1;
-        this.instrumentId = -1;
-
+        this.id = UUID.randomUUID().toString();
         this.filename = other.filename;
         this.volume = other.volume;
         this.minPitch = other.minPitch;
@@ -75,7 +80,9 @@ public class Sample {
 
     public void setFilename(String filename) {
         this.filename = filename;
-        this.sampleIndex = -1;
+        this.sampleLength = 0;
+        this.sampleRate = 0;
+        this.isInfoLoaded = false;
     }
 
     public void setSampleZone(int minPitch, int maxPitch, int minVelocity, int maxVelocity) {
@@ -325,8 +332,8 @@ public class Sample {
 
     public int valueHash() {
         int hashCode = 0;
-        hashCode ^= this.id;
-        hashCode ^= this.instrumentId;
+        hashCode ^= this.id.hashCode();
+        if (this.instrumentId != null) hashCode ^= this.instrumentId.hashCode();
         hashCode ^= this.filename.hashCode();
         hashCode ^= Float.floatToIntBits(this.volume);
         hashCode ^= this.minPitch;

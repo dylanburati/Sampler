@@ -59,7 +59,7 @@ public class ProjectLeaveDialog extends DialogFragment {
         builder.setPositiveButton(R.string.action_save, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
-                viewModel.updateProjectHash();
+                viewModel.prepareSave();
                 DatabaseConnectionManager.runTask(new UpdateProjectTask(viewModel.getProject(),
                         new UpdateProjectTaskCallback((AppCompatActivity) getActivity(), upIntent)));
             }
