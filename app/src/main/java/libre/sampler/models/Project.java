@@ -197,7 +197,7 @@ public class Project {
     }
 
     public String getRelativeTime() {
-        Date then = new Date(mtime)
+        Date then = new Date(mtime);
         Calendar cal = Calendar.getInstance();
         int yearNow = cal.get(Calendar.YEAR);
         cal.setTime(then);
