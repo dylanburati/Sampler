@@ -20,7 +20,7 @@ public class MD5OutputStream extends DigestOutputStream {
 
     private static class NoOpOutputStream extends OutputStream {
         @Override
-        public void write(int b) throws IOException {
+        public void write(int b) {
             // Prevent allocating extra memory for checksum calc.
         }
     }

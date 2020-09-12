@@ -1,5 +1,6 @@
 package libre.sampler.views;
 
+import androidx.annotation.NonNull;
 import libre.sampler.models.ScheduledNoteEvent;
 
 public class VisualNote implements Comparable<VisualNote> {
@@ -17,7 +18,7 @@ public class VisualNote implements Comparable<VisualNote> {
     }
 
     @Override
-    public int compareTo(VisualNote o) {
+    public int compareTo(@NonNull VisualNote o) {
         int cmp = Long.compare(getStartTicks(), o.getStartTicks());
         if(cmp != 0) {
             return cmp;

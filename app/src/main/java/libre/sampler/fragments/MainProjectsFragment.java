@@ -159,7 +159,7 @@ public class MainProjectsFragment extends Fragment {
     }
 
     @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         if(item.getItemId() == R.id.appbar_create) {
             if(requireReadWritePermissions()) {
                 ((MainActivity) getActivity()).openDetailFragment(ProjectEvent.PROJECT_CREATE, null);

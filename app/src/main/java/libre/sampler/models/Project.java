@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
@@ -146,8 +147,11 @@ public class Project {
 
     public String getRelativeTime() {
         Date then = new Date(mtime);
-        Date now = new Date();
-        if(then.getYear() == now.getYear()) {
+        Calendar cal = Calendar.getInstance();
+        int yearNow = cal.get(Calendar.YEAR);
+        cal.setTime(then);
+        int yearThen = cal.get(Calendar.YEAR);
+        if(yearNow == yearThen) {
             return (new SimpleDateFormat("MMM d h:mm a", Locale.US)).format(then);
         } else {
             return (new SimpleDateFormat("MMM d, yyyy", Locale.US)).format(then);
