@@ -19,6 +19,8 @@ public class Instrument {
     @NonNull
     public String id;
     public String name;
+    public int sort;
+
     private float volume;
 
     @Ignore
@@ -105,6 +107,13 @@ public class Instrument {
         outputStream.writeInt(Float.floatToIntBits(volume));
         for(Sample s : samples) {
             outputStream.writeInt(s.valueHash());
+        }
+    }
+
+    public void prepareSave() {
+        for (int i = 0; i < this.samples.size(); i++) {
+            Sample e = this.samples.get(i);
+            e.sort = i;
         }
     }
 }

@@ -150,6 +150,7 @@ public class MainViewModel extends AndroidViewModel {
                 project.addInstrument(tCopy);
                 this.allInstruments.add(tCopy);
             }
+            project.prepareSave();
             DatabaseConnectionManager.runTask(new UpdateProjectTask2(project, new Runnable() {
                 @Override
                 public void run() {

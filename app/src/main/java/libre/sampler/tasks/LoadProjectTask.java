@@ -73,7 +73,7 @@ public class LoadProjectTask extends AsyncTask<Void, Void, LoadProjectTask.Proje
             Collections.sort(r.samples, new Comparator<Sample>() {
                 @Override
                 public int compare(Sample o1, Sample o2) {
-                    return o1.id.compareTo(o2.id);
+                    return Integer.compare(o1.sort, o2.sort);
                 }
             });
             r.instrument.setSamples(r.samples);
@@ -106,7 +106,7 @@ public class LoadProjectTask extends AsyncTask<Void, Void, LoadProjectTask.Proje
         Collections.sort(projInstruments, new Comparator<Instrument>() {
             @Override
             public int compare(Instrument o1, Instrument o2) {
-                return o1.id.compareTo(o2.id);
+                return Integer.compare(o1.sort, o2.sort);
             }
         });
         return new ProjectData(project, projInstruments, projPatterns);

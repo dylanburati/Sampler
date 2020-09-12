@@ -10,7 +10,9 @@ import android.view.MenuItem;
 import android.widget.Toast;
 
 import java.lang.ref.WeakReference;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
@@ -36,7 +38,6 @@ import libre.sampler.tasks.UpdateProjectTask;
 import libre.sampler.utils.AppConstants;
 import libre.sampler.utils.DatabaseConnectionManager;
 import libre.sampler.utils.PatternThread;
-import libre.sampler.utils.SampleBindingList;
 import libre.sampler.utils.VoiceBindingList;
 import libre.sampler.views.VisualNote;
 
@@ -51,7 +52,7 @@ public class ProjectActivity extends AppCompatActivity {
     public ProjectViewModel viewModel;
 
     private VoiceBindingList pdVoiceBindings;
-    private SampleBindingList pdSampleBindings;
+    private Map<String, Sample> pdSampleBindings;
 
     static {
         System.loadLibrary("native-lib");
@@ -99,8 +100,11 @@ public class ProjectActivity extends AppCompatActivity {
                     if(pdSampleBindings != null) {
                         Log.d("InstrumentLoader", "sync  " + event.instrument.name);
                         for(Sample s : event.instrument.getSamples()) {
-                            if(pdSampleBindings.getBinding(s)) {
-                                loadSoundFile(s.sampleIndex, s.filename);
+                            boolean exists = pdSampleBindings.containsKey(s.id);
+                            if (exists) exists = pdSampleBindings.get(s.id).isInfoLoaded();
+                            if(!exists) {
+                                pdSampleBindings.put(s.id, s);
+                                loadSoundFile(s.id, s.filename);
                             }
                         }
                     } else {
@@ -156,7 +160,7 @@ public class ProjectActivity extends AppCompatActivity {
 
     private void initPdReceiverListeners() {
         startAudioService();
-        pdSampleBindings = new SampleBindingList(AppConstants.PD_NUM_SAMPLES);
+        pdSampleBindings = new HashMap<>(AppConstants.PD_NUM_SAMPLES);
         pdVoiceBindings = new VoiceBindingList(AppConstants.PD_NUM_VOICES);
 
         setVoiceFreeListener(new VoiceFreeListener() {
@@ -169,10 +173,13 @@ public class ProjectActivity extends AppCompatActivity {
 
         setSampleLoadListener(new SampleLoadListener() {
             @Override
-            public void setSampleInfo(int sampleIndex, int sampleLength, int sampleRate) {
-                pdSampleBindings.setSampleInfo(sampleIndex, sampleLength, sampleRate);
-                Log.d("MyPdDispatcher", String.format("sample_info index=%d length=%d rate=%d",
-                        sampleIndex, sampleLength, sampleRate));
+            public void setSampleInfo(String sampleId, int sampleLength, int sampleRate) {
+                Sample s = pdSampleBindings.get(sampleId);
+                if (s != null) {
+                    s.setSampleInfo(sampleLength, sampleRate);
+                    Log.d("MyPdDispatcher", String.format("sample_info filename=%s length=%d rate=%d",
+                            s.filename.replaceAll(".*/", ""), sampleLength, sampleRate));
+                }
             }
         });
     }
@@ -234,7 +241,7 @@ public class ProjectActivity extends AppCompatActivity {
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         if(item.getItemId() == R.id.appbar_save) {
-            viewModel.updateProjectHash();
+            viewModel.prepareSave();
             DatabaseConnectionManager.runTask(new UpdateProjectTask(viewModel.getProject(),
                     new UpdateProjectTaskCallback(new WeakReference<Context>(this))));
             return true;
@@ -287,9 +294,9 @@ public class ProjectActivity extends AppCompatActivity {
 
     public native void startAudioService();
     public native void stopAudioService();
-    public native void loadSoundFile(int sampleIndex, String filename);
+    public native void loadSoundFile(String sampleId, String filename);
     public native void sendNoteMsg(int voiceIndex, int keynum, float velocity, float attack,
-                                   float decay, float sustain, float release, int sampleIndex,
+                                   float decay, float sustain, float release, String sampleId,
                                    float start, float resume, float end, float baseKey);
     public native void setVoiceFreeListener(VoiceFreeListener l);
     public native void setSampleLoadListener(SampleLoadListener l);
@@ -326,23 +333,23 @@ public class ProjectActivity extends AppCompatActivity {
                         if(voiceIndex == -1) {
                             continue;
                         }
-                        Log.d("NoteEventConsumer", String.format("NOTE_ON : voice=%d sample=%d vel=%d",
-                                voiceIndex, s.sampleIndex, noteEvent.velocity));
+                        Log.d("NoteEventConsumer", String.format("NOTE_ON : voice=%d sample=%s vel=%d",
+                                voiceIndex, s.filename.replaceAll(".*/", ""), noteEvent.velocity));
                         sendNoteMsg(voiceIndex, noteEvent.keyNum,
                                 /*velocity*/   adjVelocity,
                                 /*ADSR*/       s.getAttack(), s.getDecay(), s.getSustain(), s.getRelease(),
-                                /*sampleInfo*/ s.sampleIndex, s.getLoopStart(), s.getLoopResume(), s.getLoopEnd(), s.getBasePitch());
+                                /*sampleInfo*/ s.id, s.getLoopStart(), s.getLoopResume(), s.getLoopEnd(), s.getBasePitch());
                     } else if(noteEvent.action == NoteEvent.NOTE_OFF) {
                         int voiceIndex = pdVoiceBindings.releaseBinding(noteEvent, s.id);
                         if(voiceIndex == -1) {
                             continue;
                         }
-                        Log.d("NoteEventConsumer", String.format("NOTE_OFF: voice=%d sample=%d",
-                                voiceIndex, s.sampleIndex));
+                        Log.d("NoteEventConsumer", String.format("NOTE_OFF: voice=%d sample=%s",
+                                voiceIndex, s.filename.replaceAll(".*/", "")));
                         sendNoteMsg(voiceIndex, noteEvent.keyNum,
                                 /*velocity*/   0,
                                 /*ADSR*/       s.getAttack(), s.getDecay(), s.getSustain(), s.getRelease(),
-                                /*sampleInfo*/ s.sampleIndex, s.getLoopStart(), s.getLoopResume(), s.getLoopEnd(), s.getBasePitch());
+                                /*sampleInfo*/ s.id, s.getLoopStart(), s.getLoopResume(), s.getLoopEnd(), s.getBasePitch());
                     } else if(noteEvent.action == NoteEvent.CLOSE) {
                         int voiceIndex = pdVoiceBindings.releaseBinding(noteEvent, s.id);
                         if(voiceIndex == -1) {
@@ -351,7 +358,7 @@ public class ProjectActivity extends AppCompatActivity {
                         sendNoteMsg(voiceIndex, noteEvent.keyNum,
                                 /*velocity*/   0,
                                 /*ADSR*/       s.getAttack(), s.getDecay(), s.getSustain(), 0,
-                                /*sampleInfo*/ s.sampleIndex, s.getLoopStart(), s.getLoopResume(), s.getLoopEnd(), s.getBasePitch());
+                                /*sampleInfo*/ s.id, s.getLoopStart(), s.getLoopResume(), s.getLoopEnd(), s.getBasePitch());
                     }
                 }
             } else if(noteEvent.action != NoteEvent.NOTHING) {

@@ -36,6 +36,7 @@ public class CreateProjectTask extends AsyncTask<Void, Void, Void> {
             this.project.addInstrument(tCopy);
         }
 
+        project.prepareSave();
         instrumentDao.insertAll(project.getInstruments());
         for(Instrument t : project.getInstruments()) {
             sampleDao.insertAll(t.getSamples());

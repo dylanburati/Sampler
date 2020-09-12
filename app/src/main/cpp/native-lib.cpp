@@ -45,7 +45,7 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *vm, void *reserved) {
 
 JNIEXPORT void JNICALL
 Java_libre_sampler_ProjectActivity_loadSoundFile(JNIEnv *env, jobject instance,
-                                                       jint sampleIndex, jstring filename) {
+                                                       jstring sampleId, jstring filename) {
     if(audioService == nullptr) {
         LOGD("audio service is stopped");
         return;
@@ -53,7 +53,9 @@ Java_libre_sampler_ProjectActivity_loadSoundFile(JNIEnv *env, jobject instance,
 
     const char *filenameC = env->GetStringUTFChars(filename, nullptr);
     env->ReleaseStringUTFChars(filename, filenameC);
-    audioService->loadFile(sampleIndex, std::string(filenameC));
+    const char *sampleIdC = env->GetStringUTFChars(sampleId, nullptr);
+    env->ReleaseStringUTFChars(sampleId, sampleIdC);
+    audioService->loadFile(std::string(sampleIdC), std::string(filenameC));
 }
 
 JNIEXPORT void JNICALL
@@ -71,7 +73,7 @@ JNIEXPORT void JNICALL
 Java_libre_sampler_ProjectActivity_sendNoteMsg(JNIEnv *env, jobject instance, jint voiceIndex, jint keynum,
                                                      jfloat velocity, jfloat attack,
                                                      jfloat decay, jfloat sustain, jfloat release,
-                                                     jint sampleIndex, jfloat start, jfloat resume,
+                                                     jstring sampleId, jfloat start, jfloat resume,
                                                      jfloat end, jfloat baseKey) {
 
     if(audioService == nullptr) {
@@ -79,8 +81,10 @@ Java_libre_sampler_ProjectActivity_sendNoteMsg(JNIEnv *env, jobject instance, ji
         return;
     }
 
+    const char *sampleIdC = env->GetStringUTFChars(sampleId, nullptr);
+    env->ReleaseStringUTFChars(sampleId, sampleIdC);
     audioService->noteMsg(voiceIndex, keynum, velocity, ADSR{attack, decay, sustain, release},
-                          sampleIndex, start, resume, end, baseKey);
+                          std::string(sampleIdC), start, resume, end, baseKey);
 }
 
 JNIEXPORT void JNICALL

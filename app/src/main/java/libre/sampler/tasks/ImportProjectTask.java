@@ -58,6 +58,7 @@ public class ImportProjectTask extends AsyncTask<Void, Float, String> implements
             return e.getMessage();
         }
 
+        project.prepareSave();
         InstrumentDao instrumentDao = DatabaseConnectionManager.getInstance().instrumentDao();
         SampleDao sampleDao = DatabaseConnectionManager.getInstance().sampleDao();
 

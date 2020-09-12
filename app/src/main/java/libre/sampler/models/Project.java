@@ -145,6 +145,18 @@ public class Project {
         settings.defaultInstrumentExportPath = s;
     }
 
+    public void prepareSave() {
+        for (int i = 0; i < this.instruments.size(); i++) {
+            Instrument e = this.instruments.get(i);
+            e.sort = i;
+            e.prepareSave();
+        }
+        for (int i = 0; i < this.patterns.size(); i++) {
+            Pattern e = this.patterns.get(i);
+            e.sort = i;
+        }
+    }
+
     public String getRelativeTime() {
         Date then = new Date(mtime);
         Calendar cal = Calendar.getInstance();

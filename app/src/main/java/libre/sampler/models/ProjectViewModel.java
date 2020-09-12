@@ -121,7 +121,8 @@ public class ProjectViewModel extends AndroidViewModel {
         return false;
     }
 
-    public void updateProjectHash() {
+    public void prepareSave() {
+        project.prepareSave();
         projectHash = project.valueHash();
     }
 

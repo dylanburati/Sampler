@@ -25,6 +25,7 @@ public class Pattern {
     public String id;
     public String projectId;
     public String name;
+    public int sort;
 
     @Ignore
     private List<ScheduledNoteEvent> events;
