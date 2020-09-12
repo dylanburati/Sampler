@@ -3,82 +3,59 @@ package libre.sampler.models;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
+import androidx.annotation.NonNull;
 import androidx.room.Entity;
 import androidx.room.Ignore;
-import libre.sampler.utils.IdStatus;
+import androidx.room.PrimaryKey;
 import libre.sampler.utils.MD5OutputStream;
 
-@Entity(tableName = "instrument", primaryKeys = {"projectId", "id"})
+@Entity(tableName = "instrument")
 public class Instrument {
-    public int projectId;
-    public int id;
+    public String projectId;
+
+    @PrimaryKey
+    @NonNull
+    public String id;
     public String name;
     private float volume;
 
     @Ignore
     private List<Sample> samples = new ArrayList<>();
-    @Ignore
-    private int nextSampleId;
-    @Ignore
-    private IdStatus idStatus = new IdStatus("Instrument,Sample");
 
     @Ignore
     public Instrument(String name) {
         this.name = name;
-        this.nextSampleId = 0;
+        this.id = UUID.randomUUID().toString();
         this.volume = 1.0f;
     }
 
     // should be called with the `id` obtained from the database
-    public Instrument(String name, int id) {
+    public Instrument(@NonNull String id, String name) {
         this.name = name;
         this.id = id;
-        this.nextSampleId = 0;
-
-        idStatus.set(IdStatus.SELF);
     }
 
-    public void setInstrumentId(int id) {
+    public void setInstrumentId(String id) {
         this.id = id;
-
-        idStatus.set(IdStatus.SELF);
     }
 
     public void setSamples(List<Sample> samples) {
         this.samples = samples;
-        for(Sample s : samples) {
-            s.instrumentId = this.id;
-            if(s.id >= nextSampleId) {
-                nextSampleId = s.id + 1;
-            }
-        }
-
-        idStatus.require(IdStatus.SELF);
-        idStatus.set(IdStatus.CHILDREN_ADDED);
     }
 
     public Sample addSample(String filename) {
-        Sample s = new Sample(filename, nextSampleId);
+        Sample s = new Sample(filename);
         s.instrumentId = this.id;
         samples.add(s);
 
-        nextSampleId++;
-
-        idStatus.require(IdStatus.SELF);
-        idStatus.set(IdStatus.CHILDREN_ADDED);
         return s;
     }
 
     public void addSample(Sample s) {
         s.instrumentId = this.id;
-        s.id = nextSampleId;
         samples.add(s);
-
-        nextSampleId++;
-
-        idStatus.require(IdStatus.SELF);
-        idStatus.set(IdStatus.CHILDREN_ADDED);
     }
 
     public void removeSample(Sample toRemove) {
@@ -123,8 +100,8 @@ public class Instrument {
     }
 
     public void writeHashCodes(MD5OutputStream outputStream) throws IOException {
-        outputStream.writeInt(id);
-        outputStream.writeInt(projectId);
+        outputStream.writeInt(id.hashCode());
+        if (projectId != null) outputStream.writeInt(projectId.hashCode());
         outputStream.writeInt(Float.floatToIntBits(volume));
         for(Sample s : samples) {
             outputStream.writeInt(s.valueHash());

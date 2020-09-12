@@ -5,29 +5,29 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.UUID;
 
+import androidx.annotation.NonNull;
 import androidx.room.Entity;
 import androidx.room.Ignore;
-import libre.sampler.utils.IdStatus;
+import androidx.room.PrimaryKey;
 import libre.sampler.utils.LoopScheduler;
 import libre.sampler.utils.MD5OutputStream;
 import libre.sampler.utils.MusicTime;
 
-@Entity(tableName = "pattern", primaryKeys = {"projectId", "id"})
+@Entity(tableName = "pattern")
 public class Pattern {
     public static final double DEFAULT_TEMPO = 140;
     public static final MusicTime DEFAULT_LOOP_LENGTH = new MusicTime(4, 0, 0);
 
-    public int projectId;
-    public int id;
+    @PrimaryKey
+    @NonNull
+    public String id;
+    public String projectId;
     public String name;
 
     @Ignore
-    private int nextEventId;
-    @Ignore
     private List<ScheduledNoteEvent> events;
-    @Ignore
-    private IdStatus idStatus = new IdStatus("Pattern,ScheduledNoteEvent");
 
     private double nanosPerTick;
     private long loopLengthTicks;
@@ -54,29 +54,25 @@ public class Pattern {
 
     @Ignore
     private Pattern(String name) {
-        this.name = name;
-        this.events = new ArrayList<>();
+        this(UUID.randomUUID().toString(), name);
+
         // Placeholder event so scheduler loopIndex is always incremented
         this.events.add(ScheduledNoteEvent.getPlaceholder());
         this.scheduler = new LoopScheduler(this.events, this);
-        this.nextEventId = 1;
     }
 
     // should be called with the `id` obtained from the database
-    public Pattern(int id, String name) {
-        this.name = name;
+    public Pattern(@NonNull String id, String name) {
         this.id = id;
-
-        idStatus.set(IdStatus.SELF);
+        this.name = name;
+        this.events = new ArrayList<>();
     }
 
-    public void setPatternId(int id) {
+    public void setPatternId(String id) {
         this.id = id;
         for(ScheduledNoteEvent e : events) {
             e.patternId = id;
         }
-
-        idStatus.set(IdStatus.SELF);
     }
 
     // should be called with the `events` obtained from the database
@@ -85,15 +81,7 @@ public class Pattern {
         if (events.isEmpty()) {
             this.events.add(ScheduledNoteEvent.getPlaceholder());
         }
-        for(ScheduledNoteEvent e : events) {
-            if(e.id >= nextEventId) {
-                nextEventId = e.id + 1;
-            }
-        }
         this.scheduler = new LoopScheduler(this.events, this);
-
-        idStatus.require(IdStatus.SELF);
-        idStatus.set(IdStatus.CHILDREN_DB);
     }
 
     public List<ScheduledNoteEvent> getEventsDeepCopy() {
@@ -147,8 +135,6 @@ public class Pattern {
 
     public void addEvent(ScheduledNoteEvent noteEvent) {
         noteEvent.patternId = this.id;
-        noteEvent.id = nextEventId;
-        nextEventId++;
 
         synchronized(schedulerLock) {
             int insertIdx = Collections.binarySearch(events, noteEvent, new Comparator<ScheduledNoteEvent>() {
@@ -163,9 +149,6 @@ public class Pattern {
 
             scheduler.doInsert(insertIdx, noteEvent, getTicksAtTime(System.nanoTime()));
         }
-
-        idStatus.require(IdStatus.SELF);
-        idStatus.set(IdStatus.CHILDREN_ADDED);
     }
 
     public boolean removeEvent(ScheduledNoteEvent event) {
@@ -275,8 +258,8 @@ public class Pattern {
     }
 
     public void writeHashCodes(MD5OutputStream outputStream) throws IOException {
-        outputStream.writeInt(id);
-        outputStream.writeInt(projectId);
+        outputStream.writeInt(id.hashCode());
+        if (projectId != null) outputStream.writeInt(projectId.hashCode());
         outputStream.writeInt(name.hashCode());
         outputStream.writeInt(Float.floatToIntBits((float) nanosPerTick));
         outputStream.writeInt((int) (loopLengthTicks % 0x80000000L));

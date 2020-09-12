@@ -16,7 +16,7 @@ import libre.sampler.models.Project;
 @Dao
 public interface ProjectDao {
     @Insert
-    long insert(Project toAdd);
+    void insert(Project toAdd);
 
     @Insert
     void insertAll(Project... projects);
@@ -28,19 +28,15 @@ public interface ProjectDao {
     List<Project> getAll();
 
     @Query("DELETE FROM project WHERE id IN (:projectIds)")
-    void deleteAll(List<Integer> projectIds);
+    void deleteAll(List<String> projectIds);
 
     @Transaction
     @Query("SELECT * FROM project WHERE id = :projectId")
-    List<ProjectWithRelations> getWithRelations(int projectId);
+    List<ProjectWithRelations> getWithRelations(String projectId);
 
     @Transaction
     @Query("SELECT * FROM project WHERE id IN (:projectIds)")
-    List<ProjectWithRelations> getWithRelations(List<Integer> projectIds);
-
-    @Transaction
-    @Query("SELECT * FROM project")
-    List<ProjectWithRelations> getAllWithRelations();
+    List<ProjectWithRelations> getWithRelations(List<String> projectIds);
 
     static class ProjectWithRelations {
         @Embedded

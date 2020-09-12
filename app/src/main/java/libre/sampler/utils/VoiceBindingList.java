@@ -8,10 +8,10 @@ import libre.sampler.models.NoteEvent;
 public class VoiceBindingList {
     private static class VoiceBindingData {
         public NoteEvent event;
-        public int sampleId;
+        public String sampleId;
         public boolean closed;
 
-        public VoiceBindingData(NoteEvent evt, int sampleId) {
+        public VoiceBindingData(NoteEvent evt, String sampleId) {
             this.event = evt;
             this.sampleId = sampleId;
             this.closed = false;
@@ -27,7 +27,7 @@ public class VoiceBindingList {
         }
     }
 
-    public synchronized int newBinding(NoteEvent openEvt, int sampleId) {
+    public synchronized int newBinding(NoteEvent openEvt, String sampleId) {
         int voiceIndex = 0;
         while(voiceIndex < bindings.size() && bindings.get(voiceIndex) != null) {
             voiceIndex++;
@@ -48,7 +48,7 @@ public class VoiceBindingList {
         return null;
     }
 
-    public synchronized int releaseBinding(NoteEvent closeEvt, int sampleId) {
+    public synchronized int releaseBinding(NoteEvent closeEvt, String sampleId) {
         int voiceIndex = 0;
         while(voiceIndex < bindings.size()) {
             VoiceBindingData b = bindings.get(voiceIndex);

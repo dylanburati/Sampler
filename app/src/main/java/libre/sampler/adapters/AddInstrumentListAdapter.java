@@ -2,7 +2,6 @@ package libre.sampler.adapters;
 
 import android.animation.ObjectAnimator;
 import android.util.Log;
-import android.util.SparseArray;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -13,8 +12,10 @@ import android.widget.TextView;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import androidx.annotation.NonNull;
@@ -26,7 +27,7 @@ import libre.sampler.models.Project;
 
 public class AddInstrumentListAdapter extends RecyclerView.Adapter<AddInstrumentListAdapter.ViewHolder> {
     private List<Project> projects;
-    private final SparseArray<List<Instrument>> instrumentMap = new SparseArray<>();
+    private final Map<String, List<Instrument>> instrumentMap = new HashMap<>();
 
     private final Set<Instrument> selectedInstruments = new HashSet<>();
 
@@ -177,7 +178,7 @@ public class AddInstrumentListAdapter extends RecyclerView.Adapter<AddInstrument
         }
         this.projects = new ArrayList<>();
         for(Project p : projects) {
-            if(instrumentMap.indexOfKey(p.id) >= 0) {
+            if(instrumentMap.containsKey(p.id)) {
                 this.projects.add(p);
             }
         }

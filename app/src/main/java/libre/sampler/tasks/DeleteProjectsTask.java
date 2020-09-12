@@ -32,13 +32,13 @@ public class DeleteProjectsTask extends AsyncTask<Void, Void, Void> {
         PatternDao patternDao = DatabaseConnectionManager.getInstance().patternDao();
         ScheduledNoteEventDao scheduledNoteEventDao = DatabaseConnectionManager.getInstance().scheduledNoteEventDao();
 
-        List<Integer> projectIds = new ArrayList<>();
+        List<String> projectIds = new ArrayList<>();
         for(Project p : projects) {
             projectIds.add(p.id);
         }
         List<ProjectDao.ProjectWithRelations> data = projectDao.getWithRelations(projectIds);
-        List<Integer> instrumentIds = new ArrayList<>();
-        List<Integer> patternIds = new ArrayList<>();
+        List<String> instrumentIds = new ArrayList<>();
+        List<String> patternIds = new ArrayList<>();
         for(ProjectDao.ProjectWithRelations prj : data) {
             for(Instrument t : prj.instruments) {
                 instrumentIds.add(t.id);

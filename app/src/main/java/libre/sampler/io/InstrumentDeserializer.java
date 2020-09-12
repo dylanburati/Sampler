@@ -45,9 +45,8 @@ public class InstrumentDeserializer {
     }
 
     private Sample readSample(JsonTypes.Object jsonSample) throws IOException {
-        Sample sample = new Sample("", 0);
         String entryName = jsonSample.getNonNull("filename").getValueString();
-        sample.filename = Objects.requireNonNull(entriesToFilenames.get(entryName));
+        Sample sample = new Sample(Objects.requireNonNull(entriesToFilenames.get(entryName)));
         sample.setVolume(jsonSample.getNonNull("volume").getValueFloat());
         sample.setMinPitch(jsonSample.getNonNull("minPitch").getValueInt());
         sample.setMaxPitch(jsonSample.getNonNull("maxPitch").getValueInt());

@@ -5,7 +5,7 @@ import java.util.List;
 public class GlobalSample extends Sample {
     private Instrument instrument;
     public GlobalSample(Instrument instrument) {
-        super("", 0);
+        super("", "");
         this.instrument = instrument;
         List<Sample> samples = instrument.getSamples();
         if(samples.size() > 0) {

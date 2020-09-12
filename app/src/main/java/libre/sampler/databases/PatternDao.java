@@ -23,18 +23,18 @@ public interface PatternDao {
     void updateAll(Pattern... patterns);
 
     @Query("DELETE FROM pattern WHERE projectId = :projectId")
-    void deleteAll(int projectId);
+    void deleteAll(String projectId);
 
     @Query("DELETE FROM pattern WHERE projectId IN (:projectIds)")
-    void deleteAll(List<Integer> projectIds);
+    void deleteAll(List<String> projectIds);
 
     @Transaction
     @Query("SELECT * FROM pattern WHERE id = :patternId")
-    List<PatternWithRelations> getWithRelations(int patternId);
+    List<PatternWithRelations> getWithRelations(String patternId);
 
     @Transaction
     @Query("SELECT * FROM pattern WHERE id IN (:patternIds)")
-    List<PatternWithRelations> getWithRelations(List<Integer> patternIds);
+    List<PatternWithRelations> getWithRelations(List<String> patternIds);
 
     @Delete
     void delete(Pattern pattern);

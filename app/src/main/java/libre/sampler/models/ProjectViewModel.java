@@ -33,8 +33,7 @@ import libre.sampler.utils.ModelState;
 import libre.sampler.views.VisualNote;
 
 public class ProjectViewModel extends AndroidViewModel {
-    public int projectId = -1;
-    // public String projectName = "";
+    public String projectId = null;
 
     private Project project;
     private ModelState projectState = ModelState.INVALID;
@@ -61,14 +60,14 @@ public class ProjectViewModel extends AndroidViewModel {
         DatabaseConnectionManager.initialize(application);
     }
 
-    public void setProjectId(int projectId) {
+    public void setProjectId(String projectId) {
         this.projectId = projectId;
     }
 
     @Nullable
     public Project tryGetProject() {
         if(project == null && projectState == ModelState.INVALID) {
-            if(projectId < 0) {
+            if(projectId == null) {
                 throw new AssertionError("Project ID not set");
             }
 
@@ -87,7 +86,6 @@ public class ProjectViewModel extends AndroidViewModel {
                                 pianoRollPattern = data.patterns.get(0);
                             } else {
                                 pianoRollPattern = Pattern.getEmptyPattern();
-                                project.registerPattern(pianoRollPattern);
                                 project.addPattern(pianoRollPattern);
                             }
                             loadEventSource.dispatch(AppConstants.INSTRUMENTS_PATTERNS_LOADED);

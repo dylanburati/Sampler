@@ -67,7 +67,7 @@ public class ProjectActivity extends AppCompatActivity {
         }
 
         this.viewModel = ViewModelProviders.of(this).get(ProjectViewModel.class);
-        viewModel.setProjectId(getIntent().getIntExtra(AppConstants.TAG_EXTRA_PROJECT_ID, -1));
+        viewModel.setProjectId(getIntent().getStringExtra(AppConstants.TAG_EXTRA_PROJECT_ID));
 
         attachEventListeners();
         initPatternThread();

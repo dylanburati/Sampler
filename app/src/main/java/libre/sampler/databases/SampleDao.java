@@ -14,10 +14,10 @@ public interface SampleDao {
     void insertAll(List<Sample> samples);
 
     @Query("DELETE FROM sample WHERE instrumentId = :instrumentId")
-    void deleteAll(int instrumentId);
+    void deleteAll(String instrumentId);
 
     @Query("DELETE FROM sample WHERE instrumentId IN (:instrumentIds)")
-    void deleteAll(List<Integer> instrumentIds);
+    void deleteAll(List<String> instrumentIds);
 
     @Query("SELECT * FROM sample")
     List<Sample> selectAll();

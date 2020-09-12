@@ -43,7 +43,6 @@ public class ProjectDeserializer {
         for(JsonTypes.Any aJsonInstrument : jsonInstrumentArr) {
             jsonInstrument = aJsonInstrument.getValueObject();
             Instrument instrument = new Instrument(jsonInstrument.getNonNull("name").getValueString());
-            toCreate.registerInstrument(instrument);
 
             URL download = new URL(jsonInstrument.getNonNull("download").getValueString());
             final int indexCopy = index;

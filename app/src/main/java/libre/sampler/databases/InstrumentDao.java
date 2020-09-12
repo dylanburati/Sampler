@@ -22,10 +22,10 @@ public interface InstrumentDao {
     void updateAll(Instrument... instruments);
 
     @Query("DELETE FROM instrument WHERE projectId = :projectId")
-    void deleteAll(int projectId);
+    void deleteAll(String projectId);
 
     @Query("DELETE FROM instrument WHERE projectId IN (:projectIds)")
-    void deleteAll(List<Integer> projectIds);
+    void deleteAll(List<String> projectIds);
 
     @Transaction
     @Query("SELECT * from instrument")
@@ -33,11 +33,11 @@ public interface InstrumentDao {
 
     @Transaction
     @Query("SELECT * FROM instrument WHERE id = :instrumentId")
-    List<InstrumentWithRelations> getWithRelations(int instrumentId);
+    List<InstrumentWithRelations> getWithRelations(String instrumentId);
 
     @Transaction
     @Query("SELECT * FROM instrument WHERE id IN (:instrumentIds)")
-    List<InstrumentWithRelations> getWithRelations(List<Integer> instrumentIds);
+    List<InstrumentWithRelations> getWithRelations(List<String> instrumentIds);
 
     static class InstrumentWithRelations {
         @Embedded

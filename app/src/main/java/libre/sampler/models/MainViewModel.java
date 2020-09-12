@@ -143,7 +143,6 @@ public class MainViewModel extends AndroidViewModel {
             project.setInstruments(dbInstruments);
             for(Instrument t : instruments) {
                 Instrument tCopy = new Instrument(t.name);
-                project.registerInstrument(tCopy);
                 tCopy.setVolume(t.getVolume());
                 for(Sample s : t.getSamples()) {
                     tCopy.addSample(new Sample(s));

@@ -27,7 +27,6 @@ import libre.sampler.io.InstrumentSerializer;
 import libre.sampler.models.Instrument;
 import libre.sampler.models.Project;
 import libre.sampler.models.Sample;
-import libre.sampler.utils.IdStatus;
 import libre.sampler.utils.ProgressFraction;
 
 import static org.junit.Assert.assertArrayEquals;
@@ -77,8 +76,7 @@ public class InstrumentSerializationInstrumentedTest {
     public void serialization_correct() {
         // initialize directory for samples and exported instrument
         File cacheDirectory = InstrumentationRegistry.getInstrumentation().getTargetContext().getCacheDir();
-        IdStatus.setOutputEnabled(true);
-        Project project = new Project(1, "project", 0L);
+        Project project = new Project("1", "project", 0L);
         File tmpDirectory = new File(cacheDirectory,"tmp");
         if(tmpDirectory.exists()) {
             deleteRecursively(tmpDirectory);
@@ -113,7 +111,6 @@ public class InstrumentSerializationInstrumentedTest {
 
         // Create instrument from scratch
         Instrument instrument1 = new Instrument("name");
-        project.registerInstrument(instrument1);
         project.addInstrument(instrument1);
         for(String filename : sampleFilenames) {
             Sample sample = instrument1.addSample(new File(tmpDirectory, filename).getAbsolutePath());
@@ -150,7 +147,6 @@ public class InstrumentSerializationInstrumentedTest {
 
         // Create instrument with exported properties and sample files
         Instrument instrument2 = new Instrument(null);
-        project.registerInstrument(instrument2);
         project.addInstrument(instrument2);
         try {
             InstrumentDeserializer deserializer = new InstrumentDeserializer(instrument2);
@@ -165,7 +161,7 @@ public class InstrumentSerializationInstrumentedTest {
         assertNotEquals("Deserialization gave wrong instrument ID - already used", instrument1.id, instrument2.id);
         assertEquals("Wrong number of samples deserialized", sampleFilenames.length, instrument2.getSamples().size());
         assertEquals("Properties of instruments differ", instrument1.getVolume(), instrument2.getVolume(), 1e-7);
-        Set<Integer> sample2Ids = new HashSet<>(sampleFilenames.length);
+        Set<String> sample2Ids = new HashSet<>(sampleFilenames.length);
         for(int i = 0; i < sampleFilenames.length; i++) {
             Sample sample1 = instrument1.getSamples().get(i);
             Sample sample2 = instrument2.getSamples().get(i);
