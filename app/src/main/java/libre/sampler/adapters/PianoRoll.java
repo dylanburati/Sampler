@@ -75,7 +75,6 @@ public class PianoRoll {
     }
 
     private void bindRow(@NonNull RelativeLayout notePane, int position) {
-        int containerIndex = position;
 
         ViewGroup.LayoutParams layoutParams = notePane.getLayoutParams();
         layoutParams.width = rollWidth;
@@ -83,7 +82,7 @@ public class PianoRoll {
         
         notePane.removeAllViews();
         for(VisualNote n : pianoRollNotes) {
-            if(n.getContainerIndex() == containerIndex) {
+            if(n.getContainerIndex() == position) {
                 displayNote(notePane, n, controller.getSelectedNotes().contains(n));
             }
         }

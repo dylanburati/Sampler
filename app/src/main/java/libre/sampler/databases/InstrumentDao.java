@@ -39,7 +39,7 @@ public interface InstrumentDao {
     @Query("SELECT * FROM instrument WHERE id IN (:instrumentIds)")
     List<InstrumentWithRelations> getWithRelations(List<Integer> instrumentIds);
 
-    static class InstrumentWithRelations {
+    class InstrumentWithRelations {
         @Embedded
         public Instrument instrument;
 

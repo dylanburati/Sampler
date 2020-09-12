@@ -52,11 +52,6 @@ public class InstrumentCreateDialog extends DialogFragment {
 
     private ProjectViewModel viewModel;
 
-    @Override
-    public void onAttach(@NonNull Context context) {
-        super.onAttach(context);
-    }
-
     @NonNull
     @Override
     public Dialog onCreateDialog(@Nullable Bundle savedInstanceState) {
@@ -175,7 +170,6 @@ public class InstrumentCreateDialog extends DialogFragment {
         }
     }
 
-    @Nullable
     @Override
     public void onSaveInstanceState(@NonNull Bundle outState) {
         outState.putString(AppConstants.TAG_SAVED_STATE_INSTRUMENT_CREATE_NAME, nameInputView.getText().toString());

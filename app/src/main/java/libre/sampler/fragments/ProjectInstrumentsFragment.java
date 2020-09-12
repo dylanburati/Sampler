@@ -142,11 +142,6 @@ public class ProjectInstrumentsFragment extends Fragment {
     }
 
     @Override
-    public void onResume() {
-        super.onResume();
-    }
-
-    @Override
     public void onDestroyView() {
         sampleSpinner.setAdapter(null);
         instrumentListView.setAdapter(null);

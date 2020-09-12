@@ -7,7 +7,6 @@ import android.media.midi.MidiReceiver;
 import android.os.Build;
 import android.util.Log;
 
-import java.io.IOException;
 import java.util.Arrays;
 
 import androidx.annotation.RequiresApi;
@@ -43,7 +42,7 @@ public class MidiEventDispatcher implements MidiManager.OnDeviceOpenedListener {
 
     private class MyMidiReceiver extends MidiReceiver {
         @Override
-        public void onSend(byte[] msg, int offset, int count, long timestamp) throws IOException {
+        public void onSend(byte[] msg, int offset, int count, long timestamp) {
             byte[] data = new byte[count];
             System.arraycopy(msg, offset, data, 0, count);
             Log.d("MidiEventDispatcher", Arrays.toString(data));
@@ -62,16 +61,8 @@ public class MidiEventDispatcher implements MidiManager.OnDeviceOpenedListener {
                     NoteId eventId = NoteId.createForMidi(keyNum);
                     NoteEvent event = new NoteEvent(NoteEvent.NOTE_OFF, viewModel.getKeyboardInstrument(), keyNum, velocity, eventId);
                     viewModel.noteEventSource.dispatch(event);
-                } else if(command == MidiConstants.STATUS_CONTROL_CHANGE) {
-                    int controller = data[commandIdx + 1] & 0xFF;
-                    if(controller == 0x30) {
-                        if(data[commandIdx + 2] != 0) {
-                            // viewModel.patternEventSource.dispatch(new PatternEvent(PatternEvent.PATTERN_ON, ));
-                        } else {
-                            // viewModel.patternEventSource.dispatch(new PatternEvent(PatternEvent.PATTERN_OFF, ));
-                        }
-                    }
                 }
+
                 commandIdx += MidiConstants.getBytesPerMessage(data[commandIdx]);
             }
         }

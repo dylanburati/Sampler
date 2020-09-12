@@ -42,7 +42,7 @@ public interface ProjectDao {
     @Query("SELECT * FROM project")
     List<ProjectWithRelations> getAllWithRelations();
 
-    static class ProjectWithRelations {
+    class ProjectWithRelations {
         @Embedded
         public Project project;
 

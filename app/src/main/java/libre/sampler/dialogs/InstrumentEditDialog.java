@@ -2,7 +2,6 @@ package libre.sampler.dialogs;
 
 import android.app.AlertDialog;
 import android.app.Dialog;
-import android.content.Context;
 import android.content.DialogInterface;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -26,11 +25,6 @@ public class InstrumentEditDialog extends DialogFragment {
     private Button instrumentDeleteButton;
 
     private ProjectViewModel viewModel;
-
-    @Override
-    public void onAttach(@NonNull Context context) {
-        super.onAttach(context);
-    }
 
     @NonNull
     @Override
@@ -63,8 +57,7 @@ public class InstrumentEditDialog extends DialogFragment {
                 .setPositiveButton(R.string.dialog_project_edit_submit, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        String name = nameInputView.getText().toString();
-                        viewModel.getDialogInstrument().name = name;
+                        viewModel.getDialogInstrument().name = nameInputView.getText().toString();
 
                         Instrument toEdit = viewModel.getDialogInstrument();
                         viewModel.instrumentEventSource.dispatch(new InstrumentEvent(InstrumentEvent.INSTRUMENT_EDIT, toEdit));

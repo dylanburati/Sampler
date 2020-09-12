@@ -39,11 +39,6 @@ public class ProjectImportDialog extends DialogFragment {
     private ProgressBar progressBar;
     private ModelState importingState = ModelState.INVALID;
 
-    @Override
-    public void onAttach(@NonNull Context context) {
-        super.onAttach(context);
-    }
-
     @NonNull
     @Override
     public Dialog onCreateDialog(@Nullable Bundle savedInstanceState) {

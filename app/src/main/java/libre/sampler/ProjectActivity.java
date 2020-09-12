@@ -232,7 +232,7 @@ public class ProjectActivity extends AppCompatActivity {
     }
 
     @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         if(item.getItemId() == R.id.appbar_save) {
             viewModel.updateProjectHash();
             DatabaseConnectionManager.runTask(new UpdateProjectTask(viewModel.getProject(),

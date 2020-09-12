@@ -39,7 +39,7 @@ public interface PatternDao {
     @Delete
     void delete(Pattern pattern);
 
-    static class PatternWithRelations {
+    class PatternWithRelations {
         @Embedded
         public Pattern pattern;
 
