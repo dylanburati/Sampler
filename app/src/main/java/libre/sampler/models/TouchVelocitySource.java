@@ -7,9 +7,9 @@ public enum TouchVelocitySource {
         if(this == TouchVelocitySource.NONE) {
             return 100;
         } else if(this == TouchVelocitySource.LOCATION) {
-            return (int) Math.floor(32.0 + 95.999 * yFraction);
+            return (int) Math.floor(24.0 + Math.min(112.0 * yFraction, 103.99));
         } else {
-            return (int) Math.floor(32.0 + 95.999 * Math.min(1f, pressure));
+            return (int) Math.floor(24.0 + Math.min(112.0 * pressure, 103.99));
         }
     }
 }
