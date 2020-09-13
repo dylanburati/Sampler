@@ -98,10 +98,12 @@ public class ProjectActivity extends AppCompatActivity {
                         event.action == InstrumentEvent.INSTRUMENT_PD_LOAD) {
 
                     if(pdSampleBindings != null) {
+                        viewModel.instrumentEventSource.runReplayQueue(InstrumentEvent.QUEUE_FOR_INIT_PD);
                         Log.d("InstrumentLoader", "sync  " + event.instrument.name);
                         for(Sample s : event.instrument.getSamples()) {
-                            boolean exists = pdSampleBindings.containsKey(s.id);
-                            if (exists) exists = pdSampleBindings.get(s.id).isInfoLoaded();
+                            boolean exists = event.action != InstrumentEvent.INSTRUMENT_PD_LOAD
+                                    && pdSampleBindings.containsKey(s.id)
+                                    && pdSampleBindings.get(s.id).isInfoLoaded();
                             if(!exists) {
                                 pdSampleBindings.put(s.id, s);
                                 loadSoundFile(s.id, s.filename);

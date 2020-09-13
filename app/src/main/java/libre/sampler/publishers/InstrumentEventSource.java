@@ -22,11 +22,10 @@ public class InstrumentEventSource extends MapEventSource<InstrumentEvent> {
     public void runReplayQueue(String queueTag) {
         List<InstrumentEvent> list = replayQueues.get(queueTag);
         if(list != null) {
+            replayQueues.put(queueTag, null);
             for(InstrumentEvent event : list) {
                 dispatch(event);
             }
-
-            list.clear();
         }
     }
 
